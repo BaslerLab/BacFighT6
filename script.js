@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 4.3
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 5.3 (15.11.2025)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -8,7 +8,7 @@
 
 	// --- Global Constants & Colors ---
 	// Transparency can be set, but for clarity it is off (alpha = 1.0)
-	const PREDATOR_COLOR = 'rgba(220, 38, 38, 1.0)'; // Red
+	const ATTACKER_COLOR = 'rgba(220, 38, 38, 1.0)'; // Red
 	const PREY_COLOR = 'rgba(37, 99, 235, 1.0)';     // Blue
 	const DEFENDER_COLOR = 'rgba(217, 119, 6, 1.0)'; // Amber
 	const DEAD_CELL_COLOR = 'rgba(10, 10, 10, 1.0)';       // Dark Gray
@@ -34,15 +34,15 @@
 
 	// Cell type param selection
 	const cellTypeSelectionButtons = document.getElementById('cellTypeSelectionButtons');
-	const predatorParamsSection = document.getElementById('predatorParamsSection');
+	const attackerParamsSection = document.getElementById('attackerParamsSection');
 	const preyParamsSection = document.getElementById('preyParamsSection');
 	const defenderParamsSection = document.getElementById('defenderParamsSection');
-	const selectPredatorParamsButton = document.getElementById('selectPredatorParamsButton');
+	const selectAttackerParamsButton = document.getElementById('selectAttackerParamsButton');
 	const selectPreyParamsButton = document.getElementById('selectPreyParamsButton');
 	const selectDefenderParamsButton = document.getElementById('selectDefenderParamsButton');
 	// Setup mode
 	const manualPlacementControls = document.getElementById('manualPlacementControls');
-	const selectPredatorButton = document.getElementById('selectPredatorButton');
+	const selectAttackerButton = document.getElementById('selectAttackerButton');
 	const selectPreyButton = document.getElementById('selectPreyButton');
 	const selectDefenderButton = document.getElementById('selectDefenderButton');
 	const selectBarrierButton = document.getElementById('selectBarrierButton');
@@ -68,55 +68,56 @@
 	// General settings
 	const arenaGridRadiusInput = document.getElementById('arenaGridRadiusInput');
 	const importSettingsButton = document.getElementById('importSettingsButton');
-	const exportSettingsButtonMain = document.getElementById('exportSettingsButtonMain'); // Add this line
+	const exportSettingsButtonMain = document.getElementById('exportSettingsButtonMain');
+	const resetSettingsToDefaultsButton = document.getElementById('resetSettingsToDefaultsButton');
 
 	// Exports Settings (Renamed Section)
 	const saveImagesCheckbox = document.getElementById('saveImagesCheckbox');
 	const saveArenaStatesCheckbox = document.getElementById('saveArenaStatesCheckbox'); // New
 	const imageExportWidthInput = document.getElementById('imageExportWidthInput');
-	// Predator params
-	const initialPredatorsInput = document.getElementById('initialPredatorsInput');
-	const predatorReplicationMeanInput = document.getElementById('predatorReplicationMeanInput');
-	const predatorReplicationRangeInput = document.getElementById('predatorReplicationRangeInput');
+	// Attacker params
+	const initialAttackersInput = document.getElementById('initialAttackersInput');
+	const attackerReplicationMeanInput = document.getElementById('attackerReplicationMeanInput');
+	const attackerReplicationRangeInput = document.getElementById('attackerReplicationRangeInput');
 	const t6ssFireCooldownMinInput = document.getElementById('t6ssFireCooldownMinInput');
 	const t6ssFireCooldownMaxInput = document.getElementById('t6ssFireCooldownMaxInput');
-	const predatorPrecisionInput = document.getElementById('predatorPrecisionInput');
-	const predatorContactSensingBiasInput = document.getElementById('predatorContactSensingBiasInput');
-	const predatorKinExclusionInput = document.getElementById('predatorKinExclusionInput');
-	const predatorKinExclusionPenaltyInput = document.getElementById('predatorKinExclusionPenaltyInput');
-	const predNonLyticUnitsPerHitInput = document.getElementById('predNonLyticUnitsPerHitInput');
-	const predNonLyticDeliveryChanceInput = document.getElementById('predNonLyticDeliveryChanceInput');
-	const predLyticUnitsPerHitInput = document.getElementById('predLyticUnitsPerHitInput');
-	const predLyticDeliveryChanceInput = document.getElementById('predLyticDeliveryChanceInput');
-	const predNonLyticUnitsToDieInput = document.getElementById('predNonLyticUnitsToDieInput');
-	const predLyticUnitsToLyseInput = document.getElementById('predLyticUnitsToLyseInput');
-	const predBaseLysisDelayInput = document.getElementById('predBaseLysisDelayInput');
-	// Predator movement
-	const predatorMoveCooldownMinInput = document.getElementById('predatorMoveCooldownMinInput');
-	const predatorMoveCooldownMaxInput = document.getElementById('predatorMoveCooldownMaxInput');
-	const predatorMoveProbabilityInput = document.getElementById('predatorMoveProbabilityInput');
-	const predatorMoveDirectionalityInput = document.getElementById('predatorMoveDirectionalityInput');
-	const predatorMovePreyAiAttractionInput = document.getElementById('predatorMovePreyAiAttractionInput');
-	const predatorMovePreyAiAttractionThresholdInput = document.getElementById('predatorMovePreyAiAttractionThresholdInput'); // New
-	const predatorLysesPerReplicationInput = document.getElementById('predatorLysesPerReplicationInput');
-	const predatorReplicationRewardMeanInput = document.getElementById('predatorReplicationRewardMeanInput');
-	const predatorReplicationRewardRangeInput = document.getElementById('predatorReplicationRewardRangeInput');
+	const attackerPrecisionInput = document.getElementById('attackerPrecisionInput');
+	const attackerContactSensingBiasInput = document.getElementById('attackerContactSensingBiasInput');
+	const attackerKinExclusionInput = document.getElementById('attackerKinExclusionInput');
+	const attackerKinExclusionPenaltyInput = document.getElementById('attackerKinExclusionPenaltyInput');
+	const attNonLyticUnitsPerHitInput = document.getElementById('attNonLyticUnitsPerHitInput');
+	const attNonLyticDeliveryChanceInput = document.getElementById('attNonLyticDeliveryChanceInput');
+	const attLyticUnitsPerHitInput = document.getElementById('attLyticUnitsPerHitInput');
+	const attLyticDeliveryChanceInput = document.getElementById('attLyticDeliveryChanceInput');
+	const attNonLyticUnitsToDieInput = document.getElementById('attNonLyticUnitsToDieInput');
+	const attLyticUnitsToLyseInput = document.getElementById('attLyticUnitsToLyseInput');
+	const attBaseLysisDelayInput = document.getElementById('attBaseLysisDelayInput');
+	// Attacker movement
+	const attackerMoveCooldownMinInput = document.getElementById('attackerMoveCooldownMinInput');
+	const attackerMoveCooldownMaxInput = document.getElementById('attackerMoveCooldownMaxInput');
+	const attackerMoveProbabilityInput = document.getElementById('attackerMoveProbabilityInput');
+	const attackerMoveDirectionalityInput = document.getElementById('attackerMoveDirectionalityInput');
+	const attackerMovePreyAiAttractionInput = document.getElementById('attackerMovePreyAiAttractionInput');
+	const attackerMovePreyAiAttractionThresholdInput = document.getElementById('attackerMovePreyAiAttractionThresholdInput'); // New
+	const attackerLysesPerReplicationInput = document.getElementById('attackerLysesPerReplicationInput');
+	const attackerReplicationRewardMeanInput = document.getElementById('attackerReplicationRewardMeanInput');
+	const attackerReplicationRewardRangeInput = document.getElementById('attackerReplicationRewardRangeInput');
 
-	// Predator QS
-	const predatorQSProductionRateInput = document.getElementById('predatorQSProductionRateInput');
-	const predatorQSDegradationRateInput = document.getElementById('predatorQSDegradationRateInput');
-	const predatorQSDiffusionRateInput = document.getElementById('predatorQSDiffusionRateInput');
-	const predatorQSMidpointInput = document.getElementById('predatorQSMidpointInput');
-	const predatorQSCooperativityInput = document.getElementById('predatorQSCooperativityInput');
+	// Attacker QS
+	const attackerQSProductionRateInput = document.getElementById('attackerQSProductionRateInput');
+	const attackerQSDegradationRateInput = document.getElementById('attackerQSDegradationRateInput');
+	const attackerQSDiffusionRateInput = document.getElementById('attackerQSDiffusionRateInput');
+	const attackerQSMidpointInput = document.getElementById('attackerQSMidpointInput');
+	const attackerQSCooperativityInput = document.getElementById('attackerQSCooperativityInput');
 	// Prey params
 	const initialPreyInput = document.getElementById('initialPreyInput');
 	const preyReplicationMeanInput = document.getElementById('preyReplicationMeanInput');
 	const preyReplicationRangeInput = document.getElementById('preyReplicationRangeInput');
-	const preyNonLyticUnitsToDiePredInput = document.getElementById('preyNonLyticUnitsToDiePredInput');
-	const preyLyticUnitsToLysePredInput = document.getElementById('preyLyticUnitsToLysePredInput');
-	const preyBaseLysisDelayPredInput = document.getElementById('preyBaseLysisDelayPredInput');
-	const preyNonLyticResistancePredInput = document.getElementById('preyNonLyticResistancePredInput');
-	const preyLyticResistancePredInput = document.getElementById('preyLyticResistancePredInput');
+	const preyNonLyticUnitsToDieAttInput = document.getElementById('preyNonLyticUnitsToDieAttInput');
+	const preyLyticUnitsToLyseAttInput = document.getElementById('preyLyticUnitsToLyseAttInput');
+	const preyBaseLysisDelayAttInput = document.getElementById('preyBaseLysisDelayAttInput');
+	const preyNonLyticResistanceAttInput = document.getElementById('preyNonLyticResistanceAttInput');
+	const preyLyticResistanceAttInput = document.getElementById('preyLyticResistanceAttInput');
 	const preyNonLyticUnitsToDieDefInput = document.getElementById('preyNonLyticUnitsToDieDefInput');
 	const preyLyticUnitsToLyseDefInput = document.getElementById('preyLyticUnitsToLyseDefInput');
 	const preyBaseLysisDelayDefInput = document.getElementById('preyBaseLysisDelayDefInput');
@@ -166,25 +167,25 @@
 	const lacZKmInput = document.getElementById('lacZKmInput');
 	// Stats display
 	const timeStepsDisplay = document.getElementById('timeStepsDisplay');
-	const predatorCountDisplay = document.getElementById('predatorCountDisplay');
+	const attackerCountDisplay = document.getElementById('attackerCountDisplay');
 	const livePreyCountDisplay = document.getElementById('livePreyCountDisplay');
 	const defenderCountDisplay = document.getElementById('defenderCountDisplay');
-	const deadLysingPredatorsDisplay = document.getElementById('deadLysingPredatorsDisplay');
+	const deadLysingAttackersDisplay = document.getElementById('deadLysingAttackersDisplay');
 	const deadLysingPreyDisplay = document.getElementById('deadLysingPreyDisplay');
 	const deadLysingDefendersDisplay = document.getElementById('deadLysingDefendersDisplay');
 	const totalCellCountDisplay = document.getElementById('totalCellCountDisplay');
 	const firingsThisStepDisplay = document.getElementById('firingsThisStepDisplay');
-	const predKilledThisStepDisplay = document.getElementById('predKilledThisStepDisplay');
+	const attKilledThisStepDisplay = document.getElementById('attKilledThisStepDisplay');
 	const preyKilledThisStepDisplay = document.getElementById('preyKilledThisStepDisplay');
 	const defKilledThisStepDisplay = document.getElementById('defKilledThisStepDisplay');
-	const predLysedThisStepDisplay = document.getElementById('predLysedThisStepDisplay');
+	const attLysedThisStepDisplay = document.getElementById('attLysedThisStepDisplay');
 	const preyLysedThisStepDisplay = document.getElementById('preyLysedThisStepDisplay');
 	const defLysedThisStepDisplay = document.getElementById('defLysedThisStepDisplay');
 	const cumulativeFiringsDisplay = document.getElementById('cumulativeFiringsDisplay');
-	const cumulativePredKilledDisplay = document.getElementById('cumulativePredKilledDisplay');
+	const cumulativeAttKilledDisplay = document.getElementById('cumulativeAttKilledDisplay');
 	const cumulativePreyKilledDisplay = document.getElementById('cumulativePreyKilledDisplay');
 	const cumulativeDefKilledDisplay = document.getElementById('cumulativeDefKilledDisplay');
-	const cumulativePredLysedDisplay = document.getElementById('cumulativePredLysedDisplay');
+	const cumulativeAttLysedDisplay = document.getElementById('cumulativeAttLysedDisplay');
 	const cumulativePreyLysedDisplay = document.getElementById('cumulativePreyLysedDisplay');
 	const cumulativeDefLysedDisplay = document.getElementById('cumulativeDefLysedDisplay');
 	const totalCPRGConvertedDisplay = document.getElementById('totalCPRGConvertedDisplay');
@@ -197,20 +198,20 @@
 	const closeReportModalButton = document.getElementById('closeReportModalButton');
 	const reportOutcome = document.getElementById('reportOutcome');
 	const reportDuration = document.getElementById('reportDuration');
-	const reportPredatorsRemaining = document.getElementById('reportPredatorsRemaining');
+	const reportAttackersRemaining = document.getElementById('reportAttackersRemaining');
 	const reportLivePreyRemaining = document.getElementById('reportLivePreyRemaining');
 	const reportDefendersRemainingContainer = document.getElementById('reportDefendersRemainingContainer');
 	const reportDefendersRemaining = document.getElementById('reportDefendersRemaining');
-	const reportDeadLysingPredators = document.getElementById('reportDeadLysingPredators');
+	const reportDeadLysingAttackers = document.getElementById('reportDeadLysingAttackers');
 	const reportDeadLysingPrey = document.getElementById('reportDeadLysingPrey');
 	const reportDeadLysingDefendersContainer = document.getElementById('reportDeadLysingDefendersContainer');
 	const reportDeadLysingDefenders = document.getElementById('reportDeadLysingDefenders');
 	const reportCumulativeFirings = document.getElementById('reportCumulativeFirings');
-	const reportCumulativePredKilled = document.getElementById('reportCumulativePredKilled');
+	const reportCumulativeAttKilled = document.getElementById('reportCumulativeAttKilled');
 	const reportCumulativePreyKilled = document.getElementById('reportCumulativePreyKilled');
 	const reportCumulativeDefKilledContainer = document.getElementById('reportCumulativeDefKilledContainer');
 	const reportCumulativeDefKilled = document.getElementById('reportCumulativeDefKilled');
-	const reportCumulativePredLysed = document.getElementById('reportCumulativePredLysed');
+	const reportCumulativeAttLysed = document.getElementById('reportCumulativeAttLysed');
 	const reportCumulativePreyLysed = document.getElementById('reportCumulativePreyLysed');
 	const reportCumulativeDefLysedContainer = document.getElementById('reportCumulativeDefLysedContainer');
 	const reportCumulativeDefLysed = document.getElementById('reportCumulativeDefLysed');
@@ -238,12 +239,12 @@
 	// Preset Group 1: Density
 	const densityFillSlider = document.getElementById('densityFillSlider');
 	const densityFillDisplay = document.getElementById('densityFillDisplay');
-	const densityPredPreyRatioSlider = document.getElementById('densityPredPreyRatioSlider');
+	const densityAttPreyRatioSlider = document.getElementById('densityAttPreyRatioSlider');
 	const densityRatioDisplay = document.getElementById('densityRatioDisplay');
 	// Preset Group 2: Sensitivity
 	const sensitivityFillSlider = document.getElementById('sensitivityFillSlider');
 	const sensitivityFillDisplay = document.getElementById('sensitivityFillDisplay');
-	const sensitivityPredPreyRatioSlider = document.getElementById('sensitivityPredPreyRatioSlider');
+	const sensitivityAttPreyRatioSlider = document.getElementById('sensitivityAttPreyRatioSlider');
 	const sensitivityRatioDisplay = document.getElementById('sensitivityRatioDisplay');
 	// Preset Group 3: Contact & Kin Exclusion
 	const contactKinContactSensingSlider = document.getElementById('contactKinContactSensingSlider');
@@ -252,12 +253,86 @@
 	const contactKinKinExclusionDisplay = document.getElementById('contactKinKinExclusionDisplay');
 	const contactKinFillSlider = document.getElementById('contactKinFillSlider');
 	const contactKinFillDisplay = document.getElementById('contactKinFillDisplay');
-	const contactKinPredPreyRatioSlider = document.getElementById('contactKinPredPreyRatioSlider');
+	const contactKinAttPreyRatioSlider = document.getElementById('contactKinAttPreyRatioSlider');
 	const contactKinRatioDisplay = document.getElementById('contactKinRatioDisplay');
 	// Preset Group 4: Tit-for-Tat
 	const titfortatFillSlider = document.getElementById('titfortatFillSlider');
 	const titfortatFillDisplay = document.getElementById('titfortatFillDisplay');
+	// Preset Group 5: Capsule
+	const capsuleProtectionSlider = document.getElementById('capsuleProtectionSlider');
+	const capsuleProtectionDisplay = document.getElementById('capsuleProtectionDisplay');
+	const capsuleTimeSlider = document.getElementById('capsuleTimeSlider');
+	const capsuleTimeDisplay = document.getElementById('capsuleTimeDisplay');
+	const capsuleFillSlider = document.getElementById('capsuleFillSlider');
+	const capsuleFillDisplay = document.getElementById('capsuleFillDisplay');
+	const capsuleAttPreyRatioSlider = document.getElementById('capsuleAttPreyRatioSlider');
+	const capsuleRatioDisplay = document.getElementById('capsuleRatioDisplay');
+	// Preset Group 6: Predation
+	const predationLysesPerRepSlider = document.getElementById('predationLysesPerRepSlider');
+	const predationLysesPerRepDisplay = document.getElementById('predationLysesPerRepDisplay');
+	const predationFillSlider = document.getElementById('predationFillSlider');
+	const predationFillDisplay = document.getElementById('predationFillDisplay');
+	const predationAttPreyRatioSlider = document.getElementById('predationAttPreyRatioSlider');
+	const predationRatioDisplay = document.getElementById('predationRatioDisplay');
+	// Preset Group 7: Movement
+	const movementPreyAiProdSlider = document.getElementById('movementPreyAiProdSlider');
+	const movementPreyAiProdDisplay = document.getElementById('movementPreyAiProdDisplay');
+	const movementAttMoveProbSlider = document.getElementById('movementAttMoveProbSlider');
+	const movementAttMoveProbDisplay = document.getElementById('movementAttMoveProbDisplay');
+	const movementAttMoveDirSlider = document.getElementById('movementAttMoveDirSlider');
+	const movementAttMoveDirDisplay = document.getElementById('movementAttMoveDirDisplay');
+	const movementArenaRadiusSlider = document.getElementById('movementArenaRadiusSlider');
+	const movementArenaRadiusDisplay = document.getElementById('movementArenaRadiusDisplay');
+	const movementFillSlider = document.getElementById('movementFillSlider');
+	const movementFillDisplay = document.getElementById('movementFillDisplay');
+	const movementAttPreyRatioSlider = document.getElementById('movementAttPreyRatioSlider');
+	const movementRatioDisplay = document.getElementById('movementRatioDisplay');
+	// Preset Group 8: Quorum Sensing
+	const attackerQSProdSlider = document.getElementById('attackerQSProdSlider');
+	const attackerQSProdDisplay = document.getElementById('attackerQSProdDisplay');
+	const attackerQSKSlider = document.getElementById('attackerQSKSlider');
+	const attackerQSKDisplay = document.getElementById('attackerQSKDisplay');
+	const attackerQSNSlider = document.getElementById('attackerQSNSlider');
+	const attackerQSNDisplay = document.getElementById('attackerQSNDisplay');
+	const preyQSProdSlider = document.getElementById('preyQSProdSlider');
+	const preyQSProdDisplay = document.getElementById('preyQSProdDisplay');
+	const preyQSKSlider = document.getElementById('preyQSKSlider');
+	const preyQSKDisplay = document.getElementById('preyQSKDisplay');
+	const preyQSNSlider = document.getElementById('preyQSNSlider');
+	const preyQSNDisplay = document.getElementById('preyQSNDisplay');
+	const attackerQSArenaFillSlider = document.getElementById('attackerQSArenaFillSlider');
+	const attackerQSArenaFillDisplay = document.getElementById('attackerQSArenaFillDisplay');
+	const attackerQSAttPreyRatioSlider = document.getElementById('attackerQSAttPreyRatioSlider');
+	const attackerQSRatioDisplay = document.getElementById('attackerQSRatioDisplay');
 
+	// Preset Group 9: Battle Royale
+	const brArenaRadiusSlider = document.getElementById('brArenaRadiusSlider');
+	const brArenaRadiusDisplay = document.getElementById('brArenaRadiusDisplay');
+	const brFillSlider = document.getElementById('brFillSlider');
+	const brFillDisplay = document.getElementById('brFillDisplay');
+	const brAttackerPercentSlider = document.getElementById('brAttackerPercentSlider');
+	const brAttackerPercentDisplay = document.getElementById('brAttackerPercentDisplay');
+	const brAttackerPercentMaxDisplay = document.getElementById('brAttackerPercentMaxDisplay');
+	const brDefenderPercentSlider = document.getElementById('brDefenderPercentSlider');
+	const brDefenderPercentDisplay = document.getElementById('brDefenderPercentDisplay');
+	const brDefenderPercentMaxDisplay = document.getElementById('brDefenderPercentMaxDisplay');
+	const brMixDisplay = document.getElementById('brMixDisplay');
+	// Sliders
+	const brAttMovementSlider = document.getElementById('brAttMovementSlider');
+	const brAttMovementDisplay = document.getElementById('brAttMovementDisplay');
+	const brDefSelectivitySlider = document.getElementById('brDefSelectivitySlider');
+	const brDefSelectivityDisplay = document.getElementById('brDefSelectivityDisplay');
+	// Checkboxes
+	const brAttQsCheckbox = document.getElementById('brAttQsCheckbox');
+	const brAttKinCheckbox = document.getElementById('brAttKinCheckbox');
+	const brAttContactCheckbox = document.getElementById('brAttContactCheckbox');
+	const brAttPredationCheckbox = document.getElementById('brAttPredationCheckbox');
+	const brPreyMovementCheckbox = document.getElementById('brPreyMovementCheckbox');
+	const brPreyAiCheckbox = document.getElementById('brPreyAiCheckbox');
+	const brPreyCapsuleCheckbox = document.getElementById('brPreyCapsuleCheckbox');
+	const brDefMovementCheckbox = document.getElementById('brDefMovementCheckbox');
+	const brDefPredationCheckbox = document.getElementById('brDefPredationCheckbox');
+	
 	const parameterToElementIdMap = {
 		"Arena_Radius": "arenaGridRadiusInput",
 		"Simulation_Duration_Minutes": "totalSimulationMinutesInput",
@@ -271,44 +346,44 @@
 		"Image_Buffer_Size_Limit_MB": "imageBufferSizeLimitInput",
         "History_Buffer_Size_Limit_MB": "historyBufferSizeLimitInput",
 	    "Arena_State_Buffer_Size_Limit_MB": "arenaStateBufferSizeLimitInput",
-		"Predator_Initial_Count": "initialPredatorsInput",
-		"Predator_Replication_Mean_min": "predatorReplicationMeanInput",
-		"Predator_Replication_Range_min": "predatorReplicationRangeInput",
-		"Predator_T6SS_Fire_Cooldown_Min_min": "t6ssFireCooldownMinInput",
-		"Predator_T6SS_Fire_Cooldown_Max_min": "t6ssFireCooldownMaxInput",
-		"Predator_T6SS_Precision_Percent": "predatorPrecisionInput",
-		"Predator_T6SS_Contact_Sensing_Bias_Percent": "predatorContactSensingBiasInput",
-		"Predator_T6SS_Kin_Exclusion_Percent": "predatorKinExclusionInput",
-		"Predator_T6SS_Kin_Exclusion_Penalty_min": "predatorKinExclusionPenaltyInput",
-		"Predator_T6SS_NL_Units_per_Hit": "predNonLyticUnitsPerHitInput",
-		"Predator_T6SS_NL_Delivery_Chance_Percent": "predNonLyticDeliveryChanceInput",
-		"Predator_T6SS_L_Units_per_Hit": "predLyticUnitsPerHitInput",
-		"Predator_T6SS_L_Delivery_Chance_Percent": "predLyticDeliveryChanceInput",
-		"Predator_Sensitivity_NL_Units_to_Die": "predNonLyticUnitsToDieInput",
-		"Predator_Sensitivity_L_Units_to_Lyse": "predLyticUnitsToLyseInput",
-		"Predator_Sensitivity_Base_Lysis_Delay_min": "predBaseLysisDelayInput",
-		"Predator_Movement_Cooldown_Min_min": "predatorMoveCooldownMinInput",
-		"Predator_Movement_Cooldown_Max_min": "predatorMoveCooldownMaxInput",
-		"Predator_Movement_Probability_Percent": "predatorMoveProbabilityInput",
-		"Predator_Movement_Directionality_Percent": "predatorMoveDirectionalityInput",
-		"Predator_Movement_Prey_AI_Attraction_Percent": "predatorMovePreyAiAttractionInput",
-		"Predator_Movement_Prey_AI_Attraction_Threshold": "predatorMovePreyAiAttractionThresholdInput", // New
-		"Predator_QS_Production_Rate_per_min": "predatorQSProductionRateInput",
-		"Predator_QS_Degradation_Rate_Percent_per_min": "predatorQSDegradationRateInput",
-		"Predator_QS_Diffusion_Rate": "predatorQSDiffusionRateInput",
-		"Predator_QS_Activation_Midpoint_K": "predatorQSMidpointInput",
-		"Predator_QS_Cooperativity_n": "predatorQSCooperativityInput",
-        "Predator_Replication_Reward_Lyses_per_Reward": "predatorLysesPerReplicationInput",
-        "Predator_Replication_Reward_Mean_min": "predatorReplicationRewardMeanInput",
-        "Predator_Replication_Reward_Range_min": "predatorReplicationRewardRangeInput",
+		"Attacker_Initial_Count": "initialAttackersInput",
+		"Attacker_Replication_Mean_min": "attackerReplicationMeanInput",
+		"Attacker_Replication_Range_min": "attackerReplicationRangeInput",
+		"Attacker_T6SS_Fire_Cooldown_Min_min": "t6ssFireCooldownMinInput",
+		"Attacker_T6SS_Fire_Cooldown_Max_min": "t6ssFireCooldownMaxInput",
+		"Attacker_T6SS_Precision_Percent": "attackerPrecisionInput",
+		"Attacker_T6SS_Contact_Sensing_Bias_Percent": "attackerContactSensingBiasInput",
+		"Attacker_T6SS_Kin_Exclusion_Percent": "attackerKinExclusionInput",
+		"Attacker_T6SS_Kin_Exclusion_Penalty_min": "attackerKinExclusionPenaltyInput",
+		"Attacker_T6SS_NL_Units_per_Hit": "attNonLyticUnitsPerHitInput",
+		"Attacker_T6SS_NL_Delivery_Chance_Percent": "attNonLyticDeliveryChanceInput",
+		"Attacker_T6SS_L_Units_per_Hit": "attLyticUnitsPerHitInput",
+		"Attacker_T6SS_L_Delivery_Chance_Percent": "attLyticDeliveryChanceInput",
+		"Attacker_Sensitivity_NL_Units_to_Die": "attNonLyticUnitsToDieInput",
+		"Attacker_Sensitivity_L_Units_to_Lyse": "attLyticUnitsToLyseInput",
+		"Attacker_Sensitivity_Base_Lysis_Delay_min": "attBaseLysisDelayInput",
+		"Attacker_Movement_Cooldown_Min_min": "attackerMoveCooldownMinInput",
+		"Attacker_Movement_Cooldown_Max_min": "attackerMoveCooldownMaxInput",
+		"Attacker_Movement_Probability_Percent": "attackerMoveProbabilityInput",
+		"Attacker_Movement_Directionality_Percent": "attackerMoveDirectionalityInput",
+		"Attacker_Movement_Prey_AI_Attraction_Percent": "attackerMovePreyAiAttractionInput",
+		"Attacker_Movement_Prey_AI_Attraction_Threshold": "attackerMovePreyAiAttractionThresholdInput",
+		"Attacker_QS_Production_Rate_per_min": "attackerQSProductionRateInput",
+		"Attacker_QS_Degradation_Rate_Percent_per_min": "attackerQSDegradationRateInput",
+		"Attacker_QS_Diffusion_Rate": "attackerQSDiffusionRateInput",
+		"Attacker_QS_Activation_Midpoint_K": "attackerQSMidpointInput",
+		"Attacker_QS_Cooperativity_n": "attackerQSCooperativityInput",
+        "Attacker_Replication_Reward_Lyses_per_Reward": "attackerLysesPerReplicationInput",
+        "Attacker_Replication_Reward_Mean_min": "attackerReplicationRewardMeanInput",
+        "Attacker_Replication_Reward_Range_min": "attackerReplicationRewardRangeInput",
 		"Prey_Initial_Count": "initialPreyInput",
 		"Prey_Replication_Mean_min": "preyReplicationMeanInput",
 		"Prey_Replication_Range_min": "preyReplicationRangeInput",
-		"Prey_Sensitivity_vs_Pred_NL_Units_to_Die": "preyNonLyticUnitsToDiePredInput",
-		"Prey_Sensitivity_vs_Pred_L_Units_to_Lyse": "preyLyticUnitsToLysePredInput",
-		"Prey_Sensitivity_vs_Pred_Base_Lysis_Delay_min": "preyBaseLysisDelayPredInput",
-		"Prey_Resistance_vs_Pred_NL_Percent": "preyNonLyticResistancePredInput",
-		"Prey_Resistance_vs_Pred_L_Percent": "preyLyticResistancePredInput",
+		"Prey_Sensitivity_vs_Att_NL_Units_to_Die": "preyNonLyticUnitsToDieAttInput",
+		"Prey_Sensitivity_vs_Att_L_Units_to_Lyse": "preyLyticUnitsToLyseAttInput",
+		"Prey_Sensitivity_vs_Att_Base_Lysis_Delay_min": "preyBaseLysisDelayAttInput",
+		"Prey_Resistance_vs_Att_NL_Percent": "preyNonLyticResistanceAttInput",
+		"Prey_Resistance_vs_Att_L_Percent": "preyLyticResistanceAttInput",
 		"Prey_Sensitivity_vs_Def_NL_Units_to_Die": "preyNonLyticUnitsToDieDefInput",
 		"Prey_Sensitivity_vs_Def_L_Units_to_Lyse": "preyLyticUnitsToLyseDefInput",
 		"Prey_Sensitivity_vs_Def_Base_Lysis_Delay_min": "preyBaseLysisDelayDefInput",
@@ -340,11 +415,11 @@
 		"Defender_T6SS_NL_Delivery_Chance_Percent": "defNonLyticDeliveryChanceInput",
 		"Defender_T6SS_L_Units_per_Hit": "defLyticUnitsPerHitInput",
 		"Defender_T6SS_L_Delivery_Chance_Percent": "defLyticDeliveryChanceInput",
-		"Defender_Sensitivity_vs_Pred_NL_Units_to_Die": "defNonLyticUnitsToDieInput",
-		"Defender_Sensitivity_vs_Pred_L_Units_to_Lyse": "defLyticUnitsToLyseInput",
-		"Defender_Sensitivity_vs_Pred_Base_Lysis_Delay_min": "defBaseLysisDelayInput",
-		"Defender_Resistance_vs_Pred_NL_Percent": "defNonLyticResistanceInput",
-		"Defender_Resistance_vs_Pred_L_Percent": "defLyticResistanceInput",
+		"Defender_Sensitivity_vs_Att_NL_Units_to_Die": "defNonLyticUnitsToDieInput",
+		"Defender_Sensitivity_vs_Att_L_Units_to_Lyse": "defLyticUnitsToLyseInput",
+		"Defender_Sensitivity_vs_Att_Base_Lysis_Delay_min": "defBaseLysisDelayInput",
+		"Defender_Resistance_vs_Att_NL_Percent": "defNonLyticResistanceInput",
+		"Defender_Resistance_vs_Att_L_Percent": "defLyticResistanceInput",
 		"Defender_Movement_Cooldown_Min_min": "defenderMoveCooldownMinInput",
 		"Defender_Movement_Cooldown_Max_min": "defenderMoveCooldownMaxInput",
 		"Defender_Movement_Probability_Percent": "defenderMoveProbabilityInput",
@@ -358,10 +433,207 @@
 		// Add any other parameters you export/import here
 	};
 
+	// This is the single source of truth for all simulation parameters.
+	// It is applied on page load to set the default state.
+	const SIMULATION_DEFAULTS = {
+		"Arena_Radius": 20,
+		"Simulation_Duration_Minutes": 600,
+		"Simulation_Step_Delay_ms": 50,
+		"Simulation_Render_Rate_every_N_steps": 1,
+		"Arena_State_Export_Enabled": true,
+		"Full_State_History_Enabled": true,
+		"Image_Export_Enabled": false,
+		"Image_Export_Size_px": 1000,
+		"Image_Buffer_Size_Limit_MB": 500,
+		"History_Buffer_Size_Limit_MB": 1500,
+		"Arena_State_Buffer_Size_Limit_MB": 200,
+
+		"Attacker_Initial_Count": 30,
+		"Attacker_Replication_Mean_min": 30,
+		"Attacker_Replication_Range_min": 5,
+		"Attacker_T6SS_Fire_Cooldown_Min_min": 3,
+		"Attacker_T6SS_Fire_Cooldown_Max_min": 5,
+		"Attacker_T6SS_Precision_Percent": 25,
+		"Attacker_T6SS_Contact_Sensing_Bias_Percent": 0,
+		"Attacker_T6SS_Kin_Exclusion_Percent": 0,
+		"Attacker_T6SS_Kin_Exclusion_Penalty_min": -1,
+		"Attacker_T6SS_NL_Units_per_Hit": 3,
+		"Attacker_T6SS_NL_Delivery_Chance_Percent": 90,
+		"Attacker_T6SS_L_Units_per_Hit": 3,
+		"Attacker_T6SS_L_Delivery_Chance_Percent": 90,
+		"Attacker_Sensitivity_NL_Units_to_Die": 5,
+		"Attacker_Sensitivity_L_Units_to_Lyse": 5,
+		"Attacker_Sensitivity_Base_Lysis_Delay_min": 20,
+		"Attacker_Movement_Cooldown_Min_min": 5,
+		"Attacker_Movement_Cooldown_Max_min": 10,
+		"Attacker_Movement_Probability_Percent": 0,
+		"Attacker_Movement_Directionality_Percent": 100,
+		"Attacker_Movement_Prey_AI_Attraction_Percent": 100,
+		"Attacker_Movement_Prey_AI_Attraction_Threshold": 5,
+		"Attacker_QS_Production_Rate_per_min": 0,
+		"Attacker_QS_Degradation_Rate_Percent_per_min": 2,
+		"Attacker_QS_Diffusion_Rate": 0.05,
+		"Attacker_QS_Activation_Midpoint_K": -1,
+		"Attacker_QS_Cooperativity_n": 4,
+		"Attacker_Replication_Reward_Lyses_per_Reward": 0,
+		"Attacker_Replication_Reward_Mean_min": 30,
+		"Attacker_Replication_Reward_Range_min": 5,
+
+		"Prey_Initial_Count": 20,
+		"Prey_Replication_Mean_min": 20,
+		"Prey_Replication_Range_min": 5,
+		"Prey_Sensitivity_vs_Att_NL_Units_to_Die": 3,
+		"Prey_Sensitivity_vs_Att_L_Units_to_Lyse": 5,
+		"Prey_Sensitivity_vs_Att_Base_Lysis_Delay_min": 20,
+		"Prey_Resistance_vs_Att_NL_Percent": 10,
+		"Prey_Resistance_vs_Att_L_Percent": 10,
+		"Prey_Sensitivity_vs_Def_NL_Units_to_Die": 3,
+		"Prey_Sensitivity_vs_Def_L_Units_to_Lyse": 5,
+		"Prey_Sensitivity_vs_Def_Base_Lysis_Delay_min": 20,
+		"Prey_Resistance_vs_Def_NL_Percent": 10,
+		"Prey_Resistance_vs_Def_L_Percent": 10,
+		"Prey_LacZ_Units_per_Lysis": 5,
+		"Prey_Movement_Cooldown_Min_min": 5,
+		"Prey_Movement_Cooldown_Max_min": 10,
+		"Prey_Movement_Probability_Percent": 0,
+		"Prey_Movement_Directionality_Percent": 100,
+		"Prey_QS_Production_Rate_per_min": 0,
+		"Prey_QS_Degradation_Rate_Percent_per_min": 2,
+		"Prey_QS_Diffusion_Rate": 0.05,
+		"Prey_Capsule_System_Enabled": false,
+		"Prey_Capsule_Max_Protection_Percent": 100,
+		"Prey_Capsule_Derepression_Midpoint_K": -1,
+		"Prey_Capsule_Cooperativity_n": 4,
+		"Prey_Capsule_Cooldown_Min_min": 10,
+		"Prey_Capsule_Cooldown_Max_min": 20,
+
+		"Defender_Initial_Count": 10,
+		"Defender_Replication_Mean_min": 25,
+		"Defender_Replication_Range_min": 5,
+		"Defender_Replication_Reward_Lyses_per_Reward": 0,
+		"Defender_Replication_Reward_Mean_min": 25,
+		"Defender_Replication_Reward_Range_min": 5,
+		"Defender_Retaliation_Sense_Chance_Percent": 50,
+		"Defender_Retaliation_Max_Shots": 7,
+		"Defender_Random_Fire_Cooldown_Min_min": 25,
+		"Defender_Random_Fire_Cooldown_Max_min": 35,
+		"Defender_Random_Fire_Chance_Percent": 0.1,
+		"Defender_T6SS_NL_Units_per_Hit": 2,
+		"Defender_T6SS_NL_Delivery_Chance_Percent": 80,
+		"Defender_T6SS_L_Units_per_Hit": 2,
+		"Defender_T6SS_L_Delivery_Chance_Percent": 80,
+		"Defender_Sensitivity_vs_Att_NL_Units_to_Die": 10,
+		"Defender_Sensitivity_vs_Att_L_Units_to_Lyse": 10,
+		"Defender_Sensitivity_vs_Att_Base_Lysis_Delay_min": 40,
+		"Defender_Resistance_vs_Att_NL_Percent": 50,
+		"Defender_Resistance_vs_Att_L_Percent": 50,
+		"Defender_Movement_Cooldown_Min_min": 5,
+		"Defender_Movement_Cooldown_Max_min": 10,
+		"Defender_Movement_Probability_Percent": 0,
+		"Defender_Movement_Directionality_Percent": 100,
+
+		"CPRG_Initial_Substrate_Units": 1000000,
+		"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 5,
+		"CPRG_LacZ_Km_Units": 1000000
+	};
+
+	// This table lists *only* the parameters that *differ* from the baseline.
+	// More settings in functions like "applyBattleRoyaleSettings()"
+	const PRESET_OVERRIDES = {
+		'density': {
+			"Defender_Initial_Count": 0
+		},
+		'sensitivity': {
+			"Defender_Initial_Count": 0
+		},
+		'contactkin': {
+			"Defender_Initial_Count": 0
+		},
+		'titfortat': {
+			"Prey_Sensitivity_vs_Att_NL_Units_to_Die": 50,
+			"Prey_Sensitivity_vs_Att_L_Units_to_Lyse": 50,
+			"Prey_Resistance_vs_Att_NL_Percent": 90,
+			"Prey_Resistance_vs_Att_L_Percent": 90,
+			"Prey_Sensitivity_vs_Def_NL_Units_to_Die": 3,
+			"Prey_Sensitivity_vs_Def_L_Units_to_Lyse": 3,
+			"Prey_Resistance_vs_Def_NL_Percent": 0,
+			"Prey_Resistance_vs_Def_L_Percent": 0,
+			"Attacker_Sensitivity_NL_Units_to_Die": 3,
+			"Attacker_Sensitivity_L_Units_to_Lyse": 3,
+			"Defender_T6SS_NL_Units_per_Hit": 2,
+			"Defender_T6SS_L_Units_per_Hit": 1,
+			"Defender_T6SS_NL_Delivery_Chance_Percent": 75,
+			"Defender_T6SS_L_Delivery_Chance_Percent": 75,
+			"Defender_Retaliation_Max_Shots": 5,
+			"Defender_Random_Fire_Cooldown_Min_min": 8,
+			"Defender_Random_Fire_Cooldown_Max_min": 12,
+			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
+
+		},
+		'capsule': {
+			"Defender_Initial_Count": 0,
+			"Prey_Capsule_System_Enabled": true,
+			"Prey_Capsule_Derepression_Midpoint_K": -1,
+			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
+
+		},
+		'predation': {
+			"Defender_Initial_Count": 0,
+			"Attacker_Replication_Mean_min": -1,
+			"Attacker_T6SS_Precision_Percent": 100,
+			"Attacker_T6SS_Contact_Sensing_Bias_Percent": 100,
+			"Attacker_T6SS_Kin_Exclusion_Percent": 100,
+			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
+
+		},
+		'movement': {
+			"Arena_Radius": 50,
+			"Simulation_Duration_Minutes": 3000,
+			"History_Buffer_Size_Limit_MB": 1500,
+			"Defender_Initial_Count": 0,
+			"Attacker_Replication_Mean_min": 300,
+			"Attacker_Replication_Range_min": 50,
+			"Attacker_Movement_Cooldown_Min_min": 2,
+			"Attacker_Movement_Cooldown_Max_min": 4,
+			"Attacker_T6SS_Precision_Percent": 100,
+			"Attacker_T6SS_Contact_Sensing_Bias_Percent": 100,
+			"Attacker_T6SS_Kin_Exclusion_Percent": 100,
+			"Attacker_Replication_Reward_Lyses_per_Reward": 3,
+			"Prey_Replication_Mean_min": 30,
+			"Prey_Replication_Range_min": 5,
+			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
+
+		},
+		'qs': {
+			"Simulation_Duration_Minutes": 1200,
+			"Defender_Initial_Count": 0,
+			"Prey_Capsule_System_Enabled": true,
+			"Prey_Capsule_Max_Protection_Percent": 100,
+			"Attacker_T6SS_Precision_Percent": 100,
+			"Attacker_T6SS_Contact_Sensing_Bias_Percent": 100,
+			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
+		},
+		'battleroyale': {
+			"Simulation_Duration_Minutes": 3000,
+			"History_Buffer_Size_Limit_MB": 2000,
+			"Arena_State_Export_Enabled": false,
+			"Full_State_History_Enabled": true,
+			"Attacker_T6SS_Fire_Cooldown_Min_min": 1,
+			"Attacker_T6SS_Fire_Cooldown_Max_min": 3,
+			"Attacker_T6SS_Precision_Percent": 100,
+			"Prey_Replication_Mean_min": 60,
+			"Prey_Replication_Range_min": 10,
+			"Prey_Capsule_Max_Protection_Percent": 75,
+			"Defender_Resistance_vs_Att_NL_Percent": 80,
+			"Defender_Resistance_vs_Att_L_Percent": 80,
+			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
+		}
+	};
+
 	// This schema is CRUCIAL for saving and loading space-efficiently.
 	// --- Mappings to convert repetitive strings to integers for space efficiency ---
-	const TYPE_TO_INT = { 'predator': 0, 'prey': 1, 'defender': 2, 'barrier': 3 };
-	const INT_TO_TYPE = ['predator', 'prey', 'defender', 'barrier'];
+	const TYPE_TO_INT = { 'attacker': 0, 'prey': 1, 'defender': 2, 'barrier': 3 };
+	const INT_TO_TYPE = ['attacker', 'prey', 'defender', 'barrier'];
 
 	// ---  The schema is updated to store the numerical part of the ID ---
 	const CELL_SCHEMA = [
@@ -369,7 +641,7 @@
 		'movementCooldown', 'replicationCooldown',
 		'accumulatedNonLyticToxins', 'accumulatedLyticToxins',
 		'isDead', 'isLysing', 'lysisTimer', 'isEffectivelyGone',
-		// Predator-specific
+		// Attacker-specific
 		't6ssFireCooldownTimer',
 		// Defender-specific
 		'sensedAttackFromKey', 'isRetaliating', 'retaliationTargetKey',
@@ -408,161 +680,76 @@
 			group: 'density', // Default active group
 			// Density Preset
 			densityFillPercent: 10,
-			densityPredPreyRatioIndex: 4, // 1:1
+			densityAttPreyRatioIndex: 4, // 1:1
 			// Sensitivity Preset
 			sensitivityType: 'both_sensitive',
 			sensitivityFillPercent: 10,
-			sensitivityPredPreyRatioIndex: 4, // 1:1
+			sensitivityAttPreyRatioIndex: 4, // 1:1
 			// Contact & Kin Exclusion Preset
 			contactKinFillPercent: 20,
-			contactKinPredPreyRatioIndex: 4, // 1:1
+			contactKinAttPreyRatioIndex: 4, // 1:1
 			contactKinContactSensingBias: 50, // Default 50%
 			contactKinKinExclusion: 50,       // Default 50%
 			// Tit-for-Tat Preset
 			titfortatLevel: 'medium',
 			titfortatFillPercent: 50,
+			// Preset 5: Capsule
+			capsuleProtectionPercent: 100,
+			capsuleLayerTime: 5,
+			capsuleFillPercent: 10,
+			capsuleAttPreyRatioIndex: 4, // 1:1
+			// Preset 6: Predation
+			predationEffectorType: 'both_sensitive',
+			predationLysesPerRep: 3,
+			predationFillPercent: 10,
+			predationAttPreyRatioIndex: 4, // 1:1
+			// Preset 7: Movement
+			movementPredation: 'on',
+			movementPreyAiProd: 100,
+			movementAttMoveProb: 50,
+			movementAttMoveDir: 100,
+			movementArenaRadius: 50,
+			movementFillPercent: 5,
+			movementAttPreyRatioIndex: 6, // 1:1
+			// Preset 8: Quorum Sensing
+			attackerQSProd: 20,
+			attackerQSK: 1000,
+			attackerQSN: 4,
+			attackerQSFillPercent: 10,
+			attackerQSAttPreyRatioIndex: 4,
+			preyQSProd: 30,
+			preyQSK: 3000,
+			preyQSN: 4,
+			// Preset 9: Battle Royale
+			brArenaRadius: 50,
+			brFillPercent: 10,
+			brAttackerPercent: 10,
+			brDefenderPercent: 10,
+			brAttMovement: 2, // 0=No, 1=Yes, 2=AI
+			brAttQs: false,
+			brAttKin: true,
+			brAttContact: true,
+			brAttPredation: true,
+			brPreyMovement: false,
+			brPreyAi: true,
+			brPreyCapsule: true,
+			brDefMovement: true,
+			brDefSelectivity: 2, // 0=Low, 1=Med, 2=High
+			brDefPredation: true,
 		},
-		config: {
-			hexGridActualRadius: 15, 
-			hexRadius: 5, 
-			predator: {
-				initialCount: 30,
-				replication: { mean: 30, range: 5 },
-                replicationReward: { lysesPerReward: 0, mean: 30, range: 5 },
-				movement: {
-					cooldownMin: 5,
-					cooldownMax: 10,
-					probability: 0,
-					directionality: 1,
-					preyAiAttraction: 1,
-					preyAiAttractionThreshold: 5
-				},
-				qs: {
-						productionRate: 0,
-						degradationRate: 0.02,
-						diffusionRate: 0.05,
-						midpoint: -1,
-						cooperativity: 4
-					},
-				t6ss: {
-					fireCooldownMin: 3,
-					fireCooldownMax: 5,
-					precision: 0.25,
-					contactSensingBias: 0.0,
-					kinExclusion: 0.0,
-					kinExclusionPenalty: -1,
-					nonLyticUnitsPerHit: 3,
-					nonLyticDeliveryChance: 0.9,
-					lyticUnitsPerHit: 3,
-					lyticDeliveryChance: 0.9,
-				},
-				sensitivity: {
-					nonLyticUnitsToDie: 5,
-					lyticUnitsToLyse: 5,
-					baseLysisDelay: 20,
-				}
-			},
-			prey: {
-				initialCount: 20,
-				replication: { mean: 20, range: 5 },
-				movement: {
-					cooldownMin: 5,
-					cooldownMax: 10,
-					probability: 0,
-					directionality: 1
-				},
-			    qs: {
-					productionRate: 0,
-					degradationRate: 0.02,
-					diffusionRate: 0.05
-			    },
-				sensitivityToPredator: {
-					nonLyticUnitsToDie: 3,
-					lyticUnitsToLyse: 5,
-					baseLysisDelay: 20,
-					nonLyticResistanceChance: 0.10,
-					lyticResistanceChance: 0.10,
-				},
-				sensitivityToDefender: {
-					nonLyticUnitsToDie: 3,
-					lyticUnitsToLyse: 5,
-					baseLysisDelay: 20,
-					nonLyticResistanceChance: 0.10,
-					lyticResistanceChance: 0.10,
-				},
-				lacZPerPrey: 5,
-				capsule: {
-					isEnabled: false,
-					maxProtection: 100,
-                    midpoint: -1,
-                    cooperativity: 4,
-                    cooldownMin: 10,
-                    cooldownMax: 20
-				}
-			},
-			defender: {
-				initialCount: 10,
-				replication: { mean: 25, range: 5 },
-                replicationReward: { lysesPerReward: 0, mean: 25, range: 5 },
-				movement: {
-					cooldownMin: 5,
-					cooldownMax: 10,
-					probability: 0,
-					directionality: 1
-				},
-				retaliation: {
-					senseChance: 0.50,
-					maxRetaliations: 7,
-				},
-				randomFiring: {
-					cooldownMin: 25,
-					cooldownMax: 35,
-					chance: 0.001
-				},
-				t6ss: {
-					nonLyticUnitsPerHit: 2,
-					nonLyticDeliveryChance: 0.8,
-					lyticUnitsPerHit: 2,
-					lyticDeliveryChance: 0.8,
-				},
-				sensitivity: {
-					nonLyticUnitsToDie: 10,
-					lyticUnitsToLyse: 10,
-					baseLysisDelay: 40,
-					nonLyticResistanceChance: 0.50,
-					lyticResistanceChance: 0.50,
-				}
-			},
-			cprg: {
-				initialSubstrate: 1000000,
-				k_cat: 5,
-				Km: 1000000,
-			},
-			simulationControl: {
-				totalSimulationMinutes: 600,
-				simulationSpeedMs: 50,
-				renderRate: 1,
-			},
-            exports: {
-                sizeThresholdForZip: 500 // Default 500 MB
-            },
-            history: {
-                sizeLimitMB: 500 // Default 500 MB
-            }
-
-		},
+		config: {}, // will be populated from defaults
 		offsetX: 0,
 		offsetY: 0,
 		activeFiringsThisStep: new Map(),
-		predatorAiGrid: new Map(),
+		attackerAiGrid: new Map(),
 		preyAiGrid: new Map(),
 		lastHoveredHexKey: null, // To store the 'q,r' key of the last valid hex hovered
 		firingsThisStep: 0,
-		killedThisStep: { predator: 0, prey: 0, defender: 0 },
-		lysedThisStep: { predator: 0, prey: 0, defender: 0 },
+		killedThisStep: { attacker: 0, prey: 0, defender: 0 },
+		lysedThisStep: { attacker: 0, prey: 0, defender: 0 },
 		cumulativeFirings: 0,
-		cumulativeKills: { predator: 0, prey: 0, defender: 0 },
-		cumulativeLyses: { predator: 0, prey: 0, defender: 0 },
+		cumulativeKills: { attacker: 0, prey: 0, defender: 0 },
+		cumulativeLyses: { attacker: 0, prey: 0, defender: 0 },
 		totalCPRGConverted: 0,
 		remainingCPRGSubstrate: 0,
 		totalActiveLacZReleased: 0,
@@ -585,6 +772,21 @@
 	};
 
 	// --- Utility Functions ---
+
+	function applySettingsObject(settingsObject) {
+		for (const [paramName, value] of Object.entries(settingsObject)) {
+			const elementId = parameterToElementIdMap[paramName];
+			if (elementId) {
+				// Use "true" to dispatch a change event, just in case
+				updateInputElement(elementId, value, true);
+			} else {
+				// We don't warn for Simulation_Seed, it's handled separately
+				if (paramName !== "Simulation_Seed") {
+					console.warn(`Preset Warning: Parameter "${paramName}" not found in map.`);
+				}
+			}
+		}
+	}
 
 	function generateTimestamp() {
 		const now = new Date();
@@ -750,7 +952,7 @@
 					let cellType = null;
 					let action = 'place';
 
-					if (typeChar === 'A') cellType = 'predator';
+					if (typeChar === 'A') cellType = 'attacker';
 					else if (typeChar === 'P') cellType = 'prey';
 					else if (typeChar === 'D') cellType = 'defender';
 					else if (typeChar === 'B') cellType = 'barrier';
@@ -814,7 +1016,7 @@
 			this.accumulatedNonLyticToxins = 0;
 			this.accumulatedLyticToxins = 0;
 
-			// Predator-specific properties (defaults for others)
+			// Attacker-specific properties (defaults for others)
 			this.t6ssFireCooldownTimer = 0;
 
 			// Defender-specific properties (defaults for others)
@@ -836,7 +1038,7 @@
 				// No other overrides are needed because the defaults are correct for a barrier.
 			
 			} else {
-				// This 'else' block handles ALL biological cells ('predator', 'prey', 'defender').
+				// This 'else' block handles ALL biological cells ('attacker', 'prey', 'defender').
 				
 				// 3. This is the fix: Only run RNG-dependent code for NEW cells.
 				if (!isForRehydration) {
@@ -849,7 +1051,7 @@
 					this.replicationCooldown = getRandomIntInRange(0, this.replicationCooldown);
 
 					// Set initial random T6SS cooldowns for attackers
-					if (type === 'predator') {
+					if (type === 'attacker') {
 						this.resetT6SSFireCooldown(true);
 					}
 					if (type === 'defender') {
@@ -863,7 +1065,7 @@
 			if (this.type === 'barrier') return Infinity;
 
 			let rateConfig;
-			if (this.type === 'predator') rateConfig = simState.config.predator.replication;
+			if (this.type === 'attacker') rateConfig = simState.config.attacker.replication;
 			else if (this.type === 'prey') rateConfig = simState.config.prey.replication;
 			else if (this.type === 'defender') rateConfig = simState.config.defender.replication;
 
@@ -882,7 +1084,7 @@
 		}
 		
 		checkAndApplyReplicationReward() {
-			if (this.type !== 'predator' && this.type !== 'defender') return;
+			if (this.type !== 'attacker' && this.type !== 'defender') return;
 
 			const rewardConfig = simState.config[this.type].replicationReward;
 			// Use 0 to disable the feature, as requested.
@@ -931,7 +1133,7 @@
 			if (this.type === 'barrier') return Infinity;
 
 			let moveConfig;
-			if (this.type === 'predator') moveConfig = simState.config.predator.movement;
+			if (this.type === 'attacker') moveConfig = simState.config.attacker.movement;
 			else if (this.type === 'prey') moveConfig = simState.config.prey.movement;
 			else if (this.type === 'defender') moveConfig = simState.config.defender.movement;
 
@@ -946,9 +1148,9 @@
 		}
 
 		resetT6SSFireCooldown(isInitial = false) {
-			if (this.type !== 'predator') return;
-			const minCD = simState.config.predator.t6ss.fireCooldownMin;
-			const maxCD = simState.config.predator.t6ss.fireCooldownMax;
+			if (this.type !== 'attacker') return;
+			const minCD = simState.config.attacker.t6ss.fireCooldownMin;
+			const maxCD = simState.config.attacker.t6ss.fireCooldownMax;
 			let effectiveMax = getRandomIntInRange(minCD, maxCD);
 			if (isInitial) {
 				 this.t6ssFireCooldownTimer = getRandomIntInRange(0, effectiveMax); 
@@ -976,7 +1178,7 @@
 
 			if (this.replicationCooldown > 0) this.replicationCooldown--;
 
-			if (this.type === 'predator' && this.t6ssFireCooldownTimer > 0) {
+			if (this.type === 'attacker' && this.t6ssFireCooldownTimer > 0) {
 				this.t6ssFireCooldownTimer--;
 			}
 			if (this.type === 'defender' && this.t6ssRandomFireCooldownTimer > 0) {
@@ -1030,14 +1232,14 @@
 			this.movementCooldown = this.getRandomMoveTime();
 		}
 
-		attemptPredatorT6SSFire(currentCellMap) {
-			if (this.type !== 'predator' || this.t6ssFireCooldownTimer > 0) return null;
+		attemptAttackerT6SSFire(currentCellMap) {
+			if (this.type !== 'attacker' || this.t6ssFireCooldownTimer > 0) return null;
 
 			let chosenDirectionInfo;
 			const neighborInfos = getNeighborInfos(this.q, this.r, currentCellMap);
 			const occupiedNeighborInfos = neighborInfos.filter(n => n.cell && !n.cell.isEffectivelyGone && isWithinHexBounds(n.q, n.r, simState.config.hexGridActualRadius));
 
-			if (rng() < simState.config.predator.t6ss.contactSensingBias && occupiedNeighborInfos.length > 0) {
+			if (rng() < simState.config.attacker.t6ss.contactSensingBias && occupiedNeighborInfos.length > 0) {
 				chosenDirectionInfo = occupiedNeighborInfos[Math.floor(rng() * occupiedNeighborInfos.length)];
 			} else {
 				const randomIndex = Math.floor(rng() * AXIAL_DIRECTIONS.length);
@@ -1048,7 +1250,7 @@
 					directionIndex: randomIndex
 				};
 			}
-			const isPreciseHit = rng() < simState.config.predator.t6ss.precision;
+			const isPreciseHit = rng() < simState.config.attacker.t6ss.precision;
 			return {
 				q: chosenDirectionInfo.q,
 				r: chosenDirectionInfo.r,
@@ -1108,24 +1310,24 @@
 			let sensitivityConfig, resistanceConfig, effectorConfig;
 
 			if (this.type === 'prey') {
-				if (attackerType === 'predator') {
-					sensitivityConfig = simState.config.prey.sensitivityToPredator;
-					resistanceConfig = simState.config.prey.sensitivityToPredator; 
-					effectorConfig = simState.config.predator.t6ss;
+				if (attackerType === 'attacker') {
+					sensitivityConfig = simState.config.prey.sensitivityToAttacker;
+					resistanceConfig = simState.config.prey.sensitivityToAttacker; 
+					effectorConfig = simState.config.attacker.t6ss;
 				} else if (attackerType === 'defender') {
 					sensitivityConfig = simState.config.prey.sensitivityToDefender;
 					resistanceConfig = simState.config.prey.sensitivityToDefender;
 					effectorConfig = simState.config.defender.t6ss;
 				} else return; 
-			} else if (this.type === 'predator' && attackerType === 'defender') {
-				sensitivityConfig = simState.config.predator.sensitivity;
+			} else if (this.type === 'attacker' && attackerType === 'defender') {
+				sensitivityConfig = simState.config.attacker.sensitivity;
 				resistanceConfig = { nonLyticResistanceChance: 0, lyticResistanceChance: 0 };
 				effectorConfig = simState.config.defender.t6ss;
-			} else if (this.type === 'defender' && attackerType === 'predator') {
+			} else if (this.type === 'defender' && attackerType === 'attacker') {
 				if (attackerCell) this.sensedAttackFromKey = `${attackerCell.q},${attackerCell.r}`;
 				sensitivityConfig = simState.config.defender.sensitivity;
 				resistanceConfig = simState.config.defender.sensitivity; 
-				effectorConfig = simState.config.predator.t6ss;
+				effectorConfig = simState.config.attacker.t6ss;
 			} else if (this.type === 'defender' && attackerType === 'defender') {
 				if (attackerCell) this.sensedAttackFromKey = `${attackerCell.q},${attackerCell.r}`;
 				return;
@@ -1177,13 +1379,13 @@
 			// If the cell's state just changed to 'dead', credit the attacker.
 			if (this.isDead && !oldIsDead) {
 				simState.killedThisStep[this.type]++;
-				if (attackerCell && (attackerCell.type === 'predator' || attackerCell.type === 'defender')) {
+				if (attackerCell && (attackerCell.type === 'attacker' || attackerCell.type === 'defender')) {
 					attackerCell.kills = (attackerCell.kills || 0) + 1;
 				}
 			}
 			// If the cell's state just changed to 'lysing', credit the attacker.
 			if (this.isLysing && !oldIsLysing) {
-				if (attackerCell && (attackerCell.type === 'predator' || attackerCell.type === 'defender')) {
+				if (attackerCell && (attackerCell.type === 'attacker' || attackerCell.type === 'defender')) {
 					attackerCell.lyses = (attackerCell.lyses || 0) + 1;
 					// Check for and apply the replication reward
 					attackerCell.checkAndApplyReplicationReward();
@@ -1200,11 +1402,33 @@
 		return 1 + 3 * radius * (radius + 1);
 	}
 
+function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPercent) {
+	const arenaRadius = parseInt(arenaGridRadiusInput.value) || simState.config.hexGridActualRadius;
+	const totalSpaces = 1 + 3 * arenaRadius * (arenaRadius + 1);
+	const totalCellsToPlace = Math.round(totalSpaces * (fillPercent / 100));
+
+	const preyPercent = 100 - attPercent - defPercent;
+
+	let attCount = Math.round(totalCellsToPlace * (attPercent / 100));
+	let defCount = Math.round(totalCellsToPlace * (defPercent / 100));
+	let preyCount = Math.round(totalCellsToPlace * (preyPercent / 100));
+
+	// Adjust rounding errors to match total
+	const currentTotal = attCount + preyCount + defCount;
+	if (currentTotal !== totalCellsToPlace) {
+		preyCount += (totalCellsToPlace - currentTotal);
+	}
+
+	updateInputElement('initialAttackersInput', Math.max(0, attCount));
+	updateInputElement('initialPreyInput', Math.max(0, preyCount));
+	updateInputElement('initialDefendersInput', Math.max(0, defCount));
+}
+
 	function updatePercentFullDisplay() {
-		const requestedPredators = parseInt(simState.config.predator.initialCount) || 0;
+		const requestedAttackers = parseInt(simState.config.attacker.initialCount) || 0;
 		const requestedPrey = parseInt(simState.config.prey.initialCount) || 0;
 		const requestedDefenders = parseInt(simState.config.defender.initialCount) || 0;
-		const totalRequested = requestedPredators + requestedPrey + requestedDefenders;
+		const totalRequested = requestedAttackers + requestedPrey + requestedDefenders;
 		if (simState.totalArenaSpaces > 0) {
 			const percent = Math.min(100, (totalRequested / simState.totalArenaSpaces) * 100);
 			percentFullDisplay.textContent = percent.toFixed(1) + '%';
@@ -1214,6 +1438,36 @@
 	}
 
 	function updateConfigFromUI(isFullConfigRead = false) {
+		
+		const config = simState.config; // Get a reference
+		config.attacker = config.attacker || {};
+		config.attacker.replication = config.attacker.replication || {};
+		config.attacker.replicationReward = config.attacker.replicationReward || {};
+		config.attacker.movement = config.attacker.movement || {};
+		config.attacker.qs = config.attacker.qs || {};
+		config.attacker.t6ss = config.attacker.t6ss || {};
+		config.attacker.sensitivity = config.attacker.sensitivity || {};
+		
+		config.prey = config.prey || {};
+		config.prey.replication = config.prey.replication || {};
+		config.prey.movement = config.prey.movement || {};
+		config.prey.qs = config.prey.qs || {};
+		config.prey.capsule = config.prey.capsule || {};
+		config.prey.sensitivityToAttacker = config.prey.sensitivityToAttacker || {};
+		config.prey.sensitivityToDefender = config.prey.sensitivityToDefender || {};
+
+		config.defender = config.defender || {};
+		config.defender.replication = config.defender.replication || {};
+		config.defender.replicationReward = config.defender.replicationReward || {};
+		config.defender.movement = config.defender.movement || {};
+		config.defender.retaliation = config.defender.retaliation || {};
+		config.defender.randomFiring = config.defender.randomFiring || {};
+		config.defender.t6ss = config.defender.t6ss || {};
+		config.defender.sensitivity = config.defender.sensitivity || {};
+
+		config.cprg = config.cprg || {};
+		config.simulationControl = config.simulationControl || {};		
+		
 		if (isFullConfigRead) { 
 			 simState.config.hexGridActualRadius = parseInt(arenaGridRadiusInput.value);
 			 simState.totalArenaSpaces = calculateTotalArenaSpaces(simState.config.hexGridActualRadius);
@@ -1232,40 +1486,40 @@
         simState.config.history = { sizeLimitMB: parseInt(document.getElementById('historyBufferSizeLimitInput').value) || 0 };
 
 
-		simState.config.predator.initialCount = parseInt(initialPredatorsInput.value);
-		simState.config.predator.replication = { mean: parseInt(predatorReplicationMeanInput.value), range: parseInt(predatorReplicationRangeInput.value) };
-		simState.config.predator.replicationReward = {
-			lysesPerReward: parseInt(predatorLysesPerReplicationInput.value),
-			mean: parseInt(predatorReplicationRewardMeanInput.value),
-			range: parseInt(predatorReplicationRewardRangeInput.value)
+		simState.config.attacker.initialCount = parseInt(initialAttackersInput.value);
+		simState.config.attacker.replication = { mean: parseInt(attackerReplicationMeanInput.value), range: parseInt(attackerReplicationRangeInput.value) };
+		simState.config.attacker.replicationReward = {
+			lysesPerReward: parseInt(attackerLysesPerReplicationInput.value),
+			mean: parseInt(attackerReplicationRewardMeanInput.value),
+			range: parseInt(attackerReplicationRewardRangeInput.value)
 		};
-		simState.config.predator.movement = {
-			cooldownMin: parseInt(predatorMoveCooldownMinInput.value),
-			cooldownMax: parseInt(predatorMoveCooldownMaxInput.value),
-			probability: parseFloat(predatorMoveProbabilityInput.value) / 100,
-			directionality: parseFloat(predatorMoveDirectionalityInput.value) / 100, // Convert from %
-			preyAiAttractionThreshold: parseFloat(predatorMovePreyAiAttractionThresholdInput.value), // Read raw value
-			preyAiAttraction: parseFloat(predatorMovePreyAiAttractionInput.value) / 100
+		simState.config.attacker.movement = {
+			cooldownMin: parseInt(attackerMoveCooldownMinInput.value),
+			cooldownMax: parseInt(attackerMoveCooldownMaxInput.value),
+			probability: parseFloat(attackerMoveProbabilityInput.value) / 100,
+			directionality: parseFloat(attackerMoveDirectionalityInput.value) / 100, // Convert from %
+			preyAiAttractionThreshold: parseFloat(attackerMovePreyAiAttractionThresholdInput.value), // Read raw value
+			preyAiAttraction: parseFloat(attackerMovePreyAiAttractionInput.value) / 100
 
 		};
-		simState.config.predator.qs.productionRate = parseFloat(predatorQSProductionRateInput.value);
-		simState.config.predator.qs.degradationRate = parseFloat(predatorQSDegradationRateInput.value) / 100; // Convert from %
-		simState.config.predator.qs.diffusionRate = parseFloat(predatorQSDiffusionRateInput.value);
-		simState.config.predator.qs.midpoint = parseFloat(predatorQSMidpointInput.value);
-		simState.config.predator.qs.cooperativity = parseFloat(predatorQSCooperativityInput.value);
-		simState.config.predator.t6ss.fireCooldownMin = parseInt(t6ssFireCooldownMinInput.value);
-		simState.config.predator.t6ss.fireCooldownMax = parseInt(t6ssFireCooldownMaxInput.value);
-		simState.config.predator.t6ss.precision = parseFloat(predatorPrecisionInput.value) / 100;
-		simState.config.predator.t6ss.contactSensingBias = parseFloat(predatorContactSensingBiasInput.value) / 100;
-		simState.config.predator.t6ss.kinExclusion = parseFloat(predatorKinExclusionInput.value) / 100;
-		simState.config.predator.t6ss.kinExclusionPenalty = parseInt(predatorKinExclusionPenaltyInput.value); 
-		simState.config.predator.t6ss.nonLyticUnitsPerHit = parseInt(predNonLyticUnitsPerHitInput.value);
-		simState.config.predator.t6ss.nonLyticDeliveryChance = parseFloat(predNonLyticDeliveryChanceInput.value) / 100;
-		simState.config.predator.t6ss.lyticUnitsPerHit = parseInt(predLyticUnitsPerHitInput.value);
-		simState.config.predator.t6ss.lyticDeliveryChance = parseFloat(predLyticDeliveryChanceInput.value) / 100;
-		simState.config.predator.sensitivity.nonLyticUnitsToDie = parseInt(predNonLyticUnitsToDieInput.value);
-		simState.config.predator.sensitivity.lyticUnitsToLyse = parseInt(predLyticUnitsToLyseInput.value);
-		simState.config.predator.sensitivity.baseLysisDelay = parseInt(predBaseLysisDelayInput.value);
+		simState.config.attacker.qs.productionRate = parseFloat(attackerQSProductionRateInput.value);
+		simState.config.attacker.qs.degradationRate = parseFloat(attackerQSDegradationRateInput.value) / 100; // Convert from %
+		simState.config.attacker.qs.diffusionRate = parseFloat(attackerQSDiffusionRateInput.value);
+		simState.config.attacker.qs.midpoint = parseFloat(attackerQSMidpointInput.value);
+		simState.config.attacker.qs.cooperativity = parseFloat(attackerQSCooperativityInput.value);
+		simState.config.attacker.t6ss.fireCooldownMin = parseInt(t6ssFireCooldownMinInput.value);
+		simState.config.attacker.t6ss.fireCooldownMax = parseInt(t6ssFireCooldownMaxInput.value);
+		simState.config.attacker.t6ss.precision = parseFloat(attackerPrecisionInput.value) / 100;
+		simState.config.attacker.t6ss.contactSensingBias = parseFloat(attackerContactSensingBiasInput.value) / 100;
+		simState.config.attacker.t6ss.kinExclusion = parseFloat(attackerKinExclusionInput.value) / 100;
+		simState.config.attacker.t6ss.kinExclusionPenalty = parseInt(attackerKinExclusionPenaltyInput.value); 
+		simState.config.attacker.t6ss.nonLyticUnitsPerHit = parseInt(attNonLyticUnitsPerHitInput.value);
+		simState.config.attacker.t6ss.nonLyticDeliveryChance = parseFloat(attNonLyticDeliveryChanceInput.value) / 100;
+		simState.config.attacker.t6ss.lyticUnitsPerHit = parseInt(attLyticUnitsPerHitInput.value);
+		simState.config.attacker.t6ss.lyticDeliveryChance = parseFloat(attLyticDeliveryChanceInput.value) / 100;
+		simState.config.attacker.sensitivity.nonLyticUnitsToDie = parseInt(attNonLyticUnitsToDieInput.value);
+		simState.config.attacker.sensitivity.lyticUnitsToLyse = parseInt(attLyticUnitsToLyseInput.value);
+		simState.config.attacker.sensitivity.baseLysisDelay = parseInt(attBaseLysisDelayInput.value);
 
 		simState.config.prey.initialCount = parseInt(initialPreyInput.value);
 		simState.config.prey.replication = { mean: parseInt(preyReplicationMeanInput.value), range: parseInt(preyReplicationRangeInput.value) };
@@ -1286,11 +1540,11 @@
 			cooldownMin: parseInt(preyCapsuleCooldownMinInput.value),
 			cooldownMax: parseInt(preyCapsuleCooldownMaxInput.value)
 		};
-		simState.config.prey.sensitivityToPredator.nonLyticUnitsToDie = parseInt(preyNonLyticUnitsToDiePredInput.value);
-		simState.config.prey.sensitivityToPredator.lyticUnitsToLyse = parseInt(preyLyticUnitsToLysePredInput.value);
-		simState.config.prey.sensitivityToPredator.baseLysisDelay = parseInt(preyBaseLysisDelayPredInput.value);
-		simState.config.prey.sensitivityToPredator.nonLyticResistanceChance = parseFloat(preyNonLyticResistancePredInput.value) / 100;
-		simState.config.prey.sensitivityToPredator.lyticResistanceChance = parseFloat(preyLyticResistancePredInput.value) / 100;
+		simState.config.prey.sensitivityToAttacker.nonLyticUnitsToDie = parseInt(preyNonLyticUnitsToDieAttInput.value);
+		simState.config.prey.sensitivityToAttacker.lyticUnitsToLyse = parseInt(preyLyticUnitsToLyseAttInput.value);
+		simState.config.prey.sensitivityToAttacker.baseLysisDelay = parseInt(preyBaseLysisDelayAttInput.value);
+		simState.config.prey.sensitivityToAttacker.nonLyticResistanceChance = parseFloat(preyNonLyticResistanceAttInput.value) / 100;
+		simState.config.prey.sensitivityToAttacker.lyticResistanceChance = parseFloat(preyLyticResistanceAttInput.value) / 100;
 		simState.config.prey.sensitivityToDefender.nonLyticUnitsToDie = parseInt(preyNonLyticUnitsToDieDefInput.value);
 		simState.config.prey.sensitivityToDefender.lyticUnitsToLyse = parseInt(preyLyticUnitsToLyseDefInput.value);
 		simState.config.prey.sensitivityToDefender.baseLysisDelay = parseInt(preyBaseLysisDelayDefInput.value);
@@ -1407,13 +1661,13 @@
 		simState.simulationStepCount = 0;
 		simState.activeFiringsThisStep.clear();
 		simState.firingsThisStep = 0;
-		simState.predatorAiGrid.clear();
+		simState.attackerAiGrid.clear();
 		simState.preyAiGrid.clear();
-		simState.killedThisStep = { predator: 0, prey: 0, defender: 0 };
-		simState.lysedThisStep = { predator: 0, prey: 0, defender: 0 };
+		simState.killedThisStep = { attacker: 0, prey: 0, defender: 0 };
+		simState.lysedThisStep = { attacker: 0, prey: 0, defender: 0 };
 		simState.cumulativeFirings = 0;
-		simState.cumulativeKills = { predator: 0, prey: 0, defender: 0 };
-		simState.cumulativeLyses = { predator: 0, prey: 0, defender: 0 };
+		simState.cumulativeKills = { attacker: 0, prey: 0, defender: 0 };
+		simState.cumulativeLyses = { attacker: 0, prey: 0, defender: 0 };
 		simState.totalCPRGConverted = 0;
 		simState.remainingCPRGSubstrate = simState.config.cprg.initialSubstrate;
 		simState.totalActiveLacZReleased = 0;
@@ -1448,23 +1702,23 @@
 	function populateCellsRandomly() {
 	    console.log(`populateCellsRandomly called at step ${simState.simulationStepCount}`);
 
-		let numPredatorsToPlace = simState.config.predator.initialCount || 0;
+		let numAttackersToPlace = simState.config.attacker.initialCount || 0;
 		let numPreyToPlace = simState.config.prey.initialCount || 0;
 		let numDefendersToPlace = simState.config.defender.initialCount || 0;
 
-		const totalRequested = numPredatorsToPlace + numPreyToPlace + numDefendersToPlace;
+		const totalRequested = numAttackersToPlace + numPreyToPlace + numDefendersToPlace;
 		const availableSpaces = simState.totalArenaSpaces;
 
 		if (totalRequested > availableSpaces && totalRequested > 0) {
-			const predatorRatio = numPredatorsToPlace / totalRequested;
+			const attackerRatio = numAttackersToPlace / totalRequested;
 			const preyRatio = numPreyToPlace / totalRequested;
 			
-			numPredatorsToPlace = Math.round(availableSpaces * predatorRatio);
+			numAttackersToPlace = Math.round(availableSpaces * attackerRatio);
 			numPreyToPlace = Math.round(availableSpaces * preyRatio);
-			numDefendersToPlace = availableSpaces - numPredatorsToPlace - numPreyToPlace;
+			numDefendersToPlace = availableSpaces - numAttackersToPlace - numPreyToPlace;
 			if (numDefendersToPlace < 0) numDefendersToPlace = 0; 
 		} else if (totalRequested === 0) {
-			 numPredatorsToPlace = 0;
+			 numAttackersToPlace = 0;
 			 numPreyToPlace = 0;
 			 numDefendersToPlace = 0;
 		}
@@ -1472,7 +1726,7 @@
 
 		const currentGridRadius = simState.config.hexGridActualRadius;
 		const typesAndCounts = [
-			{ type: 'predator', count: numPredatorsToPlace },
+			{ type: 'attacker', count: numAttackersToPlace },
 			{ type: 'prey', count: numPreyToPlace },
 			{ type: 'defender', count: numDefendersToPlace }
 		];
@@ -1622,7 +1876,7 @@
 			if (cell.isDead || cell.isLysing) {
 				targetCtx.beginPath();
 				let dotColor = 'grey';
-				if (cell.type === 'predator') dotColor = PREDATOR_COLOR;
+				if (cell.type === 'attacker') dotColor = ATTACKER_COLOR;
 				else if (cell.type === 'prey') dotColor = PREY_COLOR;
 				else if (cell.type === 'defender') dotColor = DEFENDER_COLOR;
 				targetCtx.arc(x, y, visualHexRadius / 2.5, 0, 2 * Math.PI, false);
@@ -1687,8 +1941,8 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
     targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 
     const maxAI = calculateTheoreticalMaxAI();
-    const predatorAttractionThreshold = simState.config.predator.movement.preyAiAttractionThreshold;
-    const hasAIConfiguration = maxAI > 0 || predatorAttractionThreshold > 0;
+    const attackerAttractionThreshold = simState.config.attacker.movement.preyAiAttractionThreshold;
+    const hasAIConfiguration = maxAI > 0 || attackerAttractionThreshold > 0;
 
     for (let q_iter = -logicalGridRadius; q_iter <= logicalGridRadius; q_iter++) {
         for (let r_iter = -logicalGridRadius; r_iter <= logicalGridRadius; r_iter++) {
@@ -1707,8 +1961,8 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 // above 1%
 //                        } else if (maxAI > 0 && aiConcentration > maxAI / 100) {
 //                            alpha = 0.2;
-						// above predator sensing concentration
-                        } else if (predatorAttractionThreshold > 0 && aiConcentration > predatorAttractionThreshold) {
+						// above attacker sensing concentration
+                        } else if (attackerAttractionThreshold > 0 && aiConcentration > attackerAttractionThreshold) {
                             alpha = 0.1;
                         }
 
@@ -1734,7 +1988,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
             if (cell.isLysing) color = LYSING_CELL_COLOR;
             else if (cell.isDead) color = DEAD_CELL_COLOR;
             else {
-                if (cell.type === 'predator') color = PREDATOR_COLOR;
+                if (cell.type === 'attacker') color = ATTACKER_COLOR;
                 else if (cell.type === 'prey') color = PREY_COLOR;
                 else if (cell.type === 'defender') color = DEFENDER_COLOR;
                 else if (cell.type === 'barrier') color = BARRIER_COLOR;
@@ -1754,8 +2008,8 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 
 
 	function updateStats() {
-		let livePredatorCount = 0, livePreyCount = 0, liveDefenderCount = 0;
-		let deadLysingPredatorCount = 0, deadLysingPreyCount = 0, deadLysingDefenderCount = 0;
+		let liveAttackerCount = 0, livePreyCount = 0, liveDefenderCount = 0;
+		let deadLysingAttackerCount = 0, deadLysingPreyCount = 0, deadLysingDefenderCount = 0;
 
 		// Barriers are not counted in these dynamic stats
 		const currentGridRadius = simState.config.hexGridActualRadius;
@@ -1764,49 +2018,49 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 			if (!isWithinHexBounds(cell.q, cell.r, currentGridRadius) || cell.isEffectivelyGone) return; 
 
 			if (cell.isDead || cell.isLysing) {
-				if (cell.type === 'predator') deadLysingPredatorCount++;
+				if (cell.type === 'attacker') deadLysingAttackerCount++;
 				else if (cell.type === 'prey') deadLysingPreyCount++;
 				else if (cell.type === 'defender') deadLysingDefenderCount++;
 			} else {
-				if (cell.type === 'predator') livePredatorCount++;
-				else if (cell.type === 'prey') livePreyCount++; // Corrected from livePredatorCount
+				if (cell.type === 'attacker') liveAttackerCount++;
+				else if (cell.type === 'prey') livePreyCount++; // Corrected from liveAttackerCount
 				else if (cell.type === 'defender') liveDefenderCount++;
 			}
 		});
 
 		timeStepsDisplay.textContent = simState.simulationStepCount;
-		predatorCountDisplay.textContent = livePredatorCount;
+		attackerCountDisplay.textContent = liveAttackerCount;
 		livePreyCountDisplay.textContent = livePreyCount;
 		defenderCountDisplay.textContent = liveDefenderCount;
-		deadLysingPredatorsDisplay.textContent = deadLysingPredatorCount;
+		deadLysingAttackersDisplay.textContent = deadLysingAttackerCount;
 		deadLysingPreyDisplay.textContent = deadLysingPreyCount;
 		deadLysingDefendersDisplay.textContent = deadLysingDefenderCount;
-		totalCellCountDisplay.textContent = livePredatorCount + livePreyCount + liveDefenderCount + deadLysingPredatorCount + deadLysingPreyCount + deadLysingDefenderCount;
+		totalCellCountDisplay.textContent = liveAttackerCount + livePreyCount + liveDefenderCount + deadLysingAttackerCount + deadLysingPreyCount + deadLysingDefenderCount;
 
 		firingsThisStepDisplay.textContent = simState.firingsThisStep;
-		predKilledThisStepDisplay.textContent = simState.killedThisStep.predator;
+		attKilledThisStepDisplay.textContent = simState.killedThisStep.attacker;
 		preyKilledThisStepDisplay.textContent = simState.killedThisStep.prey;
 		defKilledThisStepDisplay.textContent = simState.killedThisStep.defender;
-		predLysedThisStepDisplay.textContent = simState.lysedThisStep.predator;
+		attLysedThisStepDisplay.textContent = simState.lysedThisStep.attacker;
 		preyLysedThisStepDisplay.textContent = simState.lysedThisStep.prey;
 		defLysedThisStepDisplay.textContent = simState.lysedThisStep.defender;
 
 		if (simState.simulationStepCount === 0 && !simState.isRunning && !simState.isStepping) {
 			cumulativeFiringsDisplay.textContent = 0;
-			cumulativePredKilledDisplay.textContent = 0;
+			cumulativeAttKilledDisplay.textContent = 0;
 			cumulativePreyKilledDisplay.textContent = 0;
 			cumulativeDefKilledDisplay.textContent = 0;
-			cumulativePredLysedDisplay.textContent = 0;
+			cumulativeAttLysedDisplay.textContent = 0;
 			cumulativePreyLysedDisplay.textContent = 0;
 			cumulativeDefLysedDisplay.textContent = 0;
 			totalCPRGConvertedDisplay.textContent = 0;
 			canvas.style.backgroundColor = DEFAULT_CANVAS_BG_COLOR;
 		} else {
 			cumulativeFiringsDisplay.textContent = simState.cumulativeFirings;
-			cumulativePredKilledDisplay.textContent = simState.cumulativeKills.predator;
+			cumulativeAttKilledDisplay.textContent = simState.cumulativeKills.attacker;
 			cumulativePreyKilledDisplay.textContent = simState.cumulativeKills.prey;
 			cumulativeDefKilledDisplay.textContent = simState.cumulativeKills.defender;
-			cumulativePredLysedDisplay.textContent = simState.cumulativeLyses.predator;
+			cumulativeAttLysedDisplay.textContent = simState.cumulativeLyses.attacker;
 			cumulativePreyLysedDisplay.textContent = simState.cumulativeLyses.prey;
 			cumulativeDefLysedDisplay.textContent = simState.cumulativeLyses.defender;
 			totalCPRGConvertedDisplay.textContent = simState.totalCPRGConverted.toLocaleString(undefined, {maximumFractionDigits: 0});
@@ -1839,7 +2093,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
             cell.movementCooldown = getRandomIntInRange(0, cell.movementCooldown);
             cell.replicationCooldown = getRandomIntInRange(0, cell.replicationCooldown);
 
-            if (cell.type === 'predator') {
+            if (cell.type === 'attacker') {
                 cell.resetT6SSFireCooldown(true); // isInitial = true for random start time
             }
             if (cell.type === 'defender') {
@@ -1876,7 +2130,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 
 		// --- Setup Arena Panel ---
 		// The panel is always visible, but its contents are disabled while running.
-		document.querySelectorAll('#selectPredatorButton, #selectPreyButton, #selectDefenderButton, #selectBarrierButton, #selectRemoveButton').forEach(btn => btn.disabled = controlsDisabled);
+		document.querySelectorAll('#selectAttackerButton, #selectPreyButton, #selectDefenderButton, #selectBarrierButton, #selectRemoveButton').forEach(btn => btn.disabled = controlsDisabled);
 		if (manualRandomPlacementButton) manualRandomPlacementButton.disabled = controlsDisabled;
 		if (clearManualPlacementButton) clearManualPlacementButton.disabled = controlsDisabled;
 		if (importManualArenaButton) importManualArenaButton.disabled = controlsDisabled;
@@ -1884,7 +2138,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 
 		// --- NEW: Visual indicator for active placement tool ---
 		const placementButtons = {
-			predator: { el: selectPredatorButton, ring: 'ring-red-500' },
+			attacker: { el: selectAttackerButton, ring: 'ring-red-500' },
 			prey:     { el: selectPreyButton,     ring: 'ring-blue-500' },
 			defender: { el: selectDefenderButton, ring: 'ring-yellow-600' },
 			barrier:  { el: selectBarrierButton,  ring: 'ring-yellow-800' },
@@ -1946,7 +2200,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		saveArenaStatesCheckbox.disabled = controlsDisabled;
 		document.getElementById('saveFullHistoryCheckbox').disabled = controlsDisabled;
 		imageExportWidthInput.disabled = controlsDisabled;
-		document.querySelectorAll('#predatorParamsSection input, #preyParamsSection input, #defenderParamsSection input, #cellTypeSelectionButtons button').forEach(input => {
+		document.querySelectorAll('#attackerParamsSection input, #preyParamsSection input, #defenderParamsSection input, #cellTypeSelectionButtons button').forEach(input => {
 			input.disabled = controlsDisabled;
 		});
 
@@ -2109,20 +2363,20 @@ function updateUiFromState(stateObject) {
     document.getElementById('timeStepsDisplay').textContent = stateObject.simulationStepCount;
     // ... (the rest of the textContent updates for cumulative and per-step stats are correct) ...
     document.getElementById('cumulativeFiringsDisplay').textContent = stateObject.cumulativeFirings.toLocaleString();
-    document.getElementById('cumulativePredKilledDisplay').textContent = stateObject.cumulativeKills.predator.toLocaleString();
+    document.getElementById('cumulativeAttKilledDisplay').textContent = stateObject.cumulativeKills.attacker.toLocaleString();
     document.getElementById('cumulativePreyKilledDisplay').textContent = stateObject.cumulativeKills.prey.toLocaleString();
     document.getElementById('cumulativeDefKilledDisplay').textContent = stateObject.cumulativeKills.defender.toLocaleString();
-    document.getElementById('cumulativePredLysedDisplay').textContent = stateObject.cumulativeLyses.predator.toLocaleString();
+    document.getElementById('cumulativeAttLysedDisplay').textContent = stateObject.cumulativeLyses.attacker.toLocaleString();
     document.getElementById('cumulativePreyLysedDisplay').textContent = stateObject.cumulativeLyses.prey.toLocaleString();
     document.getElementById('cumulativeDefLysedDisplay').textContent = stateObject.cumulativeLyses.defender.toLocaleString();
     document.getElementById('totalCPRGConvertedDisplay').textContent = stateObject.totalCPRGConverted.toLocaleString(undefined, { maximumFractionDigits: 0 });
 
     if (stateObject.firingsThisStep !== undefined) {
         document.getElementById('firingsThisStepDisplay').textContent = stateObject.firingsThisStep.toLocaleString();
-        document.getElementById('predKilledThisStepDisplay').textContent = stateObject.killedThisStep.predator.toLocaleString();
+        document.getElementById('attKilledThisStepDisplay').textContent = stateObject.killedThisStep.attacker.toLocaleString();
         document.getElementById('preyKilledThisStepDisplay').textContent = stateObject.killedThisStep.prey.toLocaleString();
         document.getElementById('defKilledThisStepDisplay').textContent = stateObject.killedThisStep.defender.toLocaleString();
-        document.getElementById('predLysedThisStepDisplay').textContent = stateObject.lysedThisStep.predator.toLocaleString();
+        document.getElementById('attLysedThisStepDisplay').textContent = stateObject.lysedThisStep.attacker.toLocaleString();
         document.getElementById('preyLysedThisStepDisplay').textContent = stateObject.lysedThisStep.prey.toLocaleString();
         document.getElementById('defLysedThisStepDisplay').textContent = stateObject.lysedThisStep.defender.toLocaleString();
     }
@@ -2134,29 +2388,29 @@ function updateUiFromState(stateObject) {
     const historicalPreyAiGrid = stateObject.preyAiGrid;
 
 
-    let livePredatorCount = 0, livePreyCount = 0, liveDefenderCount = 0;
-    let deadLysingPredatorCount = 0, deadLysingPreyCount = 0, deadLysingDefenderCount = 0;
+    let liveAttackerCount = 0, livePreyCount = 0, liveDefenderCount = 0;
+    let deadLysingAttackerCount = 0, deadLysingPreyCount = 0, deadLysingDefenderCount = 0;
 
     historicalCells.forEach(c => {
         if (c.isEffectivelyGone || c.type === 'barrier') return;
         if (c.isDead || c.isLysing) {
-            if (c.type === 'predator') deadLysingPredatorCount++;
+            if (c.type === 'attacker') deadLysingAttackerCount++;
             else if (c.type === 'prey') deadLysingPreyCount++;
             else if (c.type === 'defender') deadLysingDefenderCount++;
         } else {
-            if (c.type === 'predator') livePredatorCount++;
+            if (c.type === 'attacker') liveAttackerCount++;
             else if (c.type === 'prey') livePreyCount++;
             else if (c.type === 'defender') liveDefenderCount++;
         }
     });
     
-    document.getElementById('predatorCountDisplay').textContent = livePredatorCount;
+    document.getElementById('attackerCountDisplay').textContent = liveAttackerCount;
     document.getElementById('livePreyCountDisplay').textContent = livePreyCount;
     document.getElementById('defenderCountDisplay').textContent = liveDefenderCount;
-    document.getElementById('deadLysingPredatorsDisplay').textContent = deadLysingPredatorCount;
+    document.getElementById('deadLysingAttackersDisplay').textContent = deadLysingAttackerCount;
     document.getElementById('deadLysingPreyDisplay').textContent = deadLysingPreyCount;
     document.getElementById('deadLysingDefendersDisplay').textContent = deadLysingDefenderCount;
-    document.getElementById('totalCellCountDisplay').textContent = livePredatorCount + livePreyCount + liveDefenderCount + deadLysingPredatorCount + deadLysingPreyCount + deadLysingDefenderCount;
+    document.getElementById('totalCellCountDisplay').textContent = liveAttackerCount + livePreyCount + liveDefenderCount + deadLysingAttackerCount + deadLysingPreyCount + deadLysingDefenderCount;
 
     const cprgRatio = simState.config.cprg.initialSubstrate > 0 ? Math.min(1, stateObject.totalCPRGConverted / simState.config.cprg.initialSubstrate) : 0;
     const r_val = Math.round(255 + (255 - 255) * cprgRatio);
@@ -2172,7 +2426,7 @@ function restoreSimStateFromHistoryObject(stateToRestore) {
     simState.nextCellId = stateToRestore.nextCellId;
 	simState.cells = new Map(stateToRestore.cells); // It's already a map of Cell instances
     simState.activeFiringsThisStep = new Map(stateToRestore.activeFiringsThisStep);
-    simState.predatorAiGrid = new Map(stateToRestore.predatorAiGrid);
+    simState.attackerAiGrid = new Map(stateToRestore.attackerAiGrid);
     simState.preyAiGrid = new Map(stateToRestore.preyAiGrid);
     simState.cumulativeFirings = stateToRestore.cumulativeFirings;
     simState.cumulativeKills = { ...stateToRestore.cumulativeKills };
@@ -2223,7 +2477,7 @@ function restoreStateForResume() {
 
 
 	function switchCellParamsTab(selectedType) {
-		['predator', 'prey', 'defender'].forEach(type => {
+		['attacker', 'prey', 'defender'].forEach(type => {
 			document.getElementById(`${type}ParamsSection`).classList.add('hidden');
 			document.getElementById(`select${type.charAt(0).toUpperCase() + type.slice(1)}ParamsButton`).classList.remove('active');
 		});
@@ -2232,12 +2486,12 @@ function restoreStateForResume() {
 		updateButtonStatesAndUI(); 
 	}
 
-	selectPredatorParamsButton.addEventListener('click', () => switchCellParamsTab('predator'));
+	selectAttackerParamsButton.addEventListener('click', () => switchCellParamsTab('attacker'));
 	selectPreyParamsButton.addEventListener('click', () => switchCellParamsTab('prey'));
 	selectDefenderParamsButton.addEventListener('click', () => switchCellParamsTab('defender'));
 
 
-	selectPredatorButton.addEventListener('click', () => { if (simState.manualSetupActive) { simState.selectedManualCellType = 'predator'; updateButtonStatesAndUI(); }});
+	selectAttackerButton.addEventListener('click', () => { if (simState.manualSetupActive) { simState.selectedManualCellType = 'attacker'; updateButtonStatesAndUI(); }});
 	selectPreyButton.addEventListener('click', () => { if (simState.manualSetupActive) { simState.selectedManualCellType = 'prey'; updateButtonStatesAndUI(); }});
 	selectDefenderButton.addEventListener('click', () => { if (simState.manualSetupActive) { simState.selectedManualCellType = 'defender'; updateButtonStatesAndUI(); }});
 	selectBarrierButton.addEventListener('click', () => { if (simState.manualSetupActive) { simState.selectedManualCellType = 'barrier'; updateButtonStatesAndUI(); }});
@@ -2317,7 +2571,7 @@ function restoreStateForResume() {
 					simState.cells.delete(key);
 					actionWasPerformed = true;
 				}
-			} else { // This handles 'predator', 'prey', 'defender', 'barrier' placement
+			} else { // This handles 'attacker', 'prey', 'defender', 'barrier' placement
 				// Overwrite any existing cell at the location with the new type
 				// If you prefer to only place on empty cells, you'd add: if (!simState.cells.has(key)) { ... }
 				simState.cells.delete(key); // Ensure new cell type replaces whatever was there
@@ -2532,7 +2786,7 @@ stopButton.addEventListener('click', () => {
 		}
 	});
 
-	initialPredatorsInput.addEventListener('input', () => { if (!simState.isRunning && !simState.manualSetupActive) updateConfigFromUI(false); });
+	initialAttackersInput.addEventListener('input', () => { if (!simState.isRunning && !simState.manualSetupActive) updateConfigFromUI(false); });
 	initialPreyInput.addEventListener('input', () => { if (!simState.isRunning && !simState.manualSetupActive) updateConfigFromUI(false); });
 	initialDefendersInput.addEventListener('input', () => { if (!simState.isRunning && !simState.manualSetupActive) updateConfigFromUI(false); });
 
@@ -2551,11 +2805,45 @@ stopButton.addEventListener('click', () => {
 
 	const ratioMap = ["100:1", "30:1", "10:1", "3:1", "1:1", "1:3", "1:10", "1:30", "1:100"];
 	const ratioValues = [100, 30, 10, 3, 1, 1/3, 1/10, 1/30, 1/100];
+	const brAttMovementMap = ['No', 'Yes', 'AI'];
+	const brDefSelectivityMap = ['Low', 'Med', 'High'];
 
 	function updateSliderDisplay(sliderElement, displayElement, mapArray, valueOverride = null) {
 		const value = valueOverride !== null ? parseInt(valueOverride) : parseInt(sliderElement.value);
 		 if (mapArray && displayElement) displayElement.textContent = mapArray[value];
 		 else if (displayElement) displayElement.textContent = `${sliderElement.value}%`; 
+	}
+
+	function updateBattleRoyaleSliders() {
+		let attPercent = parseInt(brAttackerPercentSlider.value);
+		let defPercent = parseInt(brDefenderPercentSlider.value);
+
+		// Adjust Attacker slider based on Defender value
+		const maxAtt = 100 - defPercent;
+		brAttackerPercentSlider.max = maxAtt;
+		brAttackerPercentMaxDisplay.textContent = `${maxAtt}%`;
+		if (attPercent > maxAtt) {
+			attPercent = maxAtt;
+			brAttackerPercentSlider.value = maxAtt;
+			simState.activePresetConfig.brAttackerPercent = maxAtt;
+		}
+		
+		// Adjust Defender slider based on Attacker value
+		const maxDef = 100 - attPercent;
+		brDefenderPercentSlider.max = maxDef;
+		brDefenderPercentMaxDisplay.textContent = `${maxDef}%`;
+		if (defPercent > maxDef) {
+			defPercent = maxDef;
+			brDefenderPercentSlider.value = maxDef;
+			simState.activePresetConfig.brDefenderPercent = maxDef;
+		}
+
+		const preyPercent = 100 - attPercent - defPercent;
+
+		// Update displays
+		brAttackerPercentDisplay.textContent = `${attPercent}%`;
+		brDefenderPercentDisplay.textContent = `${defPercent}%`;
+		brMixDisplay.textContent = `${attPercent}% Att, ${defPercent}% Def, ${preyPercent}% Prey`;
 	}
 
 	function setActivePresetGroup(groupElementId) {
@@ -2582,6 +2870,12 @@ stopButton.addEventListener('click', () => {
 		} else if (button.dataset.action === 'selectTitForTatLevel') {
 			simState.activePresetConfig.titfortatLevel = button.dataset.level;
 			setActiveSubtypeButton(button);
+		} else if (button.dataset.action === 'selectPredationType') {
+			simState.activePresetConfig.predationEffectorType = button.dataset.type;
+			setActiveSubtypeButton(button);
+		} else if (button.dataset.action === 'selectMovementPredation') {
+			simState.activePresetConfig.movementPredation = button.dataset.type;
+			setActiveSubtypeButton(button);
 		}
 	});
 
@@ -2592,34 +2886,228 @@ stopButton.addEventListener('click', () => {
 			setActivePresetGroup(`presetGroup${group.charAt(0).toUpperCase() + group.slice(1)}`);
 			if (group === 'density') {
 				if (slider.id === 'densityFillSlider') { simState.activePresetConfig.densityFillPercent = parseInt(slider.value); updateSliderDisplay(slider, densityFillDisplay, null); }
-				else if (slider.id === 'densityPredPreyRatioSlider') { simState.activePresetConfig.densityPredPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, densityRatioDisplay, ratioMap); }
+				else if (slider.id === 'densityAttPreyRatioSlider') { simState.activePresetConfig.densityAttPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, densityRatioDisplay, ratioMap); }
 			} else if (group === 'sensitivity') {
 				if (slider.id === 'sensitivityFillSlider') { simState.activePresetConfig.sensitivityFillPercent = parseInt(slider.value); updateSliderDisplay(slider, sensitivityFillDisplay, null); }
-				else if (slider.id === 'sensitivityPredPreyRatioSlider') { simState.activePresetConfig.sensitivityPredPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, sensitivityRatioDisplay, ratioMap); }
+				else if (slider.id === 'sensitivityAttPreyRatioSlider') { simState.activePresetConfig.sensitivityAttPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, sensitivityRatioDisplay, ratioMap); }
 			} else if (group === 'contactkin') { 
 				if (slider.id === 'contactKinContactSensingSlider') { simState.activePresetConfig.contactKinContactSensingBias = parseInt(slider.value); updateSliderDisplay(slider, contactKinContactSensingDisplay, null); }
 				else if (slider.id === 'contactKinKinExclusionSlider') { simState.activePresetConfig.contactKinKinExclusion = parseInt(slider.value); updateSliderDisplay(slider, contactKinKinExclusionDisplay, null); }
 				else if (slider.id === 'contactKinFillSlider') { simState.activePresetConfig.contactKinFillPercent = parseInt(slider.value); updateSliderDisplay(slider, contactKinFillDisplay, null); }
-				else if (slider.id === 'contactKinPredPreyRatioSlider') { simState.activePresetConfig.contactKinPredPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, contactKinRatioDisplay, ratioMap); }
+				else if (slider.id === 'contactKinAttPreyRatioSlider') { simState.activePresetConfig.contactKinAttPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, contactKinRatioDisplay, ratioMap); }
 			} else if (group === 'titfortat') {
 				if (slider.id === 'titfortatFillSlider') { simState.activePresetConfig.titfortatFillPercent = parseInt(slider.value); updateSliderDisplay(slider, titfortatFillDisplay, null); }
+			} else if (group === 'capsule') {
+				if (slider.id === 'capsuleProtectionSlider') { simState.activePresetConfig.capsuleProtectionPercent = parseInt(slider.value); updateSliderDisplay(slider, capsuleProtectionDisplay, null); }
+				else if (slider.id === 'capsuleTimeSlider') { simState.activePresetConfig.capsuleLayerTime = parseInt(slider.value); capsuleTimeDisplay.textContent = `${slider.value} min`; }
+				else if (slider.id === 'capsuleFillSlider') { simState.activePresetConfig.capsuleFillPercent = parseInt(slider.value); updateSliderDisplay(slider, capsuleFillDisplay, null); }
+				else if (slider.id === 'capsuleAttPreyRatioSlider') { simState.activePresetConfig.capsuleAttPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, capsuleRatioDisplay, ratioMap); }
+			} else if (group === 'predation') {
+				if (slider.id === 'predationLysesPerRepSlider') { simState.activePresetConfig.predationLysesPerRep = parseInt(slider.value); predationLysesPerRepDisplay.textContent = slider.value; }
+				else if (slider.id === 'predationFillSlider') { simState.activePresetConfig.predationFillPercent = parseInt(slider.value); updateSliderDisplay(slider, predationFillDisplay, null); }
+				else if (slider.id === 'predationAttPreyRatioSlider') { simState.activePresetConfig.predationAttPreyRatioIndex = parseInt(slider.value); updateSliderDisplay(slider, predationRatioDisplay, ratioMap); }
+			} else if (group === 'movement') {
+				const value = parseInt(slider.value);
+				if (slider.id === 'movementPreyAiProdSlider') {
+					simState.activePresetConfig.movementPreyAiProd = value;
+					movementPreyAiProdDisplay.textContent = value;
+				} else if (slider.id === 'movementAttMoveProbSlider') {
+					simState.activePresetConfig.movementAttMoveProb = value;
+					movementAttMoveProbDisplay.textContent = `${value}%`;
+				} else if (slider.id === 'movementAttMoveDirSlider') {
+					simState.activePresetConfig.movementAttMoveDir = value;
+					movementAttMoveDirDisplay.textContent = `${value}%`;
+				} else if (slider.id === 'movementArenaRadiusSlider') {
+					simState.activePresetConfig.movementArenaRadius = value;
+					movementArenaRadiusDisplay.textContent = value;
+				} else if (slider.id === 'movementFillSlider') { 
+					simState.activePresetConfig.movementFillPercent = value; 
+					updateSliderDisplay(slider, movementFillDisplay, null); 
+				} else if (slider.id === 'movementAttPreyRatioSlider') { 
+					simState.activePresetConfig.movementAttPreyRatioIndex = value; 
+					updateSliderDisplay(slider, movementRatioDisplay, ratioMap); 
+				}
+			}
+			
+			else if (group === 'qs') {
+				const value = parseFloat(slider.value); // Use parseFloat for step="0.5"
+				
+				// Attacker sliders
+				if (slider.id === 'attackerQSProdSlider') {
+					simState.activePresetConfig.attackerQSProd = value;
+					attackerQSProdDisplay.textContent = value;
+				} else if (slider.id === 'attackerQSKSlider') {
+					simState.activePresetConfig.attackerQSK = value;
+					attackerQSKDisplay.textContent = value;
+				} else if (slider.id === 'attackerQSNSlider') {
+					simState.activePresetConfig.attackerQSN = value;
+					attackerQSNDisplay.textContent = value;
+				} 
+				// Prey sliders
+				else if (slider.id === 'preyQSProdSlider') {
+					simState.activePresetConfig.preyQSProd = value;
+					preyQSProdDisplay.textContent = value;
+				} else if (slider.id === 'preyQSKSlider') {
+					simState.activePresetConfig.preyQSK = value;
+					preyQSKDisplay.textContent = value;
+				} else if (slider.id === 'preyQSNSlider') {
+					simState.activePresetConfig.preyQSN = value;
+					preyQSNDisplay.textContent = value;
+				}
+				// Shared sliders
+				else if (slider.id === 'attackerQSArenaFillSlider') {
+					simState.activePresetConfig.attackerQSFillPercent = value;
+					updateSliderDisplay(slider, attackerQSArenaFillDisplay, null);
+				} else if (slider.id === 'attackerQSAttPreyRatioSlider') {
+					simState.activePresetConfig.attackerQSAttPreyRatioIndex = value;
+					updateSliderDisplay(slider, attackerQSRatioDisplay, ratioMap);
+				}
+			}
+			
+			else if (group === 'battleroyale') {
+				const value = slider.value;
+				const checked = slider.checked;
+
+				if (slider.id === 'brArenaRadiusSlider') {
+					simState.activePresetConfig.brArenaRadius = parseInt(value);
+					brArenaRadiusDisplay.textContent = value;
+				} else if (slider.id === 'brFillSlider') {
+					simState.activePresetConfig.brFillPercent = parseInt(value);
+					brFillDisplay.textContent = `${value}%`;
+				} else if (slider.id === 'brAttackerPercentSlider') {
+					simState.activePresetConfig.brAttackerPercent = parseInt(value);
+					updateBattleRoyaleSliders();
+				} else if (slider.id === 'brDefenderPercentSlider') {
+					simState.activePresetConfig.brDefenderPercent = parseInt(value);
+					updateBattleRoyaleSliders();
+				}
+				// Strategy Sliders
+				else if (slider.id === 'brAttMovementSlider') {
+					const valInt = parseInt(value);
+					simState.activePresetConfig.brAttMovement = valInt;
+					brAttMovementDisplay.textContent = brAttMovementMap[valInt];
+				} else if (slider.id === 'brDefSelectivitySlider') {
+					const valInt = parseInt(value);
+					simState.activePresetConfig.brDefSelectivity = valInt;
+					brDefSelectivityDisplay.textContent = brDefSelectivityMap[valInt];
+				}
+				// Checkboxes
+				else if (slider.id === 'brAttQsCheckbox') { simState.activePresetConfig.brAttQs = checked; }
+				else if (slider.id === 'brAttKinCheckbox') { simState.activePresetConfig.brAttKin = checked; }
+				else if (slider.id === 'brAttContactCheckbox') { simState.activePresetConfig.brAttContact = checked; }
+				else if (slider.id === 'brAttPredationCheckbox') { simState.activePresetConfig.brAttPredation = checked; }
+				else if (slider.id === 'brPreyMovementCheckbox') { simState.activePresetConfig.brPreyMovement = checked; }
+				else if (slider.id === 'brPreyAiCheckbox') { simState.activePresetConfig.brPreyAi = checked; }
+				else if (slider.id === 'brPreyCapsuleCheckbox') { simState.activePresetConfig.brPreyCapsule = checked; }
+				else if (slider.id === 'brDefMovementCheckbox') { simState.activePresetConfig.brDefMovement = checked; }
+				else if (slider.id === 'brDefPredationCheckbox') { simState.activePresetConfig.brDefPredation = checked; }
 			}
 		});
 	});
 
 	openPresetsModalButton.addEventListener('click', () => {
 		updateSliderDisplay(densityFillSlider, densityFillDisplay, null, simState.activePresetConfig.densityFillPercent);
-		updateSliderDisplay(densityPredPreyRatioSlider, densityRatioDisplay, ratioMap, simState.activePresetConfig.densityPredPreyRatioIndex);
+		updateSliderDisplay(densityAttPreyRatioSlider, densityRatioDisplay, ratioMap, simState.activePresetConfig.densityAttPreyRatioIndex);
 		updateSliderDisplay(sensitivityFillSlider, sensitivityFillDisplay, null, simState.activePresetConfig.sensitivityFillPercent);
-		updateSliderDisplay(sensitivityPredPreyRatioSlider, sensitivityRatioDisplay, ratioMap, simState.activePresetConfig.sensitivityPredPreyRatioIndex);
+		updateSliderDisplay(sensitivityAttPreyRatioSlider, sensitivityRatioDisplay, ratioMap, simState.activePresetConfig.sensitivityAttPreyRatioIndex);
 		document.querySelectorAll('#presetGroupSensitivity .preset-select-button').forEach(btn => btn.classList.toggle('active-preset-subtype', btn.dataset.type === simState.activePresetConfig.sensitivityType));
 		updateSliderDisplay(contactKinContactSensingSlider, contactKinContactSensingDisplay, null, simState.activePresetConfig.contactKinContactSensingBias);
 		updateSliderDisplay(contactKinKinExclusionSlider, contactKinKinExclusionDisplay, null, simState.activePresetConfig.contactKinKinExclusion);
 		updateSliderDisplay(contactKinFillSlider, contactKinFillDisplay, null, simState.activePresetConfig.contactKinFillPercent);
-		updateSliderDisplay(contactKinPredPreyRatioSlider, contactKinRatioDisplay, ratioMap, simState.activePresetConfig.contactKinPredPreyRatioIndex);
+		updateSliderDisplay(contactKinAttPreyRatioSlider, contactKinRatioDisplay, ratioMap, simState.activePresetConfig.contactKinAttPreyRatioIndex);
 
 		updateSliderDisplay(titfortatFillSlider, titfortatFillDisplay, null, simState.activePresetConfig.titfortatFillPercent);
 		document.querySelectorAll('#presetGroupTitfortat .preset-select-button').forEach(btn => btn.classList.toggle('active-preset-subtype', btn.dataset.level === simState.activePresetConfig.titfortatLevel));
+		
+		// Preset 5: Capsule
+		updateSliderDisplay(capsuleProtectionSlider, capsuleProtectionDisplay, null, simState.activePresetConfig.capsuleProtectionPercent);
+		capsuleTimeSlider.value = simState.activePresetConfig.capsuleLayerTime;
+		capsuleTimeDisplay.textContent = `${simState.activePresetConfig.capsuleLayerTime} min`;
+		updateSliderDisplay(capsuleFillSlider, capsuleFillDisplay, null, simState.activePresetConfig.capsuleFillPercent);
+		updateSliderDisplay(capsuleAttPreyRatioSlider, capsuleRatioDisplay, ratioMap, simState.activePresetConfig.capsuleAttPreyRatioIndex);
+		// Preset 6: Predation
+		document.querySelectorAll('#presetGroupPredation .preset-select-button').forEach(btn => btn.classList.toggle('active-preset-subtype', btn.dataset.type === simState.activePresetConfig.predationEffectorType));
+		predationLysesPerRepSlider.value = simState.activePresetConfig.predationLysesPerRep;
+		predationLysesPerRepDisplay.textContent = simState.activePresetConfig.predationLysesPerRep;
+		updateSliderDisplay(predationFillSlider, predationFillDisplay, null, simState.activePresetConfig.predationFillPercent);
+		updateSliderDisplay(predationAttPreyRatioSlider, predationRatioDisplay, ratioMap, simState.activePresetConfig.predationAttPreyRatioIndex);
+		// Preset 7: Movement
+		document.querySelectorAll('#presetGroupMovement .preset-select-button').forEach(btn => btn.classList.toggle('active-preset-subtype', btn.dataset.type === simState.activePresetConfig.movementPredation));
+		movementPreyAiProdSlider.value = simState.activePresetConfig.movementPreyAiProd;
+		movementPreyAiProdDisplay.textContent = simState.activePresetConfig.movementPreyAiProd;
+		movementAttMoveProbSlider.value = simState.activePresetConfig.movementAttMoveProb;
+		movementAttMoveProbDisplay.textContent = `${simState.activePresetConfig.movementAttMoveProb}%`;
+		movementAttMoveDirSlider.value = simState.activePresetConfig.movementAttMoveDir;
+		movementAttMoveDirDisplay.textContent = `${simState.activePresetConfig.movementAttMoveDir}%`;
+		movementArenaRadiusSlider.value = simState.activePresetConfig.movementArenaRadius;
+		movementArenaRadiusDisplay.textContent = simState.activePresetConfig.movementArenaRadius;
+		updateSliderDisplay(movementFillSlider, movementFillDisplay, null, simState.activePresetConfig.movementFillPercent);
+		updateSliderDisplay(movementAttPreyRatioSlider, movementRatioDisplay, ratioMap, simState.activePresetConfig.movementAttPreyRatioIndex);
+		// Preset 8: Quorum Sensing
+		attackerQSProdSlider.value = simState.activePresetConfig.attackerQSProd;
+		attackerQSProdDisplay.textContent = simState.activePresetConfig.attackerQSProd;
+		attackerQSKSlider.value = simState.activePresetConfig.attackerQSK;
+		attackerQSKDisplay.textContent = simState.activePresetConfig.attackerQSK;
+		attackerQSNSlider.value = simState.activePresetConfig.attackerQSN;
+		attackerQSNDisplay.textContent = simState.activePresetConfig.attackerQSN;
+		
+		preyQSProdSlider.value = simState.activePresetConfig.preyQSProd;
+		preyQSProdDisplay.textContent = simState.activePresetConfig.preyQSProd;
+		preyQSKSlider.value = simState.activePresetConfig.preyQSK;
+		preyQSKDisplay.textContent = simState.activePresetConfig.preyQSK;
+		preyQSNSlider.value = simState.activePresetConfig.preyQSN;
+		preyQSNDisplay.textContent = simState.activePresetConfig.preyQSN;
+
+		updateSliderDisplay(attackerQSArenaFillSlider, attackerQSArenaFillDisplay, null, simState.activePresetConfig.attackerQSFillPercent);
+		updateSliderDisplay(attackerQSAttPreyRatioSlider, attackerQSRatioDisplay, ratioMap, simState.activePresetConfig.attackerQSAttPreyRatioIndex);
+		
+		// Preset 9: Battle Royale
+		brArenaRadiusSlider.value = simState.activePresetConfig.brArenaRadius;
+		brArenaRadiusDisplay.textContent = simState.activePresetConfig.brArenaRadius;
+		brFillSlider.value = simState.activePresetConfig.brFillPercent;
+		brFillDisplay.textContent = `${simState.activePresetConfig.brFillPercent}%`;
+		brAttackerPercentSlider.value = simState.activePresetConfig.brAttackerPercent;
+		brDefenderPercentSlider.value = simState.activePresetConfig.brDefenderPercent;
+		updateBattleRoyaleSliders(); // This sets all slider values, maxes, and text displays
+		
+		// Strategy Sliders
+		const attMoveVal = simState.activePresetConfig.brAttMovement;
+		brAttMovementSlider.value = attMoveVal;
+		brAttMovementDisplay.textContent = brAttMovementMap[attMoveVal];
+		
+		const defSelVal = simState.activePresetConfig.brDefSelectivity;
+		brDefSelectivitySlider.value = defSelVal;
+		brDefSelectivityDisplay.textContent = brDefSelectivityMap[defSelVal];
+
+		// Checkboxes
+		brAttQsCheckbox.checked = simState.activePresetConfig.brAttQs;
+		brAttKinCheckbox.checked = simState.activePresetConfig.brAttKin;
+		brAttContactCheckbox.checked = simState.activePresetConfig.brAttContact;
+		brAttPredationCheckbox.checked = simState.activePresetConfig.brAttPredation;
+		brPreyMovementCheckbox.checked = simState.activePresetConfig.brPreyMovement;
+		brPreyAiCheckbox.checked = simState.activePresetConfig.brPreyAi;
+		brPreyCapsuleCheckbox.checked = simState.activePresetConfig.brPreyCapsule;
+		brDefMovementCheckbox.checked = simState.activePresetConfig.brDefMovement;
+		brDefPredationCheckbox.checked = simState.activePresetConfig.brDefPredation;
+		
+		document.querySelectorAll('#presetGroupBattleroyale .preset-select-button').forEach(btn => {
+			const action = btn.dataset.action;
+			const type = btn.dataset.type;
+			let isActive = false;
+			if (action === 'brAttMovement') isActive = simState.activePresetConfig.brAttMovement === type;
+			else if (action === 'brAttQs') isActive = simState.activePresetConfig.brAttQs === type;
+			else if (action === 'brAttKin') isActive = simState.activePresetConfig.brAttKin === type;
+			else if (action === 'brAttContact') isActive = simState.activePresetConfig.brAttContact === type;
+			else if (action === 'brAttPredation') isActive = simState.activePresetConfig.brAttPredation === type;
+			else if (action === 'brPreyMovement') isActive = simState.activePresetConfig.brPreyMovement === type;
+			else if (action === 'brPreyAi') isActive = simState.activePresetConfig.brPreyAi === type;
+			else if (action === 'brPreyCapsule') isActive = simState.activePresetConfig.brPreyCapsule === type;
+			else if (action === 'brDefMovement') isActive = simState.activePresetConfig.brDefMovement === type;
+			else if (action === 'brDefSelectivity') isActive = simState.activePresetConfig.brDefSelectivity === type;
+			else if (action === 'brDefPredation') isActive = simState.activePresetConfig.brDefPredation === type;
+			btn.classList.toggle('active-preset-subtype', isActive);
+		});
+		
 		setActivePresetGroup(`presetGroup${simState.activePresetConfig.group.charAt(0).toUpperCase() + simState.activePresetConfig.group.slice(1)}`);
 		presetsModalOverlay.classList.remove('hidden');
 	});
@@ -2627,153 +3115,272 @@ stopButton.addEventListener('click', () => {
 	closePresetsModalButton.addEventListener('click', () => presetsModalOverlay.classList.add('hidden'));
 	presetsModalOverlay.addEventListener('click', (event) => { if (event.target === presetsModalOverlay) presetsModalOverlay.classList.add('hidden'); });
 
+
 	applyActivePresetButton.addEventListener('click', () => {
 		const group = simState.activePresetConfig.group;
+		
+		// 1. Get the baseline and the specific overrides
+		const overrideSettings = PRESET_OVERRIDES[group] || {};
+		
+		// 2. Apply *only* these overrides to the UI.
+		//    This will not touch any other setting the user has changed.
+		applySettingsObject(overrideSettings);
+
+		// 3. Call the *specific* function for the preset.
+		//    This function will *only* handle dynamic logic (sliders, buttons)
+		//    and *overwrite* any settings as needed.
 		if (group === 'density') applyDensitySettings();
 		else if (group === 'sensitivity') applySensitivitySettings();
 		else if (group === 'contactkin') applyContactKinSettings(); 
 		else if (group === 'titfortat') applyTitForTatSettings();
+		else if (group === 'capsule') applyCapsuleSettings();
+		else if (group === 'predation') applyPredationSettings();
+		else if (group === 'movement') applyMovementSettings();
+		else if (group === 'qs') applyQSSettings();
+		else if (group === 'battleroyale') applyBattleRoyaleSettings();
+		
+		// 4. Finalize (this is unchanged)
+		// This will read the final UI state back into simState.config
 		finalizePresetApplication();
 	});
 
-	function applyPresetDefaults(isPredPreyOnly = true) {
-		updateInputElement('t6ssFireCooldownMinInput', 3); updateInputElement('t6ssFireCooldownMaxInput', 5);
-		updateInputElement('predatorPrecisionInput', 25); updateInputElement('predatorContactSensingBiasInput', 0);
-		updateInputElement('predatorKinExclusionInput', 0); updateInputElement('predatorKinExclusionPenaltyInput', 3);
-		updateInputElement('predNonLyticUnitsPerHitInput', 3); updateInputElement('predNonLyticDeliveryChanceInput', 90);
-		updateInputElement('predLyticUnitsPerHitInput', 3); updateInputElement('predLyticDeliveryChanceInput', 90);
-		updateInputElement('predNonLyticUnitsToDieInput', 5); updateInputElement('predLyticUnitsToLyseInput', 5);
-		updateInputElement('predBaseLysisDelayInput', 20);
-
-		updateInputElement('preyNonLyticUnitsToDiePredInput', 3); updateInputElement('preyLyticUnitsToLysePredInput', 5);
-		updateInputElement('preyBaseLysisDelayPredInput', 20); updateInputElement('preyNonLyticResistancePredInput', 10);
-		updateInputElement('preyLyticResistancePredInput', 10);
-		updateInputElement('preyNonLyticUnitsToDieDefInput', 3); updateInputElement('preyLyticUnitsToLyseDefInput', 5);
-		updateInputElement('preyBaseLysisDelayDefInput', 20); updateInputElement('preyNonLyticResistanceDefInput', 10);
-		updateInputElement('preyLyticResistanceDefInput', 10);
-
-		updateInputElement('defenderReplicationMeanInput', 25); updateInputElement('defenderReplicationRangeInput', 5);
-		updateInputElement('defNonLyticUnitsPerHitInput', 2); updateInputElement('defNonLyticDeliveryChanceInput', 80);
-		updateInputElement('defLyticUnitsPerHitInput', 2); updateInputElement('defLyticDeliveryChanceInput', 80);
-		updateInputElement('defNonLyticUnitsToDieInput', 10); updateInputElement('defLyticUnitsToLyseInput', 10);
-		updateInputElement('defBaseLysisDelayInput', 40); updateInputElement('defNonLyticResistanceInput', 50);
-		updateInputElement('defLyticResistanceInput', 50);
-
-		if (isPredPreyOnly) {
-			updateInputElement('initialDefendersInput', 0); 
-			updateInputElement('defenderSenseChanceInput', 50); updateInputElement('defenderMaxRetaliationsInput', 7);
-			updateInputElement('defenderRandomFireCooldownMinInput', 25); updateInputElement('defenderRandomFireCooldownMaxInput', 35);
-			updateInputElement('defenderRandomFireChanceInput', 0.3);
-		} else {
-			updateInputElement('defenderSenseChanceInput', 50); updateInputElement('defenderMaxRetaliationsInput', 7);
-			updateInputElement('defenderRandomFireCooldownMinInput', 25); updateInputElement('defenderRandomFireCooldownMaxInput', 35);
-			updateInputElement('defenderRandomFireChanceInput', 0.3);
-		}
-	}
-
-	function calculateAndSetCellCounts(fillPercent, predToPreyRatioValue, includeDefenders = false, defenderRatioPart = 1) {
+ 
+	function calculateAndSetCellCounts(fillPercent, attToPreyRatioValue, includeDefenders = false, defenderRatioPart = 1) {
 		const arenaRadius = parseInt(arenaGridRadiusInput.value) || simState.config.hexGridActualRadius; 
 		const totalSpaces = 1 + 3 * arenaRadius * (arenaRadius + 1);
 		const totalCellsToPlace = Math.round(totalSpaces * (fillPercent / 100));
-		let predCount, preyCount, defCount = 0;
+		let attCount, preyCount, defCount = 0;
 
 		if (includeDefenders) {
-			const totalParts = predToPreyRatioValue + 1 + defenderRatioPart; 
-			if (totalParts === 0) { predCount = 0; preyCount = 0; defCount = 0; }
+			const totalParts = attToPreyRatioValue + 1 + defenderRatioPart; 
+			if (totalParts === 0) { attCount = 0; preyCount = 0; defCount = 0; }
 			else {
 				preyCount = Math.round(totalCellsToPlace * (1 / totalParts));
-				predCount = Math.round(totalCellsToPlace * (predToPreyRatioValue / totalParts));
+				attCount = Math.round(totalCellsToPlace * (attToPreyRatioValue / totalParts));
 				defCount = Math.round(totalCellsToPlace * (defenderRatioPart / totalParts));
 			}
-			const currentTotal = predCount + preyCount + defCount;
+			const currentTotal = attCount + preyCount + defCount;
 			if (currentTotal !== totalCellsToPlace && totalCellsToPlace > 0) {
 				 preyCount += (totalCellsToPlace - currentTotal);
 				 if(preyCount < 0) { 
-					 if(predCount + defCount < totalCellsToPlace && predCount > Math.abs(preyCount)) predCount += preyCount;
+					 if(attCount + defCount < totalCellsToPlace && attCount > Math.abs(preyCount)) attCount += preyCount;
 					 else if (defCount > Math.abs(preyCount)) defCount += preyCount;
 					 preyCount = 0;
 				}
 			}
 		} else { 
-			if (predToPreyRatioValue + 1 === 0) { preyCount = 0; predCount = 0;} 
+			if (attToPreyRatioValue + 1 === 0) { preyCount = 0; attCount = 0;} 
 			else {
-				preyCount = Math.round(totalCellsToPlace / (predToPreyRatioValue + 1));
-				predCount = totalCellsToPlace - preyCount;
+				preyCount = Math.round(totalCellsToPlace / (attToPreyRatioValue + 1));
+				attCount = totalCellsToPlace - preyCount;
 			}
 		}
-		updateInputElement('initialPredatorsInput', Math.max(0, predCount));
+		updateInputElement('initialAttackersInput', Math.max(0, attCount));
 		updateInputElement('initialPreyInput', Math.max(0, preyCount));
 		updateInputElement('initialDefendersInput', Math.max(0, defCount));
 	}
 
+
 	function applyDensitySettings() {
-		applyPresetDefaults(true); 
-		const fillPercentage = simState.activePresetConfig.densityFillPercent;
-		const predToPreyRatio = ratioValues[simState.activePresetConfig.densityPredPreyRatioIndex];
-		calculateAndSetCellCounts(fillPercentage, predToPreyRatio, false);
+		const config = simState.activePresetConfig;
+		calculateAndSetCellCounts(config.densityFillPercent, ratioValues[config.densityAttPreyRatioIndex], false);
 	}
 
 	function applySensitivitySettings() {
-		applyPresetDefaults(true); 
-		const fillPercentage = simState.activePresetConfig.sensitivityFillPercent;
-		const predToPreyRatio = ratioValues[simState.activePresetConfig.sensitivityPredPreyRatioIndex];
-		const sensitivityType = simState.activePresetConfig.sensitivityType;
-		calculateAndSetCellCounts(fillPercentage, predToPreyRatio, false); 
+		const config = simState.activePresetConfig;
+		calculateAndSetCellCounts(config.sensitivityFillPercent, ratioValues[config.sensitivityAttPreyRatioIndex], false); 
+		
+		// This dynamic logic is still needed
 		let nlDie = 3, lLyse = 3, nlRes = 10, lRes = 10; 
-		switch (sensitivityType) {
+		switch (config.sensitivityType) {
 			case 'lytic_only': nlDie = 999; lLyse = 3; nlRes = 100; lRes = 0; break;
 			case 'nonlytic_only': nlDie = 3; lLyse = 999; nlRes = 0; lRes = 100; break;
 			case 'both_sensitive': nlDie = 4; lLyse = 4; nlRes = 10; lRes = 10; break; 
 		}
-		updateInputElement('preyNonLyticUnitsToDiePredInput', nlDie); updateInputElement('preyLyticUnitsToLysePredInput', lLyse);
-		updateInputElement('preyNonLyticResistancePredInput', nlRes); updateInputElement('preyLyticResistancePredInput', lRes);
-		updateInputElement('preyNonLyticUnitsToDieDefInput', nlDie); updateInputElement('preyLyticUnitsToLyseDefInput', lLyse); 
-		updateInputElement('preyNonLyticResistanceDefInput', nlRes); updateInputElement('preyLyticResistanceDefInput', lRes);
+		updateInputElement('preyNonLyticUnitsToDieAttInput', nlDie); 
+		updateInputElement('preyLyticUnitsToLyseAttInput', lLyse);
+		updateInputElement('preyNonLyticResistanceAttInput', nlRes); 
+		updateInputElement('preyLyticResistanceAttInput', lRes);
+		updateInputElement('preyNonLyticUnitsToDieDefInput', nlDie); 
+		updateInputElement('preyLyticUnitsToLyseDefInput', lLyse); 
+		updateInputElement('preyNonLyticResistanceDefInput', nlRes); 
+		updateInputElement('preyLyticResistanceDefInput', lRes);
 	}
 
 	function applyContactKinSettings() { 
-		applyPresetDefaults(true); 
-		const fillPercentage = simState.activePresetConfig.contactKinFillPercent;
-		const predToPreyRatio = ratioValues[simState.activePresetConfig.contactKinPredPreyRatioIndex];
-		calculateAndSetCellCounts(fillPercentage, predToPreyRatio, false); 
-
-		updateInputElement('predatorContactSensingBiasInput', simState.activePresetConfig.contactKinContactSensingBias);
-		updateInputElement('predatorKinExclusionInput', simState.activePresetConfig.contactKinKinExclusion);
+		const config = simState.activePresetConfig;
+		calculateAndSetCellCounts(config.contactKinFillPercent, ratioValues[config.contactKinAttPreyRatioIndex], false); 
+		
+		// Apply dynamic slider values
+		updateInputElement('attackerContactSensingBiasInput', config.contactKinContactSensingBias);
+		updateInputElement('attackerKinExclusionInput', config.contactKinKinExclusion);
 	}
 
 	function applyTitForTatSettings() {
-		applyPresetDefaults(false); 
-		const fillPercentage = simState.activePresetConfig.titfortatFillPercent;
-		calculateAndSetCellCounts(fillPercentage, 1, true, 1); 
+		const config = simState.activePresetConfig;
+		// The 'titfortat' preset has defenderRatioPart=1
+		calculateAndSetCellCounts(config.titfortatFillPercent, 1, true, 1); 
 
-		updateInputElement('preyNonLyticUnitsToDiePredInput', 50); updateInputElement('preyLyticUnitsToLysePredInput', 50);
-		updateInputElement('preyNonLyticResistancePredInput', 90); updateInputElement('preyLyticResistancePredInput', 90);
-		updateInputElement('preyNonLyticUnitsToDieDefInput', 3); updateInputElement('preyLyticUnitsToLyseDefInput', 3);
-		updateInputElement('preyNonLyticResistanceDefInput', 0); updateInputElement('preyLyticResistanceDefInput', 0);
-
-		updateInputElement('predNonLyticUnitsToDieInput', 3); updateInputElement('predLyticUnitsToLyseInput', 3);
-
-		updateInputElement('defNonLyticUnitsPerHitInput', 2); updateInputElement('defLyticUnitsPerHitInput', 1);
-		updateInputElement('defNonLyticDeliveryChanceInput', 75); updateInputElement('defLyticDeliveryChanceInput', 75);
-
-		updateInputElement('defenderMaxRetaliationsInput', 5); 
-		updateInputElement('defenderRandomFireCooldownMinInput', 8); updateInputElement('defenderRandomFireCooldownMaxInput', 12);
-
-		switch (simState.activePresetConfig.titfortatLevel) {
+		// Apply dynamic button logic
+		switch (config.titfortatLevel) {
 			case 'high': updateInputElement('defenderSenseChanceInput', 90); updateInputElement('defenderRandomFireChanceInput', 0.1); break;
 			case 'medium': updateInputElement('defenderSenseChanceInput', 50); updateInputElement('defenderRandomFireChanceInput', 1); break;
 			case 'poor': updateInputElement('defenderSenseChanceInput', 10); updateInputElement('defenderRandomFireChanceInput', 10); break;
 		}
 	}
 
+	function applyCapsuleSettings() {
+		const config = simState.activePresetConfig;
+		calculateAndSetCellCounts(config.capsuleFillPercent, ratioValues[config.capsuleAttPreyRatioIndex], false);
+		
+		// Apply dynamic slider values
+		updateInputElement('preyCapsuleMaxProtectionInput', config.capsuleProtectionPercent);
+		updateInputElement('preyCapsuleCooldownMinInput', config.capsuleLayerTime);
+		updateInputElement('preyCapsuleCooldownMaxInput', config.capsuleLayerTime);
+	}
+
+	function applyPredationSettings() {
+		const config = simState.activePresetConfig;
+		calculateAndSetCellCounts(config.predationFillPercent, ratioValues[config.predationAttPreyRatioIndex], false);
+		
+		// Apply dynamic button logic
+		let nlDie = 3, lLyse = 3, nlRes = 10, lRes = 10; 
+		switch (config.predationEffectorType) {
+			case 'lytic_only': nlDie = 999; lLyse = 3; nlRes = 100; lRes = 0; break;
+			case 'nonlytic_only': nlDie = 3; lLyse = 999; nlRes = 0; lRes = 100; break;
+			case 'both_sensitive': nlDie = 4; lLyse = 4; nlRes = 10; lRes = 10; break; 
+		}
+		updateInputElement('preyNonLyticUnitsToDieAttInput', nlDie); 
+		updateInputElement('preyLyticUnitsToLyseAttInput', lLyse);
+		updateInputElement('preyNonLyticResistanceAttInput', nlRes); 
+		updateInputElement('preyLyticResistanceAttInput', lRes);
+
+		// Apply dynamic slider value
+		updateInputElement('attackerLysesPerReplicationInput', config.predationLysesPerRep);
+	}
+
+	function applyMovementSettings() {
+		const config = simState.activePresetConfig;
+		calculateAndSetCellCounts(config.movementFillPercent, ratioValues[config.movementAttPreyRatioIndex], false);
+
+		// Apply dynamic slider values
+		updateInputElement('preyQSProductionRateInput', config.movementPreyAiProd);
+		updateInputElement('attackerMoveProbabilityInput', config.movementAttMoveProb);
+		updateInputElement('attackerMoveDirectionalityInput', config.movementAttMoveDir);
+		updateInputElement('arenaGridRadiusInput', config.movementArenaRadius);
+
+		// Apply dynamic button logic
+		if (config.movementPredation === 'on') {
+			updateInputElement('attackerReplicationMeanInput', -1);
+//			updateInputElement('attackerLysesPerReplicationInput', 3);
+		} else { // 'off'
+			updateInputElement('attackerLysesPerReplicationInput', 0);
+		}
+	}
+	
+	function applyQSSettings() {
+		const config = simState.activePresetConfig;
+
+		// 1. Set cell counts from sliders
+		calculateAndSetCellCounts(config.attackerQSFillPercent, ratioValues[config.attackerQSAttPreyRatioIndex], false);
+
+		// 2. Apply dynamic Attacker QS settings
+		updateInputElement('attackerQSProductionRateInput', config.attackerQSProd);
+		updateInputElement('attackerQSMidpointInput', config.attackerQSK);
+		updateInputElement('attackerQSCooperativityInput', config.attackerQSN);
+
+		// 3. Apply dynamic Prey QS settings
+		updateInputElement('preyQSProductionRateInput', config.preyQSProd);
+		updateInputElement('preyCapsuleDerepressionMidpointInput', config.preyQSK);
+		updateInputElement('preyCapsuleCooperativityInput', config.preyQSN);
+	}
+
+	function applyBattleRoyaleSettings() {
+		const config = simState.activePresetConfig;
+
+		// 1. Set Arena Radius
+		updateInputElement('arenaGridRadiusInput', config.brArenaRadius);
+
+		// 2. Set cell counts based on percentages
+		calculateAndSetCellCountsByPercentage(config.brFillPercent, config.brAttackerPercent, config.brDefenderPercent);
+
+		// 3. Apply Attacker Strategies
+		switch (config.brAttMovement) {
+			case 0: // No
+				updateInputElement('attackerMoveProbabilityInput', 0);
+				break;
+			case 1: // Yes
+				updateInputElement('attackerMoveProbabilityInput', 50);
+				updateInputElement('attackerMovePreyAiAttractionInput', 0);
+				break;
+			case 2: // AI
+				updateInputElement('attackerMoveProbabilityInput', 50);
+				updateInputElement('attackerMovePreyAiAttractionInput', 100);
+				break;
+		}
+		updateInputElement('attackerQSMidpointInput', config.brAttQs ? 1000 : -1);
+		updateInputElement('attackerKinExclusionInput', config.brAttKin ? 100 : 0);
+		updateInputElement('attackerContactSensingBiasInput', config.brAttContact ? 100 : 0);
+		
+		if (config.brAttPredation) {
+			updateInputElement('attackerReplicationMeanInput', -1);
+			updateInputElement('attackerLysesPerReplicationInput', 3);
+		} else {
+			updateInputElement('attackerReplicationMeanInput', 120);
+			updateInputElement('attackerLysesPerReplicationInput', 0);
+		}
+
+		// 4. Apply Prey Strategies
+		updateInputElement('preyMoveProbabilityInput', config.brPreyMovement ? 50 : 0);
+		updateInputElement('preyQSProductionRateInput', config.brPreyAi ? 100 : 0);
+		
+		if (!config.brPreyCapsule) {
+			updateInputElement('preyCapsuleSystemEnabledCheckbox', false);
+		} else { // 'yes'
+			updateInputElement('preyCapsuleSystemEnabledCheckbox', true);
+			// Linked logic: if AI is on, make capsule QS-dependent. Otherwise, make it constitutive.
+			if (config.brPreyAi) {
+				updateInputElement('preyCapsuleDerepressionMidpointInput', 5000);
+			} else {
+				updateInputElement('preyCapsuleDerepressionMidpointInput', -1);
+			}
+		}
+
+		// 5. Apply Defender Strategies
+		updateInputElement('defenderMoveProbabilityInput', config.brDefMovement ? 50 : 0);
+		
+		switch (config.brDefSelectivity) {
+			case 0: // Low
+				updateInputElement('defenderSenseChanceInput', 10); 
+				updateInputElement('defenderRandomFireChanceInput', 10); 
+				break;
+			case 1: // Medium
+				updateInputElement('defenderSenseChanceInput', 50); 
+				updateInputElement('defenderRandomFireChanceInput', 1); 
+				break;
+			case 2: // High
+				updateInputElement('defenderSenseChanceInput', 90); 
+				updateInputElement('defenderRandomFireChanceInput', 0.1); 
+				break;
+		}
+		
+		if (config.brDefPredation) {
+			updateInputElement('defenderReplicationMeanInput', -1);
+			updateInputElement('defenderLysesPerReplicationInput', 3);
+		} else {
+			updateInputElement('defenderReplicationMeanInput', 180);
+			updateInputElement('defenderLysesPerReplicationInput', 0);
+		}
+	}	
+
 	function finalizePresetApplication() {
 		updateConfigFromUI(true); 
 		resetSimulationState(); 
 
-		const hasPredators = simState.config.predator.initialCount > 0;
+		const hasAttackers = simState.config.attacker.initialCount > 0;
 		const hasPrey = simState.config.prey.initialCount > 0;
 		const hasDefenders = simState.config.defender.initialCount > 0;
-		if (hasPredators || hasPrey || hasDefenders) {
+		if (hasAttackers || hasPrey || hasDefenders) {
 			populateCellsRandomly(); 
 			simState.isInitialized = true;
 		} else {
@@ -2812,7 +3419,7 @@ function captureFullState() {
         killedThisStep: { ...simState.killedThisStep },
         lysedThisStep: { ...simState.lysedThisStep },
         activeFiringsThisStep: Array.from(simState.activeFiringsThisStep.entries()),
-        predatorAiGrid: Array.from(simState.predatorAiGrid.entries()),
+        attackerAiGrid: Array.from(simState.attackerAiGrid.entries()),
         preyAiGrid: Array.from(simState.preyAiGrid.entries()),
         cells: Array.from(simState.cells.values()).map(cellObject => {
             const valueArray = [];
@@ -2896,7 +3503,7 @@ function rehydrateOptimizedStep(inputObject) {
 		cells: rehydratedCells,
 
 		// --- This simplified logic now correctly handles all maps from all sources ---
-		predatorAiGrid: new Map(sourceForState.predatorAiGrid || []),
+		attackerAiGrid: new Map(sourceForState.attackerAiGrid || []),
 		preyAiGrid: new Map(sourceForState.preyAiGrid || []),
 		activeFiringsThisStep: new Map(sourceForState.activeFiringsThisStep || [])
 	};
@@ -3020,29 +3627,29 @@ async function runSimulationStep() {
 			// So, we will record it once more if it's the *exact* end time.
 			if (!simState.finalStateRecorded) { // Add a flag to record only once
 				// Record final state
-				let currentLivePredatorCount = 0, currentLivePreyCount = 0, currentLiveDefenderCount = 0;
-				let currentDeadLysingPredatorCount = 0, currentDeadLysingPreyCount = 0, currentDeadLysingDefenderCount = 0;
+				let currentLiveAttackerCount = 0, currentLivePreyCount = 0, currentLiveDefenderCount = 0;
+				let currentDeadLysingAttackerCount = 0, currentDeadLysingPreyCount = 0, currentDeadLysingDefenderCount = 0;
 				const currentGridRadiusFinal = simState.config.hexGridActualRadius;
 				// Barriers are not included in these counts for the report
 				simState.cells.forEach(c => {
 					if (!isWithinHexBounds(c.q, c.r, currentGridRadiusFinal) || c.isEffectivelyGone) return;
 					if (c.isDead || c.isLysing) {
-						if (c.type === 'predator') currentDeadLysingPredatorCount++;
+						if (c.type === 'attacker') currentDeadLysingAttackerCount++;
 						else if (c.type === 'prey') currentDeadLysingPreyCount++;
 						else if (c.type === 'defender') currentDeadLysingDefenderCount++;
 					} else {
-						if (c.type === 'predator') currentLivePredatorCount++;
+						if (c.type === 'attacker') currentLiveAttackerCount++;
 						else if (c.type === 'prey') currentLivePreyCount++;
 						else if (c.type === 'defender') currentLiveDefenderCount++;
 					}
 				});
 				simState.historicalData.push({
 					time: simState.simulationStepCount, // This is totalSimulationMinutes
-					livePredators: currentLivePredatorCount, livePrey: currentLivePreyCount, liveDefenders: currentLiveDefenderCount,
-					deadLysingPredators: currentDeadLysingPredatorCount, deadLysingPrey: currentDeadLysingPreyCount, deadLysingDefenders: currentDeadLysingDefenderCount,
+					liveAttackers: currentLiveAttackerCount, livePrey: currentLivePreyCount, liveDefenders: currentLiveDefenderCount,
+					deadLysingAttackers: currentDeadLysingAttackerCount, deadLysingPrey: currentDeadLysingPreyCount, deadLysingDefenders: currentDeadLysingDefenderCount,
 					firings: simState.cumulativeFirings,
-					killedPredators: simState.cumulativeKills.predator, killedPrey: simState.cumulativeKills.prey, killedDefenders: simState.cumulativeKills.defender,
-					lysedPredators: simState.cumulativeLyses.predator, lysedPrey: simState.cumulativeLyses.prey, lysedDefenders: simState.cumulativeLyses.defender,
+					killedAttackers: simState.cumulativeKills.attacker, killedPrey: simState.cumulativeKills.prey, killedDefenders: simState.cumulativeKills.defender,
+					lysedAttackers: simState.cumulativeLyses.attacker, lysedPrey: simState.cumulativeLyses.prey, lysedDefenders: simState.cumulativeLyses.defender,
 					cprgConverted: simState.totalCPRGConverted
 				});
 				if (simState.saveImagesEnabled) { captureArenaImage(); }
@@ -3068,18 +3675,18 @@ async function runSimulationStep() {
 		}
 
 		// --- Record and Visualize Current State (for current simState.simulationStepCount) ---
-		let currentLivePredatorCount = 0, currentLivePreyCount = 0, currentLiveDefenderCount = 0;
-		let currentDeadLysingPredatorCount = 0, currentDeadLysingPreyCount = 0, currentDeadLysingDefenderCount = 0;
+		let currentLiveAttackerCount = 0, currentLivePreyCount = 0, currentLiveDefenderCount = 0;
+		let currentDeadLysingAttackerCount = 0, currentDeadLysingPreyCount = 0, currentDeadLysingDefenderCount = 0;
 		const currentGridRadius = simState.config.hexGridActualRadius; // Use current config for bounds checking
 		// Barriers are not included in historical data counts
 		simState.cells.forEach(c => {
 			if (!isWithinHexBounds(c.q, c.r, currentGridRadius) || c.isEffectivelyGone) return;
 			if (c.isDead || c.isLysing) {
-				if (c.type === 'predator') currentDeadLysingPredatorCount++;
+				if (c.type === 'attacker') currentDeadLysingAttackerCount++;
 				else if (c.type === 'prey') currentDeadLysingPreyCount++;
 				else if (c.type === 'defender') currentDeadLysingDefenderCount++;
 			} else {
-				if (c.type === 'predator') currentLivePredatorCount++;
+				if (c.type === 'attacker') currentLiveAttackerCount++;
 				else if (c.type === 'prey') currentLivePreyCount++;
 				else if (c.type === 'defender') currentLiveDefenderCount++;
 			}
@@ -3088,11 +3695,11 @@ async function runSimulationStep() {
 		// For time 0, cumulative stats are already 0. For subsequent steps, they reflect previous step's actions.
 		simState.historicalData.push({
 			time: simState.simulationStepCount,
-			livePredators: currentLivePredatorCount, livePrey: currentLivePreyCount, liveDefenders: currentLiveDefenderCount,
-			deadLysingPredators: currentDeadLysingPredatorCount, deadLysingPrey: currentDeadLysingPreyCount, deadLysingDefenders: currentDeadLysingDefenderCount,
+			liveAttackers: currentLiveAttackerCount, livePrey: currentLivePreyCount, liveDefenders: currentLiveDefenderCount,
+			deadLysingAttackers: currentDeadLysingAttackerCount, deadLysingPrey: currentDeadLysingPreyCount, deadLysingDefenders: currentDeadLysingDefenderCount,
 			firings: simState.cumulativeFirings, // Cumulative up to *before* this step's calculations
-			killedPredators: simState.cumulativeKills.predator, killedPrey: simState.cumulativeKills.prey, killedDefenders: simState.cumulativeKills.defender,
-			lysedPredators: simState.cumulativeLyses.predator, lysedPrey: simState.cumulativeLyses.prey, lysedDefenders: simState.cumulativeLyses.defender,
+			killedAttackers: simState.cumulativeKills.attacker, killedPrey: simState.cumulativeKills.prey, killedDefenders: simState.cumulativeKills.defender,
+			lysedAttackers: simState.cumulativeLyses.attacker, lysedPrey: simState.cumulativeLyses.prey, lysedDefenders: simState.cumulativeLyses.defender,
 			cprgConverted: simState.totalCPRGConverted // CPRG state *before* this step's lysis
 		});
 
@@ -3133,8 +3740,8 @@ async function runSimulationStep() {
 		// --- Clear Per-Step Trackers (before calculations for the current step) ---
 		simState.activeFiringsThisStep.clear();
 		simState.firingsThisStep = 0;
-		simState.killedThisStep = { predator: 0, prey: 0, defender: 0 };
-		simState.lysedThisStep = { predator: 0, prey: 0, defender: 0 };
+		simState.killedThisStep = { attacker: 0, prey: 0, defender: 0 };
+		simState.lysedThisStep = { attacker: 0, prey: 0, defender: 0 };
 
 
 		// --- Perform Calculations for State Transition (from current simState.simulationStepCount to next) ---
@@ -3153,17 +3760,17 @@ async function runSimulationStep() {
 		// Snapshot for actions, using the working copy that has had cooldowns decremented and gone cells removed
 		const currentCellsSnapshotForActions = new Map(newCellsWorkingCopy);
 
-		// Predator Firing Logic
+		// Attacker Firing Logic
 		for (const attacker of cellsToProcess) {
-			// ... (existing predator firing logic, ensure it uses newCellsWorkingCopy for target lookups if needed, or currentCellsSnapshotForActions)
+			// ... (existing attacker firing logic, ensure it uses newCellsWorkingCopy for target lookups if needed, or currentCellsSnapshotForActions)
 			// ... (it correctly uses currentCellsSnapshotForActions for target cell lookup, and newCellsWorkingCopy for direct modification if any. Barriers are not modified by receiveHit)
 
-			if (attacker.type !== 'predator' || attacker.isDead || attacker.isLysing || !isWithinHexBounds(attacker.q, attacker.r, currentGridRadius)) continue;
+			if (attacker.type !== 'attacker' || attacker.isDead || attacker.isLysing || !isWithinHexBounds(attacker.q, attacker.r, currentGridRadius)) continue;
 
 			// --- MODIFIED QUORUM SENSING CHECK ---
 			const attackerKey = `${attacker.q},${attacker.r}`;
-			const qsConfig = simState.config.predator.qs;
-			const aiConcentration = simState.predatorAiGrid.get(attackerKey) || 0;
+			const qsConfig = simState.config.attacker.qs;
+			const aiConcentration = simState.attackerAiGrid.get(attackerKey) || 0;
 
 			let p_active_calculated; // Use a different variable name
 
@@ -3208,19 +3815,19 @@ async function runSimulationStep() {
 
 					// --- Step 2: Create an initial pool of potential targets by applying kin exclusion ---
 					let potentialTargets = neighborInfos;
-					const kinExclusionPenalty = simState.config.predator.t6ss.kinExclusionPenalty;
-					const performKinExclusion = rng() < simState.config.predator.t6ss.kinExclusion;
+					const kinExclusionPenalty = simState.config.attacker.t6ss.kinExclusionPenalty;
+					const performKinExclusion = rng() < simState.config.attacker.t6ss.kinExclusion;
 
 					if (performKinExclusion) {
 						if (kinExclusionPenalty === -1) {
 							// "Smart Targeting": The pool of potential targets is pre-filtered to exclude kin.
-							potentialTargets = neighborInfos.filter(n => !n.cell || n.cell.type !== 'predator');
+							potentialTargets = neighborInfos.filter(n => !n.cell || n.cell.type !== 'attacker');
 						}
 						// If penalty is >= 0, we don't pre-filter. We check for kin after selecting a target.
 					}
 
 					// --- Step 3: From the potential pool, choose a target based on Contact Sensing Bias ---
-					const useContactStrategy = rng() < simState.config.predator.t6ss.contactSensingBias;
+					const useContactStrategy = rng() < simState.config.attacker.t6ss.contactSensingBias;
 					
 					if (useContactStrategy) {
 						// Strategy is to target a contact. Filter the current pool for contacts.
@@ -3238,7 +3845,7 @@ async function runSimulationStep() {
 
 					// --- Step 4: Apply post-selection kin exclusion for the "Cancel & Penalize" mode ---
 					if (finalTarget && performKinExclusion && kinExclusionPenalty >= 0) {
-						if (finalTarget.cell && finalTarget.cell.type === 'predator') {
+						if (finalTarget.cell && finalTarget.cell.type === 'attacker') {
 							shotCancelledByPenalty = true;
 							if (kinExclusionPenalty > 0) {
 								attacker.t6ssFireCooldownTimer = kinExclusionPenalty;
@@ -3250,7 +3857,7 @@ async function runSimulationStep() {
 					if (finalTarget && !shotCancelledByPenalty) {
 						attacker.resetT6SSFireCooldown();
 						simState.firingsThisStep++;
-						const isPreciseHit = rng() < simState.config.predator.t6ss.precision;
+						const isPreciseHit = rng() < simState.config.attacker.t6ss.precision;
 						
 						simState.activeFiringsThisStep.set(attacker.id, {
 							directionIndex: finalTarget.directionIndex,
@@ -3316,7 +3923,7 @@ async function runSimulationStep() {
 					if (targetedCellFromSnapshot && !targetedCellFromSnapshot.isEffectivelyGone && isWithinHexBounds(targetCoords.q, targetCoords.r, currentGridRadius)) {
 						// Barriers will have targetedCell.type === 'barrier', receiveHit will do nothing.
 						const targetCellInWorkingCopy = newCellsWorkingCopy.get(targetCellKey); // Get the actual cell to modify
-						if (targetCellInWorkingCopy && (targetCellInWorkingCopy.type === 'predator' || targetCellInWorkingCopy.type === 'prey' || targetCellInWorkingCopy.type === 'barrier')) {
+						if (targetCellInWorkingCopy && (targetCellInWorkingCopy.type === 'attacker' || targetCellInWorkingCopy.type === 'prey' || targetCellInWorkingCopy.type === 'barrier')) {
 							targetCellInWorkingCopy.receiveHit(defender);
 						} else if (targetCellInWorkingCopy && targetCellInWorkingCopy.type === 'defender' && targetCellInWorkingCopy.id !== defender.id) {
 							targetCellInWorkingCopy.receiveHit(defender);
@@ -3338,7 +3945,7 @@ async function runSimulationStep() {
 					if (potentialTargetCellFromSnapshot && isWithinHexBounds(randomFireTarget.q, randomFireTarget.r, currentGridRadius) && !potentialTargetCellFromSnapshot.isEffectivelyGone) {
 						// Barriers will have potentialTargetCell.type === 'barrier', receiveHit will do nothing.
 						const targetCellInWorkingCopy = newCellsWorkingCopy.get(targetKey); // Get the actual cell to modify
-						if (targetCellInWorkingCopy && (targetCellInWorkingCopy.type === 'prey' || targetCellInWorkingCopy.type === 'predator' || targetCellInWorkingCopy.type === 'barrier')) {
+						if (targetCellInWorkingCopy && (targetCellInWorkingCopy.type === 'prey' || targetCellInWorkingCopy.type === 'attacker' || targetCellInWorkingCopy.type === 'barrier')) {
 							targetCellInWorkingCopy.receiveHit(defender);
 						} else if (targetCellInWorkingCopy && targetCellInWorkingCopy.type === 'defender' && targetCellInWorkingCopy.id !== defender.id) {
 							targetCellInWorkingCopy.receiveHit(defender);
@@ -3394,7 +4001,7 @@ async function runSimulationStep() {
 			if (cell.canMove()) {
 		        const key = `${cell.q},${cell.r}`;
 
-				if (cell.type === 'predator') moveConfig = simState.config.predator.movement;
+				if (cell.type === 'attacker') moveConfig = simState.config.attacker.movement;
 				else if (cell.type === 'prey') moveConfig = simState.config.prey.movement;
 				else if (cell.type === 'defender') moveConfig = simState.config.defender.movement;
 
@@ -3411,7 +4018,7 @@ async function runSimulationStep() {
 					if (rng() < moveConfig.directionality) {
 						// Prefer empty spot
 						if (emptyNeighbors.length > 0) {
-							if (cell.type === 'predator' && moveConfig.preyAiAttraction > 0 && rng() < moveConfig.preyAiAttraction) { // Check if attraction is enabled and passes probability
+							if (cell.type === 'attacker' && moveConfig.preyAiAttraction > 0 && rng() < moveConfig.preyAiAttraction) { // Check if attraction is enabled and passes probability
 								let bestSpotsAboveThreshold = [];
 								let maxPreyAIAboveThreshold = -1; // Start with a value lower than any possible AI concentration above threshold
 								const attractionThreshold = moveConfig.preyAiAttractionThreshold;
@@ -3524,12 +4131,12 @@ async function runSimulationStep() {
 		simState.cells = newCellsWorkingCopy; // Finalize changes to the main cells Map
 
 
-				// 1. AI Production (for both Predator and Prey)
+				// 1. AI Production (for both Attacker and Prey)
 				newCellsWorkingCopy.forEach((cell, key) => {
-					// Predator AI Production
-					if (cell.type === 'predator' && !cell.isDead && !cell.isLysing) {
-						const currentAI = simState.predatorAiGrid.get(key) || 0;
-						simState.predatorAiGrid.set(key, currentAI + simState.config.predator.qs.productionRate);
+					// Attacker AI Production
+					if (cell.type === 'attacker' && !cell.isDead && !cell.isLysing) {
+						const currentAI = simState.attackerAiGrid.get(key) || 0;
+						simState.attackerAiGrid.set(key, currentAI + simState.config.attacker.qs.productionRate);
 					}
 					// Prey AI Production
 					if (cell.type === 'prey' && !cell.isDead && !cell.isLysing) {
@@ -3539,15 +4146,15 @@ async function runSimulationStep() {
 				});
 
 				// 2. AI Diffusion & Degradation (for both systems)
-				simState.predatorAiGrid = updateAiGrid(simState.predatorAiGrid, simState.config.predator.qs, newCellsWorkingCopy, currentGridRadius);
+				simState.attackerAiGrid = updateAiGrid(simState.attackerAiGrid, simState.config.attacker.qs, newCellsWorkingCopy, currentGridRadius);
 				simState.preyAiGrid = updateAiGrid(simState.preyAiGrid, simState.config.prey.qs, newCellsWorkingCopy, currentGridRadius);
 
 		// Update Cumulative Stats (based on what happened in *this* step's calculations)
 		simState.cumulativeFirings += simState.firingsThisStep;
-		simState.cumulativeKills.predator += simState.killedThisStep.predator;
+		simState.cumulativeKills.attacker += simState.killedThisStep.attacker;
 		simState.cumulativeKills.prey += simState.killedThisStep.prey;
 		simState.cumulativeKills.defender += simState.killedThisStep.defender;
-		simState.cumulativeLyses.predator += simState.lysedThisStep.predator;
+		simState.cumulativeLyses.attacker += simState.lysedThisStep.attacker;
 		simState.cumulativeLyses.prey += simState.lysedThisStep.prey;
 		simState.cumulativeLyses.defender += simState.lysedThisStep.defender;
 
@@ -3704,31 +4311,31 @@ async function runSimulationStep() {
 		// Populate the report with the final numbers
 		reportOutcome.textContent = outcomeReason;
 		reportDuration.textContent = simState.simulationStepCount;
-		let finalLivePredators = 0, finalLivePrey = 0, finalLiveDefenders = 0;
-		let finalDeadLysingPredators = 0, finalDeadLysingPrey = 0, finalDeadLysingDefenders = 0;
+		let finalLiveAttackers = 0, finalLivePrey = 0, finalLiveDefenders = 0;
+		let finalDeadLysingAttackers = 0, finalDeadLysingPrey = 0, finalDeadLysingDefenders = 0;
 		simState.cells.forEach(cell => {
 			if (!isWithinHexBounds(cell.q, cell.r, simState.config.hexGridActualRadius) || cell.isEffectivelyGone) return;
 			if (cell.isDead || cell.isLysing) {
-				if (cell.type === 'predator') finalDeadLysingPredators++;
+				if (cell.type === 'attacker') finalDeadLysingAttackers++;
 				else if (cell.type === 'prey') finalDeadLysingPrey++;
 				else if (cell.type === 'defender') finalDeadLysingDefenders++;
 			} else {
-				if (cell.type === 'predator') finalLivePredators++;
+				if (cell.type === 'attacker') finalLiveAttackers++;
 				else if (cell.type === 'prey') finalLivePrey++;
 				else if (cell.type === 'defender') finalLiveDefenders++;
 			}
 		});
-		reportPredatorsRemaining.textContent = finalLivePredators;
+		reportAttackersRemaining.textContent = finalLiveAttackers;
 		reportLivePreyRemaining.textContent = finalLivePrey;
 		reportDefendersRemaining.textContent = finalLiveDefenders;
-		reportDeadLysingPredators.textContent = finalDeadLysingPredators;
+		reportDeadLysingAttackers.textContent = finalDeadLysingAttackers;
 		reportDeadLysingPrey.textContent = finalDeadLysingPrey;
 		reportDeadLysingDefenders.textContent = finalDeadLysingDefenders;
 		reportCumulativeFirings.textContent = simState.cumulativeFirings.toLocaleString();
-		reportCumulativePredKilled.textContent = simState.cumulativeKills.predator.toLocaleString();
+		reportCumulativeAttKilled.textContent = simState.cumulativeKills.attacker.toLocaleString();
 		reportCumulativePreyKilled.textContent = simState.cumulativeKills.prey.toLocaleString();
 		reportCumulativeDefKilled.textContent = simState.cumulativeKills.defender.toLocaleString();
-		reportCumulativePredLysed.textContent = simState.cumulativeLyses.predator.toLocaleString();
+		reportCumulativeAttLysed.textContent = simState.cumulativeLyses.attacker.toLocaleString();
 		reportCumulativePreyLysed.textContent = simState.cumulativeLyses.prey.toLocaleString();
 		reportCumulativeDefLysed.textContent = simState.cumulativeLyses.defender.toLocaleString();
 		reportTotalCPRGConverted.textContent = simState.totalCPRGConverted.toLocaleString(undefined, {
@@ -3783,10 +4390,10 @@ async function runSimulationStep() {
 		if (simulationChart) simulationChart.destroy(); 
 		const labels = simState.historicalData.map(data => data.time);
 		const datasets = [
-			{ label: 'Live Predators', data: simState.historicalData.map(data => data.livePredators), borderColor: PREDATOR_COLOR.replace('0.9', '1'), backgroundColor: PREDATOR_COLOR.replace('0.9', '0.2'), tension: 0.1, yAxisID: 'yCellCounts' },
+			{ label: 'Live Attackers', data: simState.historicalData.map(data => data.liveAttackers), borderColor: ATTACKER_COLOR.replace('0.9', '1'), backgroundColor: ATTACKER_COLOR.replace('0.9', '0.2'), tension: 0.1, yAxisID: 'yCellCounts' },
 			{ label: 'Live Prey', data: simState.historicalData.map(data => data.livePrey), borderColor: PREY_COLOR.replace('0.9', '1'), backgroundColor: PREY_COLOR.replace('0.9', '0.2'), tension: 0.1, yAxisID: 'yCellCounts' },
 			{ label: 'Live Defenders', data: simState.historicalData.map(data => data.liveDefenders), borderColor: DEFENDER_COLOR.replace('0.9', '1'), backgroundColor: DEFENDER_COLOR.replace('0.9', '0.2'), tension: 0.1, yAxisID: 'yCellCounts' },
-			{ label: 'Dead/Lysing Predators', data: simState.historicalData.map(data => data.deadLysingPredators), borderColor: 'rgba(120, 20, 20, 1)', backgroundColor: 'rgba(120, 20, 20, 0.2)', tension: 0.1, yAxisID: 'yCellCounts', hidden: true },
+			{ label: 'Dead/Lysing Attackers', data: simState.historicalData.map(data => data.deadLysingAttackers), borderColor: 'rgba(120, 20, 20, 1)', backgroundColor: 'rgba(120, 20, 20, 0.2)', tension: 0.1, yAxisID: 'yCellCounts', hidden: true },
 			{ label: 'Dead/Lysing Prey', data: simState.historicalData.map(data => data.deadLysingPrey), borderColor: 'rgba(20, 20, 120, 1)', backgroundColor: 'rgba(20, 20, 120, 0.2)', tension: 0.1, yAxisID: 'yCellCounts', hidden: true },
 			{ label: 'Dead/Lysing Defenders', data: simState.historicalData.map(data => data.deadLysingDefenders || 0), borderColor: 'rgba(200, 90, 10, 1)', backgroundColor: 'rgba(200, 90, 10, 0.2)', tension: 0.1, yAxisID: 'yCellCounts', hidden: true },
 			{ label: 'CPRG Converted', data: simState.historicalData.map(data => data.cprgConverted), borderColor: 'rgba(219, 39, 119, 1)', backgroundColor: 'rgba(219, 39, 119, 0.2)', tension: 0.1, yAxisID: 'yCPRG' }
@@ -3811,11 +4418,11 @@ async function runSimulationStep() {
 		}
 
 		let tsvContent = ""; 
-		const headers = ['Time', 'LivePredators', 'LivePrey', 'LiveDefenders', 'DeadLysingPredators', 'DeadLysingPrey', 'DeadLysingDefenders', 'CumulativeFirings', 'CumulativePredKilled', 'CumulativePreyKilled', 'CumulativeDefKilled', 'CumulativePredLysed', 'CumulativePreyLysed', 'CumulativeDefLysed', 'CPRGConverted'];
+		const headers = ['Time', 'LiveAttackers', 'LivePrey', 'LiveDefenders', 'DeadLysingAttackers', 'DeadLysingPrey', 'DeadLysingDefenders', 'CumulativeFirings', 'CumulativeAttKilled', 'CumulativePreyKilled', 'CumulativeDefKilled', 'CumulativeAttLysed', 'CumulativePreyLysed', 'CumulativeDefLysed', 'CPRGConverted'];
 		tsvContent += headers.join("\t") + "\n"; 
 
 		simState.historicalData.forEach(row => {
-			const values = [ row.time, row.livePredators, row.livePrey, row.liveDefenders, row.deadLysingPredators, row.deadLysingPrey, row.deadLysingDefenders, row.firings, row.killedPredators, row.killedPrey, row.killedDefenders, row.lysedPredators, row.lysedPrey, row.lysedDefenders, row.cprgConverted ];
+			const values = [ row.time, row.liveAttackers, row.livePrey, row.liveDefenders, row.deadLysingAttackers, row.deadLysingPrey, row.deadLysingDefenders, row.firings, row.killedAttackers, row.killedPrey, row.killedDefenders, row.lysedAttackers, row.lysedPrey, row.lysedDefenders, row.cprgConverted ];
 			tsvContent += values.map(val => (val !== undefined && val !== null) ? val : '').join("\t") + "\n"; 
 		});
 
@@ -3848,48 +4455,48 @@ async function runSimulationStep() {
 	    settingsContent += `Arena_State_Buffer_Size_Limit_MB\t${simState.config.arenaStateBuffer.sizeLimitMB}\n`;
 
 
-		// Predator Settings
-		settingsContent += `Predator_Initial_Count\t${simState.config.predator.initialCount}\n`;
-		settingsContent += `Predator_Replication_Mean_min\t${simState.config.predator.replication.mean}\n`;
-		settingsContent += `Predator_Replication_Range_min\t${simState.config.predator.replication.range}\n`;
-		settingsContent += `Predator_T6SS_Fire_Cooldown_Min_min\t${simState.config.predator.t6ss.fireCooldownMin}\n`;
-		settingsContent += `Predator_T6SS_Fire_Cooldown_Max_min\t${simState.config.predator.t6ss.fireCooldownMax}\n`;
-		settingsContent += `Predator_T6SS_Precision_Percent\t${simState.config.predator.t6ss.precision * 100}\n`;
-		settingsContent += `Predator_T6SS_Contact_Sensing_Bias_Percent\t${simState.config.predator.t6ss.contactSensingBias * 100}\n`;
-		settingsContent += `Predator_T6SS_Kin_Exclusion_Percent\t${simState.config.predator.t6ss.kinExclusion * 100}\n`;
-		settingsContent += `Predator_T6SS_Kin_Exclusion_Penalty_min\t${simState.config.predator.t6ss.kinExclusionPenalty}\n`;
-		settingsContent += `Predator_T6SS_NL_Units_per_Hit\t${simState.config.predator.t6ss.nonLyticUnitsPerHit}\n`;
-		settingsContent += `Predator_T6SS_NL_Delivery_Chance_Percent\t${simState.config.predator.t6ss.nonLyticDeliveryChance * 100}\n`;
-		settingsContent += `Predator_T6SS_L_Units_per_Hit\t${simState.config.predator.t6ss.lyticUnitsPerHit}\n`;
-		settingsContent += `Predator_T6SS_L_Delivery_Chance_Percent\t${simState.config.predator.t6ss.lyticDeliveryChance * 100}\n`;
-		settingsContent += `Predator_Sensitivity_NL_Units_to_Die\t${simState.config.predator.sensitivity.nonLyticUnitsToDie}\n`;
-		settingsContent += `Predator_Sensitivity_L_Units_to_Lyse\t${simState.config.predator.sensitivity.lyticUnitsToLyse}\n`;
-		settingsContent += `Predator_Sensitivity_Base_Lysis_Delay_min\t${simState.config.predator.sensitivity.baseLysisDelay}\n`;
-		settingsContent += `Predator_Movement_Cooldown_Min_min\t${simState.config.predator.movement.cooldownMin}\n`;
-		settingsContent += `Predator_Movement_Cooldown_Max_min\t${simState.config.predator.movement.cooldownMax}\n`;
-		settingsContent += `Predator_Movement_Probability_Percent\t${simState.config.predator.movement.probability * 100}\n`;
-		settingsContent += `Predator_Movement_Directionality_Percent\t${simState.config.predator.movement.directionality * 100}\n`;
-		settingsContent += `Predator_Movement_Prey_AI_Attraction_Percent\t${simState.config.predator.movement.preyAiAttraction * 100}\n`;
-		settingsContent += `Predator_Movement_Prey_AI_Attraction_Threshold\t${simState.config.predator.movement.preyAiAttractionThreshold}\n`; // New
-		// Predator QS Settings
-		settingsContent += `Predator_QS_Production_Rate_per_min\t${simState.config.predator.qs.productionRate}\n`;
-		settingsContent += `Predator_QS_Degradation_Rate_Percent_per_min\t${simState.config.predator.qs.degradationRate * 100}\n`;
-		settingsContent += `Predator_QS_Diffusion_Rate\t${simState.config.predator.qs.diffusionRate}\n`;
-		settingsContent += `Predator_QS_Activation_Midpoint_K\t${simState.config.predator.qs.midpoint}\n`;
-		settingsContent += `Predator_QS_Cooperativity_n\t${simState.config.predator.qs.cooperativity}\n`;
-		settingsContent += `Predator_Replication_Reward_Lyses_per_Reward\t${simState.config.predator.replicationReward.lysesPerReward}\n`;
-		settingsContent += `Predator_Replication_Reward_Mean_min\t${simState.config.predator.replicationReward.mean}\n`;
-		settingsContent += `Predator_Replication_Reward_Range_min\t${simState.config.predator.replicationReward.range}\n`;
+		// Attacker Settings
+		settingsContent += `Attacker_Initial_Count\t${simState.config.attacker.initialCount}\n`;
+		settingsContent += `Attacker_Replication_Mean_min\t${simState.config.attacker.replication.mean}\n`;
+		settingsContent += `Attacker_Replication_Range_min\t${simState.config.attacker.replication.range}\n`;
+		settingsContent += `Attacker_T6SS_Fire_Cooldown_Min_min\t${simState.config.attacker.t6ss.fireCooldownMin}\n`;
+		settingsContent += `Attacker_T6SS_Fire_Cooldown_Max_min\t${simState.config.attacker.t6ss.fireCooldownMax}\n`;
+		settingsContent += `Attacker_T6SS_Precision_Percent\t${simState.config.attacker.t6ss.precision * 100}\n`;
+		settingsContent += `Attacker_T6SS_Contact_Sensing_Bias_Percent\t${simState.config.attacker.t6ss.contactSensingBias * 100}\n`;
+		settingsContent += `Attacker_T6SS_Kin_Exclusion_Percent\t${simState.config.attacker.t6ss.kinExclusion * 100}\n`;
+		settingsContent += `Attacker_T6SS_Kin_Exclusion_Penalty_min\t${simState.config.attacker.t6ss.kinExclusionPenalty}\n`;
+		settingsContent += `Attacker_T6SS_NL_Units_per_Hit\t${simState.config.attacker.t6ss.nonLyticUnitsPerHit}\n`;
+		settingsContent += `Attacker_T6SS_NL_Delivery_Chance_Percent\t${simState.config.attacker.t6ss.nonLyticDeliveryChance * 100}\n`;
+		settingsContent += `Attacker_T6SS_L_Units_per_Hit\t${simState.config.attacker.t6ss.lyticUnitsPerHit}\n`;
+		settingsContent += `Attacker_T6SS_L_Delivery_Chance_Percent\t${simState.config.attacker.t6ss.lyticDeliveryChance * 100}\n`;
+		settingsContent += `Attacker_Sensitivity_NL_Units_to_Die\t${simState.config.attacker.sensitivity.nonLyticUnitsToDie}\n`;
+		settingsContent += `Attacker_Sensitivity_L_Units_to_Lyse\t${simState.config.attacker.sensitivity.lyticUnitsToLyse}\n`;
+		settingsContent += `Attacker_Sensitivity_Base_Lysis_Delay_min\t${simState.config.attacker.sensitivity.baseLysisDelay}\n`;
+		settingsContent += `Attacker_Movement_Cooldown_Min_min\t${simState.config.attacker.movement.cooldownMin}\n`;
+		settingsContent += `Attacker_Movement_Cooldown_Max_min\t${simState.config.attacker.movement.cooldownMax}\n`;
+		settingsContent += `Attacker_Movement_Probability_Percent\t${simState.config.attacker.movement.probability * 100}\n`;
+		settingsContent += `Attacker_Movement_Directionality_Percent\t${simState.config.attacker.movement.directionality * 100}\n`;
+		settingsContent += `Attacker_Movement_Prey_AI_Attraction_Percent\t${simState.config.attacker.movement.preyAiAttraction * 100}\n`;
+		settingsContent += `Attacker_Movement_Prey_AI_Attraction_Threshold\t${simState.config.attacker.movement.preyAiAttractionThreshold}\n`; // New
+		// Attacker QS Settings
+		settingsContent += `Attacker_QS_Production_Rate_per_min\t${simState.config.attacker.qs.productionRate}\n`;
+		settingsContent += `Attacker_QS_Degradation_Rate_Percent_per_min\t${simState.config.attacker.qs.degradationRate * 100}\n`;
+		settingsContent += `Attacker_QS_Diffusion_Rate\t${simState.config.attacker.qs.diffusionRate}\n`;
+		settingsContent += `Attacker_QS_Activation_Midpoint_K\t${simState.config.attacker.qs.midpoint}\n`;
+		settingsContent += `Attacker_QS_Cooperativity_n\t${simState.config.attacker.qs.cooperativity}\n`;
+		settingsContent += `Attacker_Replication_Reward_Lyses_per_Reward\t${simState.config.attacker.replicationReward.lysesPerReward}\n`;
+		settingsContent += `Attacker_Replication_Reward_Mean_min\t${simState.config.attacker.replicationReward.mean}\n`;
+		settingsContent += `Attacker_Replication_Reward_Range_min\t${simState.config.attacker.replicationReward.range}\n`;
 
 		// Prey Settings
 		settingsContent += `Prey_Initial_Count\t${simState.config.prey.initialCount}\n`;
 		settingsContent += `Prey_Replication_Mean_min\t${simState.config.prey.replication.mean}\n`;
 		settingsContent += `Prey_Replication_Range_min\t${simState.config.prey.replication.range}\n`;
-		settingsContent += `Prey_Sensitivity_vs_Pred_NL_Units_to_Die\t${simState.config.prey.sensitivityToPredator.nonLyticUnitsToDie}\n`;
-		settingsContent += `Prey_Sensitivity_vs_Pred_L_Units_to_Lyse\t${simState.config.prey.sensitivityToPredator.lyticUnitsToLyse}\n`;
-		settingsContent += `Prey_Sensitivity_vs_Pred_Base_Lysis_Delay_min\t${simState.config.prey.sensitivityToPredator.baseLysisDelay}\n`;
-		settingsContent += `Prey_Resistance_vs_Pred_NL_Percent\t${simState.config.prey.sensitivityToPredator.nonLyticResistanceChance * 100}\n`;
-		settingsContent += `Prey_Resistance_vs_Pred_L_Percent\t${simState.config.prey.sensitivityToPredator.lyticResistanceChance * 100}\n`;
+		settingsContent += `Prey_Sensitivity_vs_Att_NL_Units_to_Die\t${simState.config.prey.sensitivityToAttacker.nonLyticUnitsToDie}\n`;
+		settingsContent += `Prey_Sensitivity_vs_Att_L_Units_to_Lyse\t${simState.config.prey.sensitivityToAttacker.lyticUnitsToLyse}\n`;
+		settingsContent += `Prey_Sensitivity_vs_Att_Base_Lysis_Delay_min\t${simState.config.prey.sensitivityToAttacker.baseLysisDelay}\n`;
+		settingsContent += `Prey_Resistance_vs_Att_NL_Percent\t${simState.config.prey.sensitivityToAttacker.nonLyticResistanceChance * 100}\n`;
+		settingsContent += `Prey_Resistance_vs_Att_L_Percent\t${simState.config.prey.sensitivityToAttacker.lyticResistanceChance * 100}\n`;
 		settingsContent += `Prey_Sensitivity_vs_Def_NL_Units_to_Die\t${simState.config.prey.sensitivityToDefender.nonLyticUnitsToDie}\n`;
 		settingsContent += `Prey_Sensitivity_vs_Def_L_Units_to_Lyse\t${simState.config.prey.sensitivityToDefender.lyticUnitsToLyse}\n`;
 		settingsContent += `Prey_Sensitivity_vs_Def_Base_Lysis_Delay_min\t${simState.config.prey.sensitivityToDefender.baseLysisDelay}\n`;
@@ -3923,11 +4530,11 @@ async function runSimulationStep() {
 		settingsContent += `Defender_T6SS_NL_Delivery_Chance_Percent\t${simState.config.defender.t6ss.nonLyticDeliveryChance * 100}\n`;
 		settingsContent += `Defender_T6SS_L_Units_per_Hit\t${simState.config.defender.t6ss.lyticUnitsPerHit}\n`;
 		settingsContent += `Defender_T6SS_L_Delivery_Chance_Percent\t${simState.config.defender.t6ss.lyticDeliveryChance * 100}\n`;
-		settingsContent += `Defender_Sensitivity_vs_Pred_NL_Units_to_Die\t${simState.config.defender.sensitivity.nonLyticUnitsToDie}\n`;
-		settingsContent += `Defender_Sensitivity_vs_Pred_L_Units_to_Lyse\t${simState.config.defender.sensitivity.lyticUnitsToLyse}\n`;
-		settingsContent += `Defender_Sensitivity_vs_Pred_Base_Lysis_Delay_min\t${simState.config.defender.sensitivity.baseLysisDelay}\n`;
-		settingsContent += `Defender_Resistance_vs_Pred_NL_Percent\t${simState.config.defender.sensitivity.nonLyticResistanceChance * 100}\n`;
-		settingsContent += `Defender_Resistance_vs_Pred_L_Percent\t${simState.config.defender.sensitivity.lyticResistanceChance * 100}\n`;
+		settingsContent += `Defender_Sensitivity_vs_Att_NL_Units_to_Die\t${simState.config.defender.sensitivity.nonLyticUnitsToDie}\n`;
+		settingsContent += `Defender_Sensitivity_vs_Att_L_Units_to_Lyse\t${simState.config.defender.sensitivity.lyticUnitsToLyse}\n`;
+		settingsContent += `Defender_Sensitivity_vs_Att_Base_Lysis_Delay_min\t${simState.config.defender.sensitivity.baseLysisDelay}\n`;
+		settingsContent += `Defender_Resistance_vs_Att_NL_Percent\t${simState.config.defender.sensitivity.nonLyticResistanceChance * 100}\n`;
+		settingsContent += `Defender_Resistance_vs_Att_L_Percent\t${simState.config.defender.sensitivity.lyticResistanceChance * 100}\n`;
 		settingsContent += `Defender_Movement_Cooldown_Min_min\t${simState.config.defender.movement.cooldownMin}\n`;
 		settingsContent += `Defender_Movement_Cooldown_Max_min\t${simState.config.defender.movement.cooldownMax}\n`;
 		settingsContent += `Defender_Movement_Probability_Percent\t${simState.config.defender.movement.probability * 100}\n`;
@@ -4338,7 +4945,7 @@ async function exportCurrentStepState() {
 		        remainingCPRGSubstrate: stateSource.remainingCPRGSubstrate,
 				totalActiveLacZReleased: stateSource.totalActiveLacZReleased,
                 cells: Array.from(stateSource.cells.values()),
-				predatorAiGrid: Array.from(stateSource.predatorAiGrid.entries()),
+				attackerAiGrid: Array.from(stateSource.attackerAiGrid.entries()),
 				preyAiGrid: Array.from(stateSource.preyAiGrid.entries()),
 	            activeFiringsThisStep: Array.from(stateSource.activeFiringsThisStep.entries())
             }
@@ -4795,7 +5402,7 @@ async function loadFullSimulationFromFile(fileContent) { // fileContent is an Ar
 				const r = parseInt(parts[1]);
 				const type = parts[2].trim().toLowerCase();
 
-				if (!isNaN(q) && !isNaN(r) && ['predator', 'prey', 'defender', 'barrier'].includes(type)) {
+				if (!isNaN(q) && !isNaN(r) && ['attacker', 'prey', 'defender', 'barrier'].includes(type)) {
 					if (isWithinHexBounds(q, r, simState.config.hexGridActualRadius)) {
 						const key = `${q},${r}`;
 						// It's good practice to remove any cell that might be at the target location already
@@ -4972,15 +5579,15 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
     simState.lastHoveredHexKey = simpleKey;
 
     // --- This part is robust and correct ---
-    let predatorAiGrid, preyAiGrid;
+    let attackerAiGrid, preyAiGrid;
     const sourceForGrids = rawStateSource.state || rawStateSource;
 
-    if (sourceForGrids.predatorAiGrid instanceof Map) {
-        predatorAiGrid = sourceForGrids.predatorAiGrid;
-    } else if (Array.isArray(sourceForGrids.predatorAiGrid)) {
-        predatorAiGrid = new Map(sourceForGrids.predatorAiGrid);
+    if (sourceForGrids.attackerAiGrid instanceof Map) {
+        attackerAiGrid = sourceForGrids.attackerAiGrid;
+    } else if (Array.isArray(sourceForGrids.attackerAiGrid)) {
+        attackerAiGrid = new Map(sourceForGrids.attackerAiGrid);
     } else {
-        predatorAiGrid = new Map(Object.entries(sourceForGrids.predatorAiGrid || {}));
+        attackerAiGrid = new Map(Object.entries(sourceForGrids.attackerAiGrid || {}));
     }
     if (sourceForGrids.preyAiGrid instanceof Map) {
         preyAiGrid = sourceForGrids.preyAiGrid;
@@ -4990,10 +5597,10 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
         preyAiGrid = new Map(Object.entries(sourceForGrids.preyAiGrid || {}));
     }
 
-    const predatorAiConc = predatorAiGrid.get(simpleKey) || 0;
+    const attackerAiConc = attackerAiGrid.get(simpleKey) || 0;
     const preyAiConc = preyAiGrid.get(simpleKey) || 0;
 
-    infoHtml += formatCellProperty("Predator AI", predatorAiConc);
+    infoHtml += formatCellProperty("Attacker AI", attackerAiConc);
     infoHtml += formatCellProperty("Prey AI", preyAiConc);
 
     const cellsDataSource = rawStateSource.state ? rawStateSource.state.cells : rawStateSource.cells;
@@ -5037,22 +5644,22 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
             infoHtml += formatCellProperty("L Toxins", cell.accumulatedLyticToxins);
             
             // FIX: Use cellTypeStr in all following checks
-            if (cellTypeStr === 'predator' || cellTypeStr === 'defender') {
+            if (cellTypeStr === 'attacker' || cellTypeStr === 'defender') {
                 infoHtml += formatCellProperty("Kills", cell.kills || 0);
                 infoHtml += formatCellProperty("Lyses", cell.lyses || 0);
             }
 
-            if (cellTypeStr === 'predator') {
+            if (cellTypeStr === 'attacker') {
                 infoHtml += formatCellProperty("T6SS Fire CD", cell.t6ssFireCooldownTimer);
-                const qsConfig = simState.config.predator.qs;
+                const qsConfig = simState.config.attacker.qs;
                 const K_val = qsConfig.midpoint;
                 const n_val = qsConfig.cooperativity;
                 let p_active_hover = 0.0;
                 if (K_val < 0) { p_active_hover = 1.0; } 
-                else if (K_val === 0) { p_active_hover = (predatorAiConc > 0) ? 1.0 : 0.0; }
+                else if (K_val === 0) { p_active_hover = (attackerAiConc > 0) ? 1.0 : 0.0; }
                 else {
                     const K_pow_n = Math.pow(K_val, n_val);
-                    const AI_pow_n = Math.pow(predatorAiConc, n_val);
+                    const AI_pow_n = Math.pow(attackerAiConc, n_val);
                     if ((K_pow_n + AI_pow_n) !== 0) { p_active_hover = AI_pow_n / (K_pow_n + AI_pow_n); }
                 }
                 if (Number.isNaN(p_active_hover)) p_active_hover = 0.0;
@@ -5241,6 +5848,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Step 1: Initial UI & State Setup ---
     setupTooltips();
 
+	applySettingsObject(SIMULATION_DEFAULTS); // Apply master defaults to the UI
+	updateConfigFromUI(true); // Sync simState.config to the UI
+	
 	// Event Listeners for the new buttons and seed input
 	resetRngButton.addEventListener('click', () => {
 		if (resetRngButton.disabled) return;
@@ -5268,6 +5878,51 @@ document.addEventListener('DOMContentLoaded', async () => {
 			updateSyncAndRngButtons();
 		}
 	});
+
+	if (resetSettingsToDefaultsButton) {
+		resetSettingsToDefaultsButton.addEventListener('click', async () => {
+			if (simState.isRunning) return; // Don't allow while running
+
+			try {
+				// Ask for confirmation
+				await showConfirmationModal(
+					"This will reset all parameters to their default values. It will NOT clear the arena or change the current seed. Are you sure?",
+					"Reset All Settings?",
+					"Reset"
+				);
+			} catch (e) {
+				console.log("Reset settings cancelled.");
+				return; // User cancelled
+			}
+
+			// 1. Apply the default settings object to the UI
+			applySettingsObject(SIMULATION_DEFAULTS);
+			
+			// 2. Read the new UI values back into simState.config
+			updateConfigFromUI(true);
+
+			// 3. Mark cells as out of sync
+			//    This is crucial because parameters like replication/movement time
+			//    have changed, so the cells' internal states are no longer valid.
+			if (simState.cells.size > 0) {
+				simState.areCellsInSync = false;
+				updateSyncAndRngButtons();
+			}
+			
+			// 4. Redraw the grid (in case arena radius changed) and update stats
+			drawGrid();
+			updateStats();
+
+			// 5. Show a temporary confirmation message
+			const importStatusMessage = document.getElementById('importStatusMessage');
+			if (importStatusMessage) {
+				importStatusMessage.textContent = 'All settings have been reset to default values.';
+				importStatusMessage.className = 'text-xs text-center mt-2 text-green-600';
+				setTimeout(() => { if (importStatusMessage) importStatusMessage.innerHTML = ''; }, 4000);
+			}
+		});
+	}
+
 
     const initialSeed = generateNewSeed();
     simulationSeedInput.value = initialSeed;
@@ -5406,7 +6061,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- Step 4: Final UI Polish ---
-    switchCellParamsTab('predator');
+    switchCellParamsTab('attacker');
     setActivePresetGroup(`presetGroup${simState.activePresetConfig.group.charAt(0).toUpperCase() + simState.activePresetConfig.group.slice(1)}`);
     window.dispatchEvent(new Event('resize'));
 });	

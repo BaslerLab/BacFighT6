@@ -26,7 +26,7 @@
                 </button>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing predator-prey-defender dynamics with advanced controls (ver. 4.3 - 21.06.2025). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 5.3 - 15.11.2025). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 Pro.<br>
             </p>
         </header>
@@ -50,7 +50,7 @@
                                 <label for="arenaGridRadiusInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Arena Radius:
                                     <span class="tooltip-content">Radius of the hexagonal arena (5-50 cells from center to edge).</span>
                                 </label>
-                                <input type="number" id="arenaGridRadiusInput" value="15" min="5" max="50" class="mt-1 block w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <input type="number" id="arenaGridRadiusInput" value="20" min="5" max="50" class="mt-1 block w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div class="text-sm text-gray-600 text-right">
                                 <div>Total Spaces: <strong id="totalSpacesDisplay" class="font-semibold text-gray-800">0</strong></div>
@@ -65,7 +65,7 @@
                         </div>
                         <p class="text-sm text-center text-gray-600 pt-2">Click on canvas to place/remove cells:</p>
                         <div class="grid grid-cols-5 gap-1">
-                            <button id="selectPredatorButton" title="Select Predator placement tool" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-2 rounded-md shadow-sm manual-setup-button text-xs">Pred</button>
+                            <button id="selectAttackerButton" title="Select Attacker placement tool" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-2 rounded-md shadow-sm manual-setup-button text-xs">Att</button>
                             <button id="selectPreyButton" title="Select Prey placement tool" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1 px-2 rounded-md shadow-sm manual-setup-button text-xs">Prey</button>
                             <button id="selectDefenderButton" title="Select Defender placement tool" class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-1 px-2 rounded-md shadow-sm manual-setup-button text-xs">Def</button>
                             <button id="selectBarrierButton" title="Select Barrier placement tool" class="bg-yellow-800 hover:bg-yellow-900 text-white font-semibold py-1 px-2 rounded-md shadow-sm manual-setup-button text-xs">Barr</button>
@@ -163,6 +163,7 @@
                             <button id="importSettingsButton" title="Load all simulation parameters from a previously exported TSV file." class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Import Settings</button>
                             <button id="exportSettingsButtonMain" title="Save all current simulation parameters to a TSV file." class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Export Settings</button>
                         </div>
+                        <button id="resetSettingsToDefaultsButton" title="Resets all simulation parameters to their default values. Does NOT clear the arena or change the seed." class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Reset Settings to Defaults</button>
                     </div>
                     <div id="importStatusMessage" class="text-xs text-center mt-2"></div>
                 </div>
@@ -232,190 +233,190 @@
 				<div class="control-group">
                     <h3 class="text-gray-700">Cell-Specific Settings</h3>
                     <div id="cellTypeSelectionButtons" class="flex space-x-1 mb-3">
-                        <button id="selectPredatorParamsButton" title="View and edit Predator parameters" data-celltype="predator" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-1 px-2 rounded-md shadow-sm cell-type-button">Predator</button>
+                        <button id="selectAttackerParamsButton" title="View and edit Attacker parameters" data-celltype="attacker" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-1 px-2 rounded-md shadow-sm cell-type-button">Attacker</button>
                         <button id="selectPreyParamsButton" title="View and edit Prey parameters" data-celltype="prey" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-1 px-2 rounded-md shadow-sm cell-type-button active">Prey</button>
                         <button id="selectDefenderParamsButton" title="View and edit Defender parameters" data-celltype="defender" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-1 px-2 rounded-md shadow-sm cell-type-button">Defender</button>
                     </div>
 
-                    <div id="predatorParamsSection" class="cell-params-section hidden">
-                        <h4>Predator Settings</h4>
+                    <div id="attackerParamsSection" class="cell-params-section hidden">
+                        <h4>Attacker Settings</h4>
                         <div>
-                            <label for="initialPredatorsInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Initial Count:
-                                <span class="tooltip-content">Initial number of predator (attacker) cells for random initialization.</span>
+                            <label for="initialAttackersInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Initial Count:
+                                <span class="tooltip-content">Initial number of attacker cells for random initialization.</span>
                             </label>
-                            <input type="number" id="initialPredatorsInput" value="30" min="0" class="mt-1 block w-1/2 rounded-md border-gray-300 shadow-sm">
+                            <input type="number" id="initialAttackersInput" value="30" min="0" class="mt-1 block w-1/2 rounded-md border-gray-300 shadow-sm">
                         </div>
                         <div class="mt-2">
                             <span class="input-group-label text-sm font-medium text-gray-700 tooltip-trigger">Replication (min):
                                 <span class="tooltip-content">Set the average time (minutes) between divisions. The actual time is varied by the (± range). Set the average time to -1 to disable replication for this cell type.</span>
                             </span>
-                            <input type="number" id="predatorReplicationMeanInput" value="30" min="-1" class="rounded-md border-gray-300 shadow-sm w-20"> ±
-                            <input type="number" id="predatorReplicationRangeInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
+                            <input type="number" id="attackerReplicationMeanInput" value="30" min="-1" class="rounded-md border-gray-300 shadow-sm w-20"> ±
+                            <input type="number" id="attackerReplicationRangeInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
                         </div>
                         <h5 class="text-sm font-semibold mt-3 mb-1">Movement Behavior:</h5>
                         <div class="mt-2">
                             <span class="input-group-label text-sm font-medium text-gray-700 tooltip-trigger">Move Cooldown (min):
                                 <span class="tooltip-content">Time (minutes) a cell waits after a movement attempt before it can attempt again. Chosen randomly from this range.</span>
                             </span>
-                            <input type="number" id="predatorMoveCooldownMinInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20"> -
-                            <input type="number" id="predatorMoveCooldownMaxInput" value="10" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
+                            <input type="number" id="attackerMoveCooldownMinInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20"> -
+                            <input type="number" id="attackerMoveCooldownMaxInput" value="10" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
                         </div>
                         <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end mt-2">
                             <div>
-                                <label for="predatorMoveProbabilityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Move Prob. (%):
+                                <label for="attackerMoveProbabilityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Move Prob. (%):
                                     <span class="tooltip-content">Chance (%) a cell with a ready cooldown will actually attempt to move. Set to 0 for non-motile cells.</span>
                                 </label>
-                                <input type="number" id="predatorMoveProbabilityInput" value="0" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerMoveProbabilityInput" value="0" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorMoveDirectionalityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Directionality (%):
+                                <label for="attackerMoveDirectionalityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Directionality (%):
                                     <span class="tooltip-content">Preference for moving into empty space. 100% = only targets empty neighbors. 0% = targets a random neighbor direction, move fails if occupied.</span>
                                 </label>
-                                <input type="number" id="predatorMoveDirectionalityInput" value="100" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerMoveDirectionalityInput" value="100" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorMovePreyAiAttractionThresholdInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Prey AI Attr. Thresh.:
+                                <label for="attackerMovePreyAiAttractionThresholdInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Prey AI Attr. Thresh.:
                                     <span class="tooltip-content">Minimum Prey AI concentration for a hex to be considered an attractive target for chemotaxis. If no neighbors meet this, a random empty neighbor is chosen.</span>
                                 </label>
-                                <input type="number" id="predatorMovePreyAiAttractionThresholdInput" value="5" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerMovePreyAiAttractionThresholdInput" value="5" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorMovePreyAiAttractionInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Prey AI Attr. (%):
+                                <label for="attackerMovePreyAiAttractionInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Prey AI Attr. (%):
                                     <span class="tooltip-content">Chance (%) to move to the empty neighbor with the highest Prey AI concentration (if any neighbors are above the threshold).</span>
                                 </label>
-                                <input type="number" id="predatorMovePreyAiAttractionInput" value="100" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerMovePreyAiAttractionInput" value="100" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                         </div>
                         <h5 class="text-sm font-semibold mt-3 mb-1">T6SS Firing Behavior:</h5>
                         <div class="mt-2">
                             <span class="input-group-label text-sm font-medium text-gray-700 tooltip-trigger">Fire Cooldown (min):
-                                <span class="tooltip-content">Time (minutes) a predator waits after attempting to fire its T6SS before it can attempt again. Chosen randomly from this range.</span>
+                                <span class="tooltip-content">Time (minutes) an attacker waits after attempting to fire its T6SS before it can attempt again. Chosen randomly from this range.</span>
                             </span>
                             <input type="number" id="t6ssFireCooldownMinInput" value="3" min="0" class="rounded-md border-gray-300 shadow-sm w-20"> -
                             <input type="number" id="t6ssFireCooldownMaxInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
                         </div>
                         <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end mt-2">
                             <div>
-                                <label for="predatorPrecisionInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Precision (%):
+                                <label for="attackerPrecisionInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Precision (%):
                                     <span class="tooltip-content">Chance (%) a firing attempt is a 'precise hit' (inflicts damage). Misses are visualized differently and cause no damage.</span>
                                 </label>
-                                <input type="number" id="predatorPrecisionInput" value="25" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerPrecisionInput" value="25" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorContactSensingBiasInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Contact Sens. Bias (%):
+                                <label for="attackerContactSensingBiasInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Contact Sens. Bias (%):
 									<span class="tooltip-content">Priority chance (%) to target an adjacent contact (cell or barrier). If this strategy is chosen but no contacts are found, the shot is aborted for that cycle.</span>
                                 </label>
-                                <input type="number" id="predatorContactSensingBiasInput" value="0" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerContactSensingBiasInput" value="0" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorKinExclusionInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Kin Exclusion (%):
-									<span class="tooltip-content">Chance (%) to activate the kin recognition system when targeting another Predator. The outcome is determined by the Penalty setting.</span>
+                                <label for="attackerKinExclusionInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Kin Exclusion (%):
+									<span class="tooltip-content">Chance (%) to activate the kin recognition system when targeting another Attacker. The outcome is determined by the Penalty setting.</span>
                                 </label>
-                                <input type="number" id="predatorKinExclusionInput" value="0" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerKinExclusionInput" value="0" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
 							<div>
-								<label for="predatorKinExclusionPenaltyInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Kin Excl. Penalty (min):
+								<label for="attackerKinExclusionPenaltyInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Kin Excl. Penalty (min):
 									<span class="tooltip-content">Defines kin recognition outcome. '≥ 0': Cancels the shot and applies a penalty cooldown. '-1': Enables 'Smart Re-targeting', where a new non-kin target is chosen instead, still respecting the original contact bias.</span>
 								</label>
-								<input type="number" id="predatorKinExclusionPenaltyInput" value="-1" min="-1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+								<input type="number" id="attackerKinExclusionPenaltyInput" value="-1" min="-1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
 							</div>
 						</div>
                         <h5 class="text-sm font-semibold mt-3 mb-1">Quorum Sensing Behavior:</h5>
                         <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end">
                             <div>
-                                <label for="predatorQSProductionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">AI Prod. Rate (U/min):
-                                    <span class="tooltip-content">Units of Autoinducer (AI) produced per Predator per minute. This AI controls Predator T6SS activation.</span>
+                                <label for="attackerQSProductionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">AI Prod. Rate (U/min):
+                                    <span class="tooltip-content">Units of Autoinducer (AI) produced per Attacker per minute. This AI controls Attacker T6SS activation.</span>
                                 </label>
-                                <input type="number" id="predatorQSProductionRateInput" value="0" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerQSProductionRateInput" value="0" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorQSDegradationRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">AI Degrad. Rate (%/min):
+                                <label for="attackerQSDegradationRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">AI Degrad. Rate (%/min):
                                     <span class="tooltip-content">Percentage of AI in each hex that decays per minute. Simulates signal instability.</span>
                                 </label>
-                                <input type="number" id="predatorQSDegradationRateInput" value="2" min="0" max="100" step="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerQSDegradationRateInput" value="2" min="0" max="100" step="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorQSDiffusionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">AI Diffusion Rate:
+                                <label for="attackerQSDiffusionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">AI Diffusion Rate:
                                     <span class="tooltip-content">Fraction (0-0.16) of the concentration difference exchanged with each neighbor per minute. Higher values mean faster spreading.</span>
                                 </label>
-                                <input type="number" id="predatorQSDiffusionRateInput" value="0.05" min="0" max="0.166" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerQSDiffusionRateInput" value="0.05" min="0" max="0.166" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div></div>
                             <div>
-                                <label for="predatorQSMidpointInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Activation Midpoint (K):
+                                <label for="attackerQSMidpointInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Activation Midpoint (K):
                                     <span class="tooltip-content">AI concentration for 50% T6SS activation (EC50). K=-1: always active. K=0: active if any AI is present.</span>
                                 </label>
-                                <input type="number" id="predatorQSMidpointInput" value="-1" min="-1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerQSMidpointInput" value="-1" min="-1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                             <div>
-                                <label for="predatorQSCooperativityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Cooperativity (n):
+                                <label for="attackerQSCooperativityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Cooperativity (n):
                                     <span class="tooltip-content">Hill coefficient. Controls the steepness of the QS switch. 1=gradual, 4+=sharp.</span>
                                 </label>
-                                <input type="number" id="predatorQSCooperativityInput" value="4" min="1" step="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <input type="number" id="attackerQSCooperativityInput" value="4" min="1" step="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                         </div>
 						
                         <h5 class="text-sm font-semibold mt-3 mb-1">Replication Reward (via Lysis)</h5>
                         <div>
-                            <label for="predatorLysesPerReplicationInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lyses per Reward:
+                            <label for="attackerLysesPerReplicationInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lyses per Reward:
                                 <span class="tooltip-content">Number of successful lyses required to trigger a replication reward. Set to 0 to disable this feature.</span>
                             </label>
-                            <input type="number" id="predatorLysesPerReplicationInput" value="0" min="0" class="mt-1 block w-1/2 rounded-md border-gray-300 shadow-sm">
+                            <input type="number" id="attackerLysesPerReplicationInput" value="0" min="0" class="mt-1 block w-1/2 rounded-md border-gray-300 shadow-sm">
                         </div>
                         <div class="mt-2">
                             <span class="input-group-label text-sm font-medium text-gray-700 tooltip-trigger">Reward Repl. CD (min):
                                 <span class="tooltip-content">The replication cooldown reduction amount, or the new cooldown set as a reward. Set mean to -1 for immediate replication (cooldown becomes 0).</span>
                             </span>
-                            <input type="number" id="predatorReplicationRewardMeanInput" value="30" min="-1" class="rounded-md border-gray-300 shadow-sm w-20"> ±
-                            <input type="number" id="predatorReplicationRewardRangeInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
+                            <input type="number" id="attackerReplicationRewardMeanInput" value="30" min="-1" class="rounded-md border-gray-300 shadow-sm w-20"> ±
+                            <input type="number" id="attackerReplicationRewardRangeInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
                         </div>
 						
                         <h5 class="text-sm font-semibold mt-3 mb-1">T6SS Effectors (vs Prey/Defenders):</h5>
                         <div class="grid grid-cols-2 gap-x-2 gap-y-2 items-end">
                             <div>
-                                <label for="predNonLyticUnitsPerHitInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Units/Hit:
+                                <label for="attNonLyticUnitsPerHitInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Units/Hit:
                                     <span class="tooltip-content">Non-Lytic Units per Hit: Amount of non-lytic (e.g., growth-inhibiting) toxin delivered per precise hit.</span>
                                 </label>
-                                <input type="number" id="predNonLyticUnitsPerHitInput" value="3" min="0" class="mt-1 block w-full">
+                                <input type="number" id="attNonLyticUnitsPerHitInput" value="3" min="0" class="mt-1 block w-full">
                             </div>
                             <div>
-                                <label for="predNonLyticDeliveryChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Delivery %:
+                                <label for="attNonLyticDeliveryChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Delivery %:
                                      <span class="tooltip-content">Non-Lytic Delivery Chance: Probability (%) that NL toxins are successfully delivered on a precise hit.</span>
                                 </label>
-                                <input type="number" id="predNonLyticDeliveryChanceInput" value="90" min="0" max="100" class="mt-1 block w-full">
+                                <input type="number" id="attNonLyticDeliveryChanceInput" value="90" min="0" max="100" class="mt-1 block w-full">
                             </div>
                             <div>
-                                <label for="predLyticUnitsPerHitInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Units/Hit:
+                                <label for="attLyticUnitsPerHitInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Units/Hit:
                                     <span class="tooltip-content">Lytic Units per Hit: Amount of lytic (cell-bursting) toxin delivered per precise hit.</span>
                                 </label>
-                                <input type="number" id="predLyticUnitsPerHitInput" value="3" min="0" class="mt-1 block w-full">
+                                <input type="number" id="attLyticUnitsPerHitInput" value="3" min="0" class="mt-1 block w-full">
                             </div>
                             <div>
-                                <label for="predLyticDeliveryChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Delivery %:
+                                <label for="attLyticDeliveryChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Delivery %:
                                     <span class="tooltip-content">Lytic Delivery Chance: Probability (%) that Lytic toxins are successfully delivered on a precise hit.</span>
                                 </label>
-                                <input type="number" id="predLyticDeliveryChanceInput" value="90" min="0" max="100" class="mt-1 block w-full">
+                                <input type="number" id="attLyticDeliveryChanceInput" value="90" min="0" max="100" class="mt-1 block w-full">
                             </div>
                         </div>
                         <h5 class="text-sm font-semibold mt-3 mb-1">Sensitivity (to Defender Attack):</h5>
                         <div class="grid grid-cols-3 gap-x-2 gap-y-2 items-end">
                             <div>
-                                <label for="predNonLyticUnitsToDieInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:
+                                <label for="attNonLyticUnitsToDieInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:
                                     <span class="tooltip-content">Non-Lytic Die Threshold: Cumulative NL toxin units from Defenders required to kill this cell.</span>
                                 </label>
-                                <input type="number" id="predNonLyticUnitsToDieInput" value="5" min="1" class="mt-1 block w-full">
+                                <input type="number" id="attNonLyticUnitsToDieInput" value="5" min="1" class="mt-1 block w-full">
                             </div>
                             <div>
-                                <label for="predLyticUnitsToLyseInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:
+                                <label for="attLyticUnitsToLyseInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:
                                      <span class="tooltip-content">Lytic Lyse Threshold: Cumulative L toxin units from Defenders required to cause lysis in this cell.</span>
                                 </label>
-                                <input type="number" id="predLyticUnitsToLyseInput" value="5" min="1" class="mt-1 block w-full">
+                                <input type="number" id="attLyticUnitsToLyseInput" value="5" min="1" class="mt-1 block w-full">
                             </div>
                             <div>
-                                <label for="predBaseLysisDelayInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Delay:
+                                <label for="attBaseLysisDelayInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Delay:
                                     <span class="tooltip-content">Base time (minutes) for this cell to lyse after reaching the lytic threshold. More toxin reduces this delay.</span>
                                 </label>
-                                <input type="number" id="predBaseLysisDelayInput" value="20" min="1" class="mt-1 block w-full">
+                                <input type="number" id="attBaseLysisDelayInput" value="20" min="1" class="mt-1 block w-full">
                             </div>
                         </div>
                     </div>
@@ -461,7 +462,7 @@
                         <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end">
                             <div>
                                 <label for="preyQSProductionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">AI Prod. Rate (U/min):
-                                    <span class="tooltip-content">Units of Autoinducer (AI) produced per Prey per minute. This AI can be sensed by Predators for chemotaxis.</span>
+                                    <span class="tooltip-content">Units of Autoinducer (AI) produced per Prey per minute. This AI can be sensed by Attackers for chemotaxis.</span>
                                 </label>
                                 <input type="number" id="preyQSProductionRateInput" value="0" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
@@ -510,13 +511,13 @@
                             <input type="number" id="preyCapsuleCooldownMinInput" value="10" min="1" class="rounded-md border-gray-300 shadow-sm w-20"> -
                             <input type="number" id="preyCapsuleCooldownMaxInput" value="20" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
                         </div>
-                        <h5 class="text-sm font-semibold mt-3 mb-1">Sensitivity & Resistance (to Predator Attack):</h5>
+                        <h5 class="text-sm font-semibold mt-3 mb-1">Sensitivity & Resistance (to Attacker Attack):</h5>
                         <div class="grid grid-cols-3 gap-x-2 gap-y-2 items-end">
-                            <div><label for="preyNonLyticUnitsToDiePredInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:<span class="tooltip-content">Cumulative NL toxin units from Predators required to kill this cell.</span></label><input type="number" id="preyNonLyticUnitsToDiePredInput" value="3" min="1" class="mt-1 block w-full"></div>
-                            <div><label for="preyLyticUnitsToLysePredInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:<span class="tooltip-content">Cumulative L toxin units from Predators required to cause lysis in this cell.</span></label><input type="number" id="preyLyticUnitsToLysePredInput" value="5" min="1" class="mt-1 block w-full"></div>
-                            <div><label for="preyBaseLysisDelayPredInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Delay:<span class="tooltip-content">Base time (minutes) for this cell to lyse after reaching the lytic threshold from a Predator attack.</span></label><input type="number" id="preyBaseLysisDelayPredInput" value="20" min="1" class="mt-1 block w-full"></div>
-                            <div><label for="preyNonLyticResistancePredInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore NL toxins from a single Predator hit.</span></label><input type="number" id="preyNonLyticResistancePredInput" value="10" min="0" max="100" class="mt-1 block w-full"></div>
-                            <div><label for="preyLyticResistancePredInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore Lytic toxins from a single Predator hit.</span></label><input type="number" id="preyLyticResistancePredInput" value="10" min="0" max="100" class="mt-1 block w-full"></div>
+                            <div><label for="preyNonLyticUnitsToDieAttInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:<span class="tooltip-content">Cumulative NL toxin units from Attackers required to kill this cell.</span></label><input type="number" id="preyNonLyticUnitsToDieAttInput" value="3" min="1" class="mt-1 block w-full"></div>
+                            <div><label for="preyLyticUnitsToLyseAttInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:<span class="tooltip-content">Cumulative L toxin units from Attackers required to cause lysis in this cell.</span></label><input type="number" id="preyLyticUnitsToLyseAttInput" value="5" min="1" class="mt-1 block w-full"></div>
+                            <div><label for="preyBaseLysisDelayAttInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Delay:<span class="tooltip-content">Base time (minutes) for this cell to lyse after reaching the lytic threshold from an Attacker attack.</span></label><input type="number" id="preyBaseLysisDelayAttInput" value="20" min="1" class="mt-1 block w-full"></div>
+                            <div><label for="preyNonLyticResistanceAttInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore NL toxins from a single Attacker hit.</span></label><input type="number" id="preyNonLyticResistanceAttInput" value="10" min="0" max="100" class="mt-1 block w-full"></div>
+                            <div><label for="preyLyticResistanceAttInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore Lytic toxins from a single Attacker hit.</span></label><input type="number" id="preyLyticResistanceAttInput" value="10" min="0" max="100" class="mt-1 block w-full"></div>
                         </div>
                         <h5 class="text-sm font-semibold mt-3 mb-1">Sensitivity & Resistance (to Defender Attack):</h5>
                         <div class="grid grid-cols-3 gap-x-2 gap-y-2 items-end">
@@ -576,7 +577,7 @@
                         <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end">
                             <div>
                                 <label for="defenderSenseChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Sense Chance (%):
-                                    <span class="tooltip-content">Chance (%) a Defender senses a direct attack from a Predator or other Defender and decides to retaliate in the next step.</span>
+                                    <span class="tooltip-content">Chance (%) a Defender senses a direct attack from an Attacker or other Defender and decides to retaliate in the next step.</span>
                                 </label>
                                 <input type="number" id="defenderSenseChanceInput" value="50" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
@@ -597,7 +598,7 @@
                         </div>
                         <div class="mt-2">
                             <label for="defenderRandomFireChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Rand. Fire %:
-                                <span class="tooltip-content">Chance (%) that a defender (whose random fire cooldown is 0) will fire randomly at any adjacent cell. Affects Predators and Prey. Other Defenders are immune to damage but will retaliate if hit.</span>
+                                <span class="tooltip-content">Chance (%) that a defender (whose random fire cooldown is 0) will fire randomly at any adjacent cell. Affects Attackers and Prey. Other Defenders are immune to damage but will retaliate if hit.</span>
                             </label>
                             <input type="number" id="defenderRandomFireChanceInput" value="0.1" min="0" max="100" step="0.01" class="mt-1 block w-1/2 rounded-md border-gray-300 shadow-sm">
                         </div>
@@ -617,20 +618,20 @@
                             <input type="number" id="defenderReplicationRewardRangeInput" value="5" min="0" class="rounded-md border-gray-300 shadow-sm w-20">
                         </div>
 						
-                        <h5 class="text-sm font-semibold mt-3 mb-1">Defender T6SS Effectors (vs Predators/Prey):</h5>
+                        <h5 class="text-sm font-semibold mt-3 mb-1">Defender T6SS Effectors (vs Attackers/Prey):</h5>
                         <div class="grid grid-cols-2 gap-x-2 gap-y-2 items-end">
                             <div><label for="defNonLyticUnitsPerHitInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Units/Hit:<span class="tooltip-content">Amount of non-lytic toxin delivered per hit.</span></label><input type="number" id="defNonLyticUnitsPerHitInput" value="2" min="0" class="mt-1 block w-full"></div>
                             <div><label for="defNonLyticDeliveryChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Delivery %:<span class="tooltip-content">Probability (%) that NL toxins are successfully delivered on a hit.</span></label><input type="number" id="defNonLyticDeliveryChanceInput" value="80" min="0" max="100" class="mt-1 block w-full"></div>
                             <div><label for="defLyticUnitsPerHitInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Units/Hit:<span class="tooltip-content">Amount of lytic toxin delivered per hit.</span></label><input type="number" id="defLyticUnitsPerHitInput" value="2" min="0" class="mt-1 block w-full"></div>
                             <div><label for="defLyticDeliveryChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Delivery %:<span class="tooltip-content">Probability (%) that Lytic toxins are successfully delivered on a hit.</span></label><input type="number" id="defLyticDeliveryChanceInput" value="80" min="0" max="100" class="mt-1 block w-full"></div>
                         </div>
-                        <h5 class="text-sm font-semibold mt-3 mb-1">Defender Sensitivity (to Predator Attack):</h5>
+                        <h5 class="text-sm font-semibold mt-3 mb-1">Defender Sensitivity (to Attacker Attack):</h5>
                         <div class="grid grid-cols-3 gap-x-2 gap-y-2 items-end">
-                            <div><label for="defNonLyticUnitsToDieInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:<span class="tooltip-content">Cumulative NL toxin units from Predators required to kill this cell.</span></label><input type="number" id="defNonLyticUnitsToDieInput" value="10" min="1" class="mt-1 block w-full"></div>
-                            <div><label for="defLyticUnitsToLyseInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:<span class="tooltip-content">Cumulative L toxin units from Predators required to cause lysis in this cell.</span></label><input type="number" id="defLyticUnitsToLyseInput" value="10" min="1" class="mt-1 block w-full"></div>
+                            <div><label for="defNonLyticUnitsToDieInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:<span class="tooltip-content">Cumulative NL toxin units from Attackers required to kill this cell.</span></label><input type="number" id="defNonLyticUnitsToDieInput" value="10" min="1" class="mt-1 block w-full"></div>
+                            <div><label for="defLyticUnitsToLyseInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:<span class="tooltip-content">Cumulative L toxin units from Attackers required to cause lysis in this cell.</span></label><input type="number" id="defLyticUnitsToLyseInput" value="10" min="1" class="mt-1 block w-full"></div>
                             <div><label for="defBaseLysisDelayInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Delay:<span class="tooltip-content">Base time (minutes) for this cell to lyse after reaching the lytic threshold.</span></label><input type="number" id="defBaseLysisDelayInput" value="40" min="1" class="mt-1 block w-full"></div>
-                            <div><label for="defNonLyticResistanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore NL toxins from a single Predator hit.</span></label><input type="number" id="defNonLyticResistanceInput" value="50" min="0" max="100" class="mt-1 block w-full"></div>
-                            <div><label for="defLyticResistanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore Lytic toxins from a single Predator hit.</span></label><input type="number" id="defLyticResistanceInput" value="50" min="0" max="100" class="mt-1 block w-full"></div>
+                            <div><label for="defNonLyticResistanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore NL toxins from a single Attacker hit.</span></label><input type="number" id="defNonLyticResistanceInput" value="50" min="0" max="100" class="mt-1 block w-full"></div>
+                            <div><label for="defLyticResistanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore Lytic toxins from a single Attacker hit.</span></label><input type="number" id="defLyticResistanceInput" value="50" min="0" max="100" class="mt-1 block w-full"></div>
                         </div>
                     </div>
                 </div>
@@ -683,13 +684,13 @@
 								</thead>
 								<tbody>
 								<tr class="bg-white border-b">
-									<th scope="row" class="py-2 px-1 text-xs text-red-600">Predator</th>
-									<td class="py-2 px-1 text-center text-xs"><span id="predatorCountDisplay">0</span></td>
-									<td class="py-2 px-1 text-center text-xs"><span id="deadLysingPredatorsDisplay">0</span></td>
-									<td class="py-2 px-1 text-center text-xs"><span id="predKilledThisStepDisplay">0</span></td>
-									<td class="py-2 px-1 text-center text-xs"><span id="predLysedThisStepDisplay">0</span></td>
-									<td class="py-2 px-1 text-center text-xs"><span id="cumulativePredKilledDisplay">0</span></td>
-									<td class="py-2 px-1 text-center text-xs"><span id="cumulativePredLysedDisplay">0</span></td>
+									<th scope="row" class="py-2 px-1 text-xs text-red-600">Attacker</th>
+									<td class="py-2 px-1 text-center text-xs"><span id="attackerCountDisplay">0</span></td>
+									<td class="py-2 px-1 text-center text-xs"><span id="deadLysingAttackersDisplay">0</span></td>
+									<td class="py-2 px-1 text-center text-xs"><span id="attKilledThisStepDisplay">0</span></td>
+									<td class="py-2 px-1 text-center text-xs"><span id="attLysedThisStepDisplay">0</span></td>
+									<td class="py-2 px-1 text-center text-xs"><span id="cumulativeAttKilledDisplay">0</span></td>
+									<td class="py-2 px-1 text-center text-xs"><span id="cumulativeAttLysedDisplay">0</span></td>
 								</tr>
 								<tr class="bg-white border-b">
 									<th scope="row" class="py-2 px-1 text-xs text-blue-600">Prey</th>
@@ -736,10 +737,10 @@
             <div id="reportModalBody" class="modal-body">
                 <p>Outcome: <strong id="reportOutcome"></strong></p>
                 <p>Duration: <strong id="reportDuration"></strong> minutes</p>
-                <p>Remaining - Predators: <strong id="reportPredatorsRemaining"></strong>; Prey: <strong id="reportLivePreyRemaining"></strong><span id="reportDefendersRemainingContainer">; Defenders: <strong id="reportDefendersRemaining"></strong></span></p>
-                <p>Dead/Lysing - Predators: <strong id="reportDeadLysingPredators"></strong>; Prey: <strong id="reportDeadLysingPrey"></strong><span id="reportDeadLysingDefendersContainer">; Defenders: <strong id="reportDeadLysingDefenders"></strong></span></p>
-                <p>Cumulative Killed - Predators: <strong id="reportCumulativePredKilled"></strong>; Prey: <strong id="reportCumulativePreyKilled"></strong><span id="reportCumulativeDefKilledContainer">; Defenders: <strong id="reportCumulativeDefKilled"></strong></span></p>
-                <p>Cumulative Lysed - Predators: <strong id="reportCumulativePredLysed"></strong>; Prey: <strong id="reportCumulativePreyLysed"></strong><span id="reportCumulativeDefLysedContainer">; Defenders: <strong id="reportCumulativeDefLysed"></strong></span></p>
+                <p>Remaining - Attackers: <strong id="reportAttackersRemaining"></strong>; Prey: <strong id="reportLivePreyRemaining"></strong><span id="reportDefendersRemainingContainer">; Defenders: <strong id="reportDefendersRemaining"></strong></span></p>
+                <p>Dead/Lysing - Attackers: <strong id="reportDeadLysingAttackers"></strong>; Prey: <strong id="reportDeadLysingPrey"></strong><span id="reportDeadLysingDefendersContainer">; Defenders: <strong id="reportDeadLysingDefenders"></strong></span></p>
+                <p>Cumulative Killed - Attackers: <strong id="reportCumulativeAttKilled"></strong>; Prey: <strong id="reportCumulativePreyKilled"></strong><span id="reportCumulativeDefKilledContainer">; Defenders: <strong id="reportCumulativeDefKilled"></strong></span></p>
+                <p>Cumulative Lysed - Attackers: <strong id="reportCumulativeAttLysed"></strong>; Prey: <strong id="reportCumulativePreyLysed"></strong><span id="reportCumulativeDefLysedContainer">; Defenders: <strong id="reportCumulativeDefLysed"></strong></span></p>
                 <p>Cumulative T6SS Firings (All Types): <strong id="reportCumulativeFirings"></strong></p>
                 <p>Total CPRG Converted: <strong id="reportTotalCPRGConverted"></strong></p>
             </div>
@@ -783,7 +784,7 @@
         <div class="modal-body">
 
             <h4>Summary</h4>
-            <p>This tool simulates dynamic, T6SS-mediated interactions between up to three bacterial populations: <strong>Predators</strong> (red), <strong>Prey</strong> (blue), and <strong>Defenders</strong> (yellow-orange). Cells exist on a hexagonal grid where they can move, replicate, and compete for space based on a wide range of user-configurable parameters. The simulation proceeds in discrete one-minute time steps.</p>
+            <p>This tool simulates dynamic, T6SS-mediated interactions between up to three bacterial populations: <strong>Attackers</strong> (red), <strong>Prey</strong> (blue), and <strong>Defenders</strong> (yellow-orange). Cells exist on a hexagonal grid where they can move, replicate, and compete for space based on a wide range of user-configurable parameters. The simulation proceeds in discrete one-minute time steps.</p>
 
             <hr class="my-3">
 
@@ -792,7 +793,7 @@
                 <li>
                     <strong>Set Up the Arena:</strong> Interactively design your starting battlefield.
                     <ul class="list-disc ml-5 mt-1">
-                        <li>Use the <strong>'Pred'</strong>, <strong>'Prey'</strong>, <strong>'Def'</strong>, <strong>'Barr'</strong>, or <strong>'Rem'</strong> buttons to select a tool, then click and drag on the canvas to place or remove cells. Barriers are static obstacles.</li>
+                        <li>Use the <strong>'Att'</strong>, <strong>'Prey'</strong>, <strong>'Def'</strong>, <strong>'Barr'</strong>, or <strong>'Rem'</strong> buttons to select a tool, then click and drag on the canvas to place or remove cells. Barriers are static obstacles.</li>
                         <li>Alternatively, use <strong>'Place Cells Randomly'</strong> to populate the grid based on 'Initial Count' settings, or import a specific layout with <strong>'Import Arena (TSV)'</strong>.</li>
                     </ul>
                 </li>
@@ -807,13 +808,37 @@
             <ul class="list-disc ml-5 space-y-1">
                 <li><strong>Cell States:</strong> Live cells are solid colors. Dead cells are dark gray, and lysing cells are light gray, both with a faint inner dot of their original color.</li>
                 <li><strong>Prey Capsule:</strong> A thick, purple inner border on a Prey cell indicates it has synthesized protective capsule layers.</li>
-                <li><strong>T6SS Firing:</strong> A bright green sector indicates a 'precise hit' capable of delivering toxins. A darker, transparent green sector (Predators only) indicates a 'miss' that causes no damage but still triggers a cooldown.</li>
+                <li><strong>T6SS Firing:</strong> A bright green sector indicates a 'precise hit' capable of delivering toxins. A darker, transparent green sector (Attackers only) indicates a 'miss' that causes no damage but still triggers a cooldown.</li>
                 <li><strong>CPRG Reporter:</strong> The arena's background color shifts from white towards magenta as lysed Prey cells release LacZ enzyme, which converts the CPRG substrate.</li>
-			    <li><strong>Prey AI Field:</strong> A blue overlay on empty hexes visualizes the concentration of the Prey autoinducer signal. The overlay becomes more opaque as the concentration crosses key thresholds (the Predator's attraction limit and a fraction of the theoretical maximum AI level).
+			    <li><strong>Prey AI Field:</strong> A blue overlay on empty hexes visualizes the concentration of the Prey autoinducer signal. The overlay becomes more opaque as the concentration crosses key thresholds (the Attacker's attraction limit and a fraction of the theoretical maximum AI level).
 				</li>
             </ul>
 
-            <hr class="my-3">
+		</ul>
+
+			<hr class="my-4"> <div class="mt-4">
+                <h4 class="font-semibold text-lg text-gray-800">Preset Scenarios 📚</h4>
+                <p class="text-sm text-gray-700 mt-1">
+                    The <strong>'Load Preset Scenario'</strong> button provides a fast way to configure the simulation for specific experimental questions.
+                </p>
+                <p class="text-sm text-gray-700 mt-2">
+                    <strong>Behavior:</strong> Applying a preset will <strong>only override the specific settings</strong> relevant to that scenario (e.g., disable defenders, enable capsule synthesis, etc.). It leaves all other parameters (like Arena Radius or any settings you have manually changed) untouched. You can use the <strong>'Reset Settings to Defaults'</strong> button in the main panel if you wish to return to a baseline state before applying a preset.
+                </p>
+                <p class="text-sm text-gray-700 mt-2">The available presets include:</p>
+                <ul class="list-disc ml-6 mt-2 space-y-1 text-sm">
+                    <li><strong>1. Role of Initial Density:</strong> Vary total cell density and Attacker:Prey ratios.</li>
+                    <li><strong>2. Prey Sensitivity:</strong> Explore outcomes when Prey are sensitive to only Lytic, only Non-Lytic, or Both toxin types.</li>
+                    <li><strong>3. Contact & Kin:</strong> Adjust Attacker firing strategies like Contact Sensing Bias and Kin Exclusion.</li>
+                    <li><strong>4. Tit-for-Tat:</strong> A 3-type scenario (Att, Prey, Def) to model Defender retaliation strategies.</li>
+                    <li><strong>5. Role of Capsule:</strong> Tests Prey capsule protection by making it always-on. Control protection % and synthesis time.</li>
+                    <li><strong>6. Predation:</strong> Forces Attackers to "eat to replicate" by disabling normal replication and enabling the Lysis-for-Replication reward.</li>
+                    <li><strong>7. Role of Movement:</strong> Focuses on mobility and chemotaxis. Control Prey AI production and Attacker movement/attraction.</li>
+                    <li><strong>8. Quorum Sensing:</strong> A two-column setup to control *both* Attacker T6SS activation and Prey capsule synthesis via their respective QS systems.</li>
+                    <li><strong>9. Battle Royale:</strong> A full sandbox to quickly configure all three cell types with high-level strategy switches (e.g., 'Movement: AI', 'Predation: Yes', 'Selectivity: High').</li>
+                </ul>
+            </div>
+			
+            <hr class="my-4">
 
             <h4>Settings Explained ⚙️</h4>
             <p>The control panel allows fine-tuning of the simulation. Here are the key concepts for each cell type:</p>
@@ -839,17 +864,17 @@
                 <div>
                     <h5 class="font-semibold">Replication Reward System</h5>
                     <p class="text-sm">
-                        Predators and Defenders can be rewarded for their effectiveness. For every set number of lyses they cause, they can receive a replication reward. This can either kick-start a new replication cycle or accelerate their current one. This feature is configurable in the Predator and Defender settings panels, allowing you to create dynamic fitness advantages.
+                        Attackers and Defenders can be rewarded for their effectiveness. For every set number of lyses they cause, they can receive a replication reward. This can either kick-start a new replication cycle or accelerate their current one. This feature is configurable in the Attacker and Defender settings panels, allowing you to create dynamic fitness advantages.
                     </p>
                 </div>
 
 				<div>
-					<h5 class="font-semibold">Predator Behavior</h5>
+					<h5 class="font-semibold">Attacker Behavior</h5>
 					<p class="text-sm">
-						Predators are the primary attackers. Their firing logic follows a clear priority:
+						The firing logic of the attackers follows a clear priority:
 						<br> &bull; <strong>Contact Sensing:</strong> First, it decides whether to target a specific adjacent contact (cell or barrier) or fire randomly, based on the <strong>Contact Sensing Bias %</strong>. If it attempts a contact-biased shot but no targets are available, the firing is aborted for that turn.
-						<br> &bull; <strong>Kin Recognition:</strong> After a preliminary target is chosen, the <strong>Kin Exclusion %</strong> determines if self-recognition occurs when targeting another Predator. The outcome is set by the penalty value (either cancelling the shot or smartly re-targeting a non-kin cell).
-						<br> &bull; <strong>Quorum Sensing (QS):</strong> The entire firing sequence is gated by a flexible Quorum Sensing system, which can activate firing based on local Predator density.
+						<br> &bull; <strong>Kin Recognition:</strong> After a preliminary target is chosen, the <strong>Kin Exclusion %</strong> determines if self-recognition occurs when targeting another Attacker. The outcome is set by the penalty value (either cancelling the shot or smartly re-targeting a non-kin cell).
+						<br> &bull; <strong>Quorum Sensing (QS):</strong> The entire firing sequence is gated by a flexible Quorum Sensing system, which can activate firing based on local Attacker density.
 					</p>
 				</div>                
 
@@ -858,7 +883,7 @@
                     <p class="text-sm">
                         Prey are the primary targets but can have their own defense mechanisms:
                         <br> &bull; <strong>Capsule Synthesis:</strong> If enabled, Prey can produce up to 5 protective capsule layers, reducing damage from T6SS attacks. Synthesis can be constitutive (always on) or dependent on their own AI concentration.
-                        <br> &bull; <strong>Resistance:</strong> Prey have separate resistance percentages and toxin sensitivity thresholds against attacks from Predators and Defenders.
+                        <br> &bull; <strong>Resistance:</strong> Prey have separate resistance percentages and toxin sensitivity thresholds against attacks from Attackers and Defenders.
                         <br> &bull; <strong>Reporter Release:</strong> Upon lysis, Prey release a set amount of LacZ enzyme, driving the CPRG color change.
                     </p>
                 </div>
@@ -957,6 +982,7 @@
                 <ul class="list-disc ml-5 space-y-1 text-sm">
                     <li><a href="https://doi.org/10.1146/annurev-micro-020518-115420" target="_blank" class="text-blue-500 hover:underline">Wang et al. 2019</a></li>
 					<li><a href="https://doi.org/10.1099/mic.0.001376" target="_blank" class="text-blue-500 hover:underline">Hespanhol et al. 2023</a></li>
+					<li><a href="https://doi.org/10.1038/s41579-025-01256-w" target="_blank" class="text-blue-500 hover:underline">Wohlfarth et al. 2025</a></li>
                 </ul>
             </div>
             <button id="closeLiteratureModalButton" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg shadow-md modal-close-button">Close Literature</button>
@@ -978,11 +1004,11 @@
     <div id="presetsModalOverlay" class="modal-overlay hidden">
         <div class="modal-content large-modal">
             <h2 class="modal-title">Presets to simulate described behaviours</h2>
-            <div id="presetsModalBody" class="modal-body grid grid-cols-1 md:grid-cols-2 gap-6">
-
+			<div id="presetsModalBody" class="modal-body grid grid-cols-1 md:grid-cols-3 gap-6">
+			
                 <div id="presetGroupDensity" class="preset-group border p-4 rounded-lg shadow-sm">
-                    <h4 class="font-semibold text-gray-800 text-lg mb-2">1. Role of Initial Density (Pred & Prey) <a href="https://doi.org/10.1371/journal.pcbi.1004520" target="_blank" class="text-blue-500 hover:underline">[Borenstein et al. 2015]</a></h4>
-                    <p class="text-sm text-gray-600 mb-3">Defenders are disabled. Adjust fill and ratio.</p>
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">1. Role of Initial Density <a href="https://doi.org/10.1371/journal.pcbi.1004520" target="_blank" class="text-blue-500 hover:underline">[Borenstein et al. 2015]</a></h4>
+                    <p class="text-sm text-gray-600 mb-3">Adjust arena fill and ratio between attackers and prey.</p>
                     <div class="space-y-3 mt-3">
                         <div>
                             <label for="densityFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="densityFillDisplay" class="font-semibold">10%</span>):</label>
@@ -990,8 +1016,8 @@
                              <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
                         </div>
                         <div>
-                            <label for="densityPredPreyRatioSlider" class="block text-sm font-medium text-gray-700">Predator:Prey Ratio (<span id="densityRatioDisplay" class="font-semibold">1:1</span>)</label>
-                            <input type="range" id="densityPredPreyRatioSlider" data-group="density" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
+                            <label for="densityAttPreyRatioSlider" class="block text-sm font-medium text-gray-700">Attacker:Prey Ratio (<span id="densityRatioDisplay" class="font-semibold">1:1</span>)</label>
+                            <input type="range" id="densityAttPreyRatioSlider" data-group="density" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
                             <div class="text-xs text-gray-500 grid grid-cols-9 mt-1 text-center gap-x-1">
                                  <span>100:1</span><span>30:1</span><span>10:1</span><span>3:1</span><span>1:1</span><span>1:3</span><span>1:10</span><span>1:30</span><span>1:100</span>
                             </div>
@@ -1000,8 +1026,8 @@
                 </div>
 
                 <div id="presetGroupSensitivity" class="preset-group border p-4 rounded-lg shadow-sm">
-                    <h4 class="font-semibold text-gray-800 text-lg mb-2">2. Prey Sensitivity / Effector Type (Pred & Prey) <a href="https://doi.org/10.1371/journal.pbio.3000720" target="_blank" class="text-blue-500 hover:underline">[Smith and Vettiger et al. 2020]</a></h4>
-                    <p class="text-sm text-gray-600 mb-3">Defenders are disabled. Select sensitivity to effectors, adjust fill and ratio.</p>
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">2. Prey Sensitivity / Effector Type <a href="https://doi.org/10.1371/journal.pbio.3000720" target="_blank" class="text-blue-500 hover:underline">[Smith and Vettiger et al. 2020]</a></h4>
+                    <p class="text-sm text-gray-600 mb-3">Select sensitivity of prey to effectors, adjust fill and ratio.</p>
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Select Prey Sensitivity Type (vs All Attackers):</label>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -1010,15 +1036,15 @@
                             <button data-preset-group="sensitivity" data-action="selectSensitivityType" data-type="both_sensitive" class="preset-select-button bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-3 rounded-md text-xs shadow-sm">Both Sensitive</button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-3 mt-3">
                         <div>
                             <label for="sensitivityFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="sensitivityFillDisplay" class="font-semibold">10%</span>):</label>
                             <input type="range" id="sensitivityFillSlider" data-group="sensitivity" min="1" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
                             <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
                         </div>
                         <div>
-                            <label for="sensitivityPredPreyRatioSlider" class="block text-sm font-medium text-gray-700">Predator:Prey Ratio (<span id="sensitivityRatioDisplay" class="font-semibold">1:1</span>)</label>
-                            <input type="range" id="sensitivityPredPreyRatioSlider" data-group="sensitivity" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
+                            <label for="sensitivityAttPreyRatioSlider" class="block text-sm font-medium text-gray-700">Attacker:Prey Ratio (<span id="sensitivityRatioDisplay" class="font-semibold">1:1</span>)</label>
+                            <input type="range" id="sensitivityAttPreyRatioSlider" data-group="sensitivity" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
                             <div class="text-xs text-gray-500 grid grid-cols-9 mt-1 text-center gap-x-1">
                                  <span>100:1</span><span>30:1</span><span>10:1</span><span>3:1</span><span>1:1</span><span>1:3</span><span>1:10</span><span>1:30</span><span>1:100</span>
                             </div>
@@ -1027,16 +1053,16 @@
                 </div>
 
                 <div id="presetGroupContactKin" class="preset-group border p-4 rounded-lg shadow-sm">
-                    <h4 class="font-semibold text-gray-800 text-lg mb-2">3. Contact Sensing & Kin Exclusion (Pred & Prey) <a href="https://doi.org/10.15252/embj.2021108595" target="_blank" class="text-blue-500 hover:underline">[Lin et al. 2022]</a></h4>
-                    <p class="text-sm text-gray-600 mb-3">Defenders are disabled. Adjust Predator firing behaviors, fill, and ratio.</p>
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">3. Contact Sensing & Kin Exclusion <a href="https://doi.org/10.15252/embj.2021108595" target="_blank" class="text-blue-500 hover:underline">[Lin et al. 2022]</a></h4>
+                    <p class="text-sm text-gray-600 mb-3">Adjust Attacker firing behaviors, fill, and ratio.</p>
                     <div class="space-y-3 mt-3">
                         <div>
-                            <label for="contactKinContactSensingSlider" class="block text-sm font-medium text-gray-700">Pred. Contact Sensing Bias (<span id="contactKinContactSensingDisplay" class="font-semibold">50%</span>):</label>
+                            <label for="contactKinContactSensingSlider" class="block text-sm font-medium text-gray-700">Att. Contact Sensing Bias (<span id="contactKinContactSensingDisplay" class="font-semibold">50%</span>):</label>
                             <input type="range" id="contactKinContactSensingSlider" data-group="contactkin" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
                             <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0%</span><span>100%</span></div>
                         </div>
                         <div>
-                            <label for="contactKinKinExclusionSlider" class="block text-sm font-medium text-gray-700">Pred. Kin Exclusion (<span id="contactKinKinExclusionDisplay" class="font-semibold">50%</span>):</label>
+                            <label for="contactKinKinExclusionSlider" class="block text-sm font-medium text-gray-700">Att. Kin Exclusion (<span id="contactKinKinExclusionDisplay" class="font-semibold">50%</span>):</label>
                             <input type="range" id="contactKinKinExclusionSlider" data-group="contactkin" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
                             <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0%</span><span>100%</span></div>
                         </div>
@@ -1046,8 +1072,8 @@
                              <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
                         </div>
                         <div>
-                            <label for="contactKinPredPreyRatioSlider" class="block text-sm font-medium text-gray-700">Predator:Prey Ratio (<span id="contactKinRatioDisplay" class="font-semibold">1:1</span>)</label>
-                            <input type="range" id="contactKinPredPreyRatioSlider" data-group="contactkin" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
+                            <label for="contactKinAttPreyRatioSlider" class="block text-sm font-medium text-gray-700">Attacker:Prey Ratio (<span id="contactKinRatioDisplay" class="font-semibold">1:1</span>)</label>
+                            <input type="range" id="contactKinAttPreyRatioSlider" data-group="contactkin" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 mt-1 preset-config-slider">
                             <div class="text-xs text-gray-500 grid grid-cols-9 mt-1 text-center gap-x-1">
                                  <span>100:1</span><span>30:1</span><span>10:1</span><span>3:1</span><span>1:1</span><span>1:3</span><span>1:10</span><span>1:30</span><span>1:100</span>
                             </div>
@@ -1056,8 +1082,8 @@
                 </div>
 
                 <div id="presetGroupTitfortat" class="preset-group border p-4 rounded-lg shadow-sm">
-                    <h4 class="font-semibold text-gray-800 text-lg mb-2">4. Tit-for-Tat Dynamics (Pred, Prey, Def) <a href="https://doi.org/10.1016/j.cell.2013.01.042" target="_blank" class="text-blue-500 hover:underline">[Basler et al. 2013]</a></h4>
-                    <p class="text-sm text-gray-600 mb-1">Prey are resistant to Predators but sensitive to Defenders. Predators are sensitive to Defenders. Prey:Predator:Defender ratio fixed at 1:1:1.</p>
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">4. Tit-for-Tat Dynamics <a href="https://doi.org/10.1016/j.cell.2013.01.042" target="_blank" class="text-blue-500 hover:underline">[Basler et al. 2013]</a></h4>
+                    <p class="text-sm text-gray-600 mb-1">Prey are resistant to Attackers but sensitive to Defenders. Attackers are sensitive to Defenders. Prey:Attacker:Defender ratio fixed at 1:1:1.</p>
                     <p class="text-xs text-gray-500 mb-3">High Selectivity: Defender Retaliation 90%, Random Fire 0.1%. Medium: Ret. 50%, Rand. 1%. Poor: Ret. 10%, Rand. 10%.</p>
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Select Defender Selectivity:</label>
@@ -1073,6 +1099,273 @@
                         <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
                     </div>
                 </div>
+				
+				<div id="presetGroupCapsule" class="preset-group border p-4 rounded-lg shadow-sm">
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">5. Role of Capsule in Protection <a href="https://doi.org/10.7554/eLife.101032" target="_blank" class="text-blue-500 hover:underline">[Flaugnatti et al. 2025]</a></h4>
+                    <p class="text-sm text-gray-600 mb-3">Capsule is constitutively active. Adjust protection, synthesis time, and density.</p>
+                    <div class="space-y-3 mt-3">
+                        <div>
+                            <label for="capsuleProtectionSlider" class="block text-sm font-medium text-gray-700">Capsule Protection (<span id="capsuleProtectionDisplay" class="font-semibold">100%</span>):</label>
+                            <input type="range" id="capsuleProtectionSlider" data-group="capsule" min="0" max="100" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0%</span><span>100%</span></div>
+                        </div>
+                        <div>
+                            <label for="capsuleTimeSlider" class="block text-sm font-medium text-gray-700">Layer Synthesis Time (<span id="capsuleTimeDisplay" class="font-semibold">5 min</span>):</label>
+                            <input type="range" id="capsuleTimeSlider" data-group="capsule" min="5" max="30" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>5 min</span><span>30 min</span></div>
+                        </div>
+                        <div>
+                            <label for="capsuleFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="capsuleFillDisplay" class="font-semibold">10%</span>):</label>
+                            <input type="range" id="capsuleFillSlider" data-group="capsule" min="1" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
+                        </div>
+                        <div>
+                            <label for="capsuleAttPreyRatioSlider" class="block text-sm font-medium text-gray-700">Attacker:Prey Ratio (<span id="capsuleRatioDisplay" class="font-semibold">1:1</span>)</label>
+                            <input type="range" id="capsuleAttPreyRatioSlider" data-group="capsule" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 grid grid-cols-9 mt-1 text-center gap-x-1">
+                                <span>100:1</span><span>30:1</span><span>10:1</span><span>3:1</span><span>1:1</span><span>1:3</span><span>1:10</span><span>1:30</span><span>1:100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="presetGroupPredation" class="preset-group border p-4 rounded-lg shadow-sm">
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">6. Predation by T6SS Activity <a href="https://doi.org/10.1126/science.adr8286" target="_blank" class="text-blue-500 hover:underline">[Stubbusch et al. 2025]</a></h4>
+                    <p class="text-sm text-gray-600 mb-3">Attacker replication is OFF, but can be enabled via lysis rewards.</p>
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Prey Sensitivity Type:</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <button data-preset-group="predation" data-action="selectPredationType" data-type="lytic_only" class="preset-select-button bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-3 rounded-md text-xs shadow-sm">Lytic Only</button>
+                            <button data-preset-group="predation" data-action="selectPredationType" data-type="nonlytic_only" class="preset-select-button bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-3 rounded-md text-xs shadow-sm">Non-Lytic Only</button>
+                            <button data-preset-group="predation" data-action="selectPredationType" data-type="both_sensitive" class="preset-select-button bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-3 rounded-md text-xs shadow-sm">Both</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3 mt-3">
+                         <div>
+                            <label for="predationLysesPerRepSlider" class="block text-sm font-medium text-gray-700">Lyses per Replication (<span id="predationLysesPerRepDisplay" class="font-semibold">3</span>):</label>
+                            <input type="range" id="predationLysesPerRepSlider" data-group="predation" min="0" max="10" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0</span><span>10</span></div>
+                        </div>
+                        <div>
+                            <label for="predationFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="predationFillDisplay" class="font-semibold">10%</span>):</label>
+                            <input type="range" id="predationFillSlider" data-group="predation" min="1" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
+                        </div>
+                        <div>
+                            <label for="predationAttPreyRatioSlider" class="block text-sm font-medium text-gray-700">Attacker:Prey Ratio (<span id="predationRatioDisplay" class="font-semibold">1:1</span>)</label>
+                            <input type="range" id="predationAttPreyRatioSlider" data-group="predation" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 grid grid-cols-9 mt-1 text-center gap-x-1">
+                                <span>100:1</span><span>30:1</span><span>10:1</span><span>3:1</span><span>1:1</span><span>1:3</span><span>1:10</span><span>1:30</span><span>1:100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="presetGroupMovement" class="preset-group border p-4 rounded-lg shadow-sm">
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">7. Role of Movement in Killing <a href="https://doi.org/10.1371/journal.ppat.1003608" target="_blank" class="text-blue-500 hover:underline">[Alteri et al. 2013]</a></h4>
+                    <p class="text-sm text-gray-600 mb-3">Configure Prey AI and Attacker movement. Predation reward is optional.</p>
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Predation Reward:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button data-preset-group="movement" data-action="selectMovementPredation" data-type="on" class="preset-select-button bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-3 rounded-md text-xs shadow-sm">ON</button>
+                            <button data-preset-group="movement" data-action="selectMovementPredation" data-type="off" class="preset-select-button bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-3 rounded-md text-xs shadow-sm">OFF</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3 mt-3">
+                        <div>
+                            <label for="movementPreyAiProdSlider" class="block text-sm font-medium text-gray-700">Prey AI Prod. (<span id="movementPreyAiProdDisplay" class="font-semibold">100</span> U/min):</label>
+                            <input type="range" id="movementPreyAiProdSlider" data-group="movement" min="0" max="1000" value="100" step="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0</span><span>1000</span></div>
+                        </div>
+                        <div>
+                            <label for="movementAttMoveProbSlider" class="block text-sm font-medium text-gray-700">Movement Probability (<span id="movementAttMoveProbDisplay" class="font-semibold">50%</span>):</label>
+                            <input type="range" id="movementAttMoveProbSlider" data-group="movement" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0%</span><span>100%</span></div>
+                        </div>
+                        <div>
+                            <label for="movementAttMoveDirSlider" class="block text-sm font-medium text-gray-700">Movement Directionality (<span id="movementAttMoveDirDisplay" class="font-semibold">100%</span>):</label>
+                            <input type="range" id="movementAttMoveDirSlider" data-group="movement" min="0" max="100" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0%</span><span>100%</span></div>
+                        </div>
+                        <div>
+                            <label for="movementArenaRadiusSlider" class="block text-sm font-medium text-gray-700">Arena Radius (<span id="movementArenaRadiusDisplay" class="font-semibold">30</span>):</label>
+                            <input type="range" id="movementArenaRadiusSlider" data-group="movement" min="20" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>20</span><span>100</span></div>
+                        </div>
+						<div>
+                            <label for="movementFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="movementFillDisplay" class="font-semibold">5%</span>):</label>
+                            <input type="range" id="movementFillSlider" data-group="movement" min="1" max="100" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
+                        </div>
+                        <div>
+                            <label for="movementAttPreyRatioSlider" class="block text-sm font-medium text-gray-700">Attacker:Prey Ratio (<span id="movementRatioDisplay" class="font-semibold">1:10</span>)</label>
+                            <input type="range" id="movementAttPreyRatioSlider" data-group="movement" min="0" max="8" value="6" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 grid grid-cols-9 mt-1 text-center gap-x-1">
+                                <span>100:1</span><span>30:1</span><span>10:1</span><span>3:1</span><span>1:1</span><span>1:3</span><span>1:10</span><span>1:30</span><span>1:100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>			
+
+				<div id="presetGroupQs" class="preset-group border p-4 rounded-lg shadow-sm">
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">8. Quorum Sensing Dynamics</h4>
+                    <p class="text-sm text-gray-600 mb-3">Configure Attacker T6SS activation and Prey capsule synthesis, which are both controlled by their own QS systems.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mt-3">
+                        
+                        <div class="space-y-3 border-r md:pr-4">
+                            <h5 class="text-sm font-semibold text-gray-700 text-center">Attacker T6SS Activation</h5>
+                            <div>
+                                <label for="attackerQSProdSlider" class="block text-sm font-medium text-gray-700">AI Prod. Rate (<span id="attackerQSProdDisplay" class="font-semibold">100</span>):</label>
+                                <input type="range" id="attackerQSProdSlider" data-group="qs" min="0" max="100" value="20" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0</span><span>100</span></div>
+                            </div>
+                            <div>
+                                <label for="attackerQSKSlider" class="block text-sm font-medium text-gray-700">Activation Midpoint (K) (<span id="attackerQSKDisplay" class="font-semibold">100</span>):</label>
+                                <input type="range" id="attackerQSKSlider" data-group="qs" min="0" max="10000" value="1000" step="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0</span><span>10000</span></div>
+                            </div>
+                            <div>
+                                <label for="attackerQSNSlider" class="block text-sm font-medium text-gray-700">Cooperativity (n) (<span id="attackerQSNDisplay" class="font-semibold">4</span>):</label>
+                                <input type="range" id="attackerQSNSlider" data-group="qs" min="1" max="10" value="4" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1</span><span>10</span></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h5 class="text-sm font-semibold text-gray-700 text-center">Prey Capsule Synthesis</h5>
+                            <div>
+                                <label for="preyQSProdSlider" class="block text-sm font-medium text-gray-700">AI Prod. Rate (<span id="preyQSProdDisplay" class="font-semibold">100</span>):</label>
+                                <input type="range" id="preyQSProdSlider" data-group="qs" min="0" max="100" value="30" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0</span><span>100</span></div>
+                            </div>
+                            <div>
+                                <label for="preyQSKSlider" class="block text-sm font-medium text-gray-700">Derepression Midpoint (K) (<span id="preyQSKDisplay" class="font-semibold">100</span>):</label>
+                                <input type="range" id="preyQSKSlider" data-group="qs" min="0" max="10000" value="3000" step="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0</span><span>10000</span></div>
+                            </div>
+                            <div>
+                                <label for="preyQSNSlider" class="block text-sm font-medium text-gray-700">Cooperativity (n) (<span id="preyQSNDisplay" class="font-semibold">4</span>):</label>
+                                <input type="range" id="preyQSNSlider" data-group="qs" min="1" max="10" value="4" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1</span><span>10</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 mt-4 pt-4 border-t">
+                        <div>
+                            <label for="attackerQSArenaFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="attackerQSArenaFillDisplay" class="font-semibold">10%</span>):</label>
+                            <input type="range" id="attackerQSArenaFillSlider" data-group="qs" min="1" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
+                        </div>
+                        <div>
+                            <label for="attackerQSAttPreyRatioSlider" class="block text-sm font-medium text-gray-700">Attacker:Prey Ratio (<span id="attackerQSRatioDisplay" class="font-semibold">1:1</span>)</label>
+                            <input type="range" id="attackerQSAttPreyRatioSlider" data-group="qs" min="0" max="8" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 grid grid-cols-9 mt-1 text-center gap-x-1">
+                                <span>100:1</span><span>30:1</span><span>10:1</span><span>3:1</span><span>1:1</span><span>1:3</span><span>1:10</span><span>1:30</span><span>1:100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+				<div id="presetGroupBattleroyale" class="preset-group border p-4 rounded-lg shadow-sm">
+                    <h4 class="font-semibold text-gray-800 text-lg mb-2">9. Battle Royale</h4>
+                    <p class="text-sm text-gray-600 mb-3">A sandbox to quickly set up complex 3-type ecologies using high-level strategy switches.</p>
+
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-3 pt-2">
+                        <div>
+                            <label for="brArenaRadiusSlider" class="block text-sm font-medium text-gray-700">Arena Radius (<span id="brArenaRadiusDisplay" class="font-semibold">50</span>):</label>
+                            <input type="range" id="brArenaRadiusSlider" data-group="battleroyale" min="30" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>30</span><span>100</span></div>
+                        </div>
+                        <div>
+                            <label for="brFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="brFillDisplay" class="font-semibold">10%</span>):</label>
+                            <input type="range" id="brFillSlider" data-group="battleroyale" min="1" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t">
+                        <h5 class="text-sm font-semibold text-gray-700 text-center mb-2">Population Mix</h5>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                            <div>
+                                <label for="brAttackerPercentSlider" class="block text-sm font-medium text-gray-700">Attacker % (<span id="brAttackerPercentDisplay" class="font-semibold">10%</span>):</label>
+                                <input type="range" id="brAttackerPercentSlider" data-group="battleroyale" min="0" max="100" value="10" step="5" class="w-full h-2 bg-red-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0%</span><span id="brAttackerPercentMaxDisplay">100%</span></div>
+                            </div>
+                            <div>
+                                <label for="brDefenderPercentSlider" class="block text-sm font-medium text-gray-700">Defender % (<span id="brDefenderPercentDisplay" class="font-semibold">10%</span>):</label>
+                                <input type="range" id="brDefenderPercentSlider" data-group="battleroyale" min="0" max="90" value="10" step="5" class="w-full h-2 bg-yellow-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                <div class="text-xs text-gray-500 flex justify-between mt-1"><span>0%</span><span id="brDefenderPercentMaxDisplay">90%</span></div>
+                            </div>
+                        </div>
+                        <div class="text-center text-sm font-medium text-gray-800 mt-2">
+                            Resulting Mix: <span id="brMixDisplay" class="font-semibold">10% Att, 10% Def, 80% Prey</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t">
+                        <h5 class="text-sm font-semibold text-gray-700 text-center mb-3">Strategy Switches</h5>
+                        <div class="grid grid-cols-3 gap-x-3">
+                            <div class="space-y-3 border-r pr-3">
+                                <h6 class="font-semibold text-gray-700 text-center text-red-600">Attacker</h6>
+                                <div>
+                                    <label for="brAttMovementSlider" class="block text-sm font-medium text-gray-700">Movement: <span id="brAttMovementDisplay" class="font-semibold">AI</span></label>
+                                    <input type="range" id="brAttMovementSlider" data-group="battleroyale" min="0" max="2" value="2" class="w-full h-2 bg-red-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                    <div class="text-xs text-gray-500 flex justify-between mt-1 px-1"><span>No</span><span>Yes</span><span>AI</span></div>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="brAttQsCheckbox" data-group="battleroyale" type="checkbox" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 preset-config-slider">
+                                    <label for="brAttQsCheckbox" class="ml-2 block text-sm font-medium text-gray-700">QS Regulated</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="brAttKinCheckbox" data-group="battleroyale" type="checkbox" checked class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 preset-config-slider">
+                                    <label for="brAttKinCheckbox" class="ml-2 block text-sm font-medium text-gray-700">Kin Exclusion</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="brAttContactCheckbox" data-group="battleroyale" type="checkbox" checked class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 preset-config-slider">
+                                    <label for="brAttContactCheckbox" class="ml-2 block text-sm font-medium text-gray-700">Contact Sensing</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="brAttPredationCheckbox" data-group="battleroyale" type="checkbox" checked class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 preset-config-slider">
+                                    <label for="brAttPredationCheckbox" class="ml-2 block text-sm font-medium text-gray-700">Predation</label>
+                                </div>
+                            </div>
+                            <div class="space-y-3 border-r pr-3">
+                                <h6 class="font-semibold text-gray-700 text-center text-blue-600">Prey</h6>
+                                <div class="flex items-center pt-6">
+                                    <input id="brPreyMovementCheckbox" data-group="battleroyale" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 preset-config-slider">
+                                    <label for="brPreyMovementCheckbox" class="ml-2 block text-sm font-medium text-gray-700">Movement</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="brPreyAiCheckbox" data-group="battleroyale" type="checkbox" checked class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 preset-config-slider">
+                                    <label for="brPreyAiCheckbox" class="ml-2 block text-sm font-medium text-gray-700">AI Production</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="brPreyCapsuleCheckbox" data-group="battleroyale" type="checkbox" checked class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 preset-config-slider">
+                                    <label for="brPreyCapsuleCheckbox" class="ml-2 block text-sm font-medium text-gray-700">Capsule</label>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <h6 class="font-semibold text-gray-700 text-center text-yellow-600">Defender</h6>
+                                <div class="flex items-center pt-6">
+                                    <input id="brDefMovementCheckbox" data-group="battleroyale" type="checkbox" checked class="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 preset-config-slider">
+                                    <label for="brDefMovementCheckbox" class="ml-2 block text-sm font-medium text-gray-700">Movement</label>
+                                </div>
+                                <div>
+                                    <label for="brDefSelectivitySlider" class="block text-sm font-medium text-gray-700">Selectivity: <span id="brDefSelectivityDisplay" class="font-semibold">High</span></label>
+                                    <input type="range" id="brDefSelectivitySlider" data-group="battleroyale" min="0" max="2" value="2" class="w-full h-2 bg-yellow-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                                    <div class="text-xs text-gray-500 flex justify-between mt-1 px-1"><span>Low</span><span>Med</span><span>High</span></div>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="brDefPredationCheckbox" data-group="battleroyale" type="checkbox" checked class="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 preset-config-slider">
+                                    <label for="brDefPredationCheckbox" class="ml-2 block text-sm font-medium text-gray-700">Predation</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <button id="applyActivePresetButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md mt-6 text-base">Apply Selected Preset & Close</button>
             <button id="closePresetsModalButton" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md modal-close-button mt-2">Close Presets</button>

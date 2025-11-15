@@ -78,7 +78,7 @@ canvas#simulationCanvas { /* Specific ID for simulation canvas */
 .manual-setup-button.active-selection {
 	ring-2 ring-offset-2 ring-blue-500;
 }
-.manual-setup-button.active-predator { ring-color: #ef4444; }
+.manual-setup-button.active-attacker { ring-color: #ef4444; }
 .manual-setup-button.active-prey { ring-color: #3b82f6; }
 .manual-setup-button.active-defender { ring-color: #d97706; }
 .manual-setup-button.active-barrier { ring-color: #78350f; } /* amber-900 for dark brown */
