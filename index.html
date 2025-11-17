@@ -12,6 +12,7 @@
 
     <link rel="stylesheet" href="style.css">
 
+
 </head>
 <body class="bg-gray-100 text-gray-800 p-4 md:p-6">
     <div class="container-fluid mx-auto">
@@ -26,7 +27,7 @@
                 </button>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 5.3 - 15.11.2025). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 6.1 - 17.11.2025). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 Pro.<br>
             </p>
         </header>
@@ -821,6 +822,9 @@
                 <p class="text-sm text-gray-700 mt-1">
                     The <strong>'Load Preset Scenario'</strong> button provides a fast way to configure the simulation for specific experimental questions.
                 </p>
+	            <p class="text-sm text-gray-700 mt-2">
+                    <strong>To select a preset, simply click anywhere on its title or in the background of its box. The box will become highlighted.</strong>
+                </p>
                 <p class="text-sm text-gray-700 mt-2">
                     <strong>Behavior:</strong> Applying a preset will <strong>only override the specific settings</strong> relevant to that scenario (e.g., disable defenders, enable capsule synthesis, etc.). It leaves all other parameters (like Arena Radius or any settings you have manually changed) untouched. You can use the <strong>'Reset Settings to Defaults'</strong> button in the main panel if you wish to return to a baseline state before applying a preset.
                 </p>
@@ -1006,7 +1010,7 @@
             <h2 class="modal-title">Presets to simulate described behaviours</h2>
 			<div id="presetsModalBody" class="modal-body grid grid-cols-1 md:grid-cols-3 gap-6">
 			
-                <div id="presetGroupDensity" class="preset-group border p-4 rounded-lg shadow-sm">
+                <div id="presetGroupDensity" class="preset-group border p-4 rounded-lg shadow-sm" data-group="density">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">1. Role of Initial Density <a href="https://doi.org/10.1371/journal.pcbi.1004520" target="_blank" class="text-blue-500 hover:underline">[Borenstein et al. 2015]</a></h4>
                     <p class="text-sm text-gray-600 mb-3">Adjust arena fill and ratio between attackers and prey.</p>
                     <div class="space-y-3 mt-3">
@@ -1025,7 +1029,7 @@
                     </div>
                 </div>
 
-                <div id="presetGroupSensitivity" class="preset-group border p-4 rounded-lg shadow-sm">
+                <div id="presetGroupSensitivity" class="preset-group border p-4 rounded-lg shadow-sm" data-group="sensitivity">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">2. Prey Sensitivity / Effector Type <a href="https://doi.org/10.1371/journal.pbio.3000720" target="_blank" class="text-blue-500 hover:underline">[Smith and Vettiger et al. 2020]</a></h4>
                     <p class="text-sm text-gray-600 mb-3">Select sensitivity of prey to effectors, adjust fill and ratio.</p>
                     <div class="mb-3">
@@ -1052,7 +1056,7 @@
                     </div>
                 </div>
 
-                <div id="presetGroupContactKin" class="preset-group border p-4 rounded-lg shadow-sm">
+                <div id="presetGroupContactKin" class="preset-group border p-4 rounded-lg shadow-sm" data-group="contactkin">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">3. Contact Sensing & Kin Exclusion <a href="https://doi.org/10.15252/embj.2021108595" target="_blank" class="text-blue-500 hover:underline">[Lin et al. 2022]</a></h4>
                     <p class="text-sm text-gray-600 mb-3">Adjust Attacker firing behaviors, fill, and ratio.</p>
                     <div class="space-y-3 mt-3">
@@ -1081,7 +1085,7 @@
                     </div>
                 </div>
 
-                <div id="presetGroupTitfortat" class="preset-group border p-4 rounded-lg shadow-sm">
+                <div id="presetGroupTitfortat" class="preset-group border p-4 rounded-lg shadow-sm" data-group="titfortat">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">4. Tit-for-Tat Dynamics <a href="https://doi.org/10.1016/j.cell.2013.01.042" target="_blank" class="text-blue-500 hover:underline">[Basler et al. 2013]</a></h4>
                     <p class="text-sm text-gray-600 mb-1">Prey are resistant to Attackers but sensitive to Defenders. Attackers are sensitive to Defenders. Prey:Attacker:Defender ratio fixed at 1:1:1.</p>
                     <p class="text-xs text-gray-500 mb-3">High Selectivity: Defender Retaliation 90%, Random Fire 0.1%. Medium: Ret. 50%, Rand. 1%. Poor: Ret. 10%, Rand. 10%.</p>
@@ -1100,7 +1104,7 @@
                     </div>
                 </div>
 				
-				<div id="presetGroupCapsule" class="preset-group border p-4 rounded-lg shadow-sm">
+				<div id="presetGroupCapsule" class="preset-group border p-4 rounded-lg shadow-sm" data-group="capsule">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">5. Role of Capsule in Protection <a href="https://doi.org/10.7554/eLife.101032" target="_blank" class="text-blue-500 hover:underline">[Flaugnatti et al. 2025]</a></h4>
                     <p class="text-sm text-gray-600 mb-3">Capsule is constitutively active. Adjust protection, synthesis time, and density.</p>
                     <div class="space-y-3 mt-3">
@@ -1129,7 +1133,7 @@
                     </div>
                 </div>
 
-                <div id="presetGroupPredation" class="preset-group border p-4 rounded-lg shadow-sm">
+                <div id="presetGroupPredation" class="preset-group border p-4 rounded-lg shadow-sm" data-group="predation">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">6. Predation by T6SS Activity <a href="https://doi.org/10.1126/science.adr8286" target="_blank" class="text-blue-500 hover:underline">[Stubbusch et al. 2025]</a></h4>
                     <p class="text-sm text-gray-600 mb-3">Attacker replication is OFF, but can be enabled via lysis rewards.</p>
                     <div class="mb-3">
@@ -1161,7 +1165,7 @@
                     </div>
                 </div>
 
-                <div id="presetGroupMovement" class="preset-group border p-4 rounded-lg shadow-sm">
+                <div id="presetGroupMovement" class="preset-group border p-4 rounded-lg shadow-sm" data-group="movement">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">7. Role of Movement in Killing <a href="https://doi.org/10.1371/journal.ppat.1003608" target="_blank" class="text-blue-500 hover:underline">[Alteri et al. 2013]</a></h4>
                     <p class="text-sm text-gray-600 mb-3">Configure Prey AI and Attacker movement. Predation reward is optional.</p>
                     <div class="mb-3">
@@ -1189,8 +1193,8 @@
                         </div>
                         <div>
                             <label for="movementArenaRadiusSlider" class="block text-sm font-medium text-gray-700">Arena Radius (<span id="movementArenaRadiusDisplay" class="font-semibold">30</span>):</label>
-                            <input type="range" id="movementArenaRadiusSlider" data-group="movement" min="20" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
-                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>20</span><span>100</span></div>
+                            <input type="range" id="movementArenaRadiusSlider" data-group="movement" min="20" max="70" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>20</span><span>70</span></div>
                         </div>
 						<div>
                             <label for="movementFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="movementFillDisplay" class="font-semibold">5%</span>):</label>
@@ -1207,7 +1211,7 @@
                     </div>
                 </div>			
 
-				<div id="presetGroupQs" class="preset-group border p-4 rounded-lg shadow-sm">
+				<div id="presetGroupQs" class="preset-group border p-4 rounded-lg shadow-sm" data-group="qs">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">8. Quorum Sensing Dynamics</h4>
                     <p class="text-sm text-gray-600 mb-3">Configure Attacker T6SS activation and Prey capsule synthesis, which are both controlled by their own QS systems.</p>
                     
@@ -1268,19 +1272,19 @@
                     </div>
                 </div>
 
-				<div id="presetGroupBattleroyale" class="preset-group border p-4 rounded-lg shadow-sm">
+				<div id="presetGroupBattleroyale" class="preset-group border p-4 rounded-lg shadow-sm" data-group="battleroyale">
                     <h4 class="font-semibold text-gray-800 text-lg mb-2">9. Battle Royale</h4>
                     <p class="text-sm text-gray-600 mb-3">A sandbox to quickly set up complex 3-type ecologies using high-level strategy switches.</p>
 
                     <div class="grid grid-cols-2 gap-x-4 gap-y-3 pt-2">
                         <div>
                             <label for="brArenaRadiusSlider" class="block text-sm font-medium text-gray-700">Arena Radius (<span id="brArenaRadiusDisplay" class="font-semibold">50</span>):</label>
-                            <input type="range" id="brArenaRadiusSlider" data-group="battleroyale" min="30" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
-                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>30</span><span>100</span></div>
+                            <input type="range" id="brArenaRadiusSlider" data-group="battleroyale" min="30" max="70" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <div class="text-xs text-gray-500 flex justify-between mt-1"><span>30</span><span>70</span></div>
                         </div>
                         <div>
                             <label for="brFillSlider" class="block text-sm font-medium text-gray-700">Total Arena Fill (<span id="brFillDisplay" class="font-semibold">10%</span>):</label>
-                            <input type="range" id="brFillSlider" data-group="battleroyale" min="1" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
+                            <input type="range" id="brFillSlider" data-group="battleroyale" min="1" max="100" value="30" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1 preset-config-slider">
                             <div class="text-xs text-gray-500 flex justify-between mt-1"><span>1%</span><span>100%</span></div>
                         </div>
                     </div>
@@ -1408,8 +1412,8 @@
         </div>
     </div>
 
-
-    <script src="script.js" defer></script>
+<script src="config.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>

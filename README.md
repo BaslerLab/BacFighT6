@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 5.3 (15.11.2025)
+**Version:** 6.1 (17.11.2025)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 Pro.
 
@@ -439,7 +439,7 @@ The CPRG reporter system simulates a common laboratory assay.
 
 ## 9. Preset Scenarios
 
-The "Load Preset Scenario" button provides access to pre-configured parameter sets designed to explore specific phenomena:
+The "Load Preset Scenario" button provides access to pre-configured parameter sets designed to explore specific phenomena. **To select a preset, simply click anywhere on its title or in the background of its box. The box will become highlighted.**
 * **1. Role of Initial Density (Att & Prey):** Focuses on how varying initial cell densities and ratios between Attackers and Prey affect outcomes. Defenders are typically disabled.
 * **2. Prey Sensitivity / Effector Type (Att & Prey):** Explores how different Prey sensitivities (to lytic vs. non-lytic toxins, or both) influence interactions. Defenders are typically disabled.
 * **3. Contact Sensing & Kin Exclusion (Att & Prey):** Investigates the impact of Attacker T6SS firing strategies like biased targeting of adjacent cells and avoiding self-attack. Defenders are typically disabled.

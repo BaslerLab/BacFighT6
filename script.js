@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 5.3 (15.11.2025)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.1 (17.11.2025)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -8,16 +8,17 @@
 
 	// --- Global Constants & Colors ---
 	// Transparency can be set, but for clarity it is off (alpha = 1.0)
-	const ATTACKER_COLOR = 'rgba(220, 38, 38, 1.0)'; // Red
-	const PREY_COLOR = 'rgba(37, 99, 235, 1.0)';     // Blue
-	const DEFENDER_COLOR = 'rgba(217, 119, 6, 1.0)'; // Amber
-	const DEAD_CELL_COLOR = 'rgba(10, 10, 10, 1.0)';       // Dark Gray
-	const BARRIER_COLOR = 'rgba(101, 67, 33, 1.0)'; // Dark Brown (SaddleBrown like)
-	const LYSING_CELL_COLOR = 'rgba(160, 160, 160, 1.0)'; // Light Gray
-	const EMPTY_COLOR_STROKE = '#d1d5db';                 // Lighter Gray for empty hex outline
-	const FIRING_SECTOR_COLOR = 'rgba(0, 255, 0, 1.0)'; // Bright Green for precise hit
-	const MISS_FIRING_SECTOR_COLOR = 'rgba(0, 100, 0, 0.5)'; // Dark Green, 50% alpha for miss
-	const DEFAULT_CANVAS_BG_COLOR = '#ffffff';
+	// --- Global Constants & Colors (Mapped from config.js) ---
+	const ATTACKER_COLOR = AppConfig.colors.ATTACKER;
+	const PREY_COLOR = AppConfig.colors.PREY;
+	const DEFENDER_COLOR = AppConfig.colors.DEFENDER;
+	const DEAD_CELL_COLOR = AppConfig.colors.DEAD_CELL;
+	const BARRIER_COLOR = AppConfig.colors.BARRIER;
+	const LYSING_CELL_COLOR = AppConfig.colors.LYSING_CELL;
+	const EMPTY_COLOR_STROKE = AppConfig.colors.EMPTY_STROKE;
+	const FIRING_SECTOR_COLOR = AppConfig.colors.FIRING_SECTOR;
+	const MISS_FIRING_SECTOR_COLOR = AppConfig.colors.MISS_FIRING_SECTOR;
+	const DEFAULT_CANVAS_BG_COLOR = AppConfig.colors.DEFAULT_CANVAS_BG;
 
 	const AXIAL_DIRECTIONS = [
 		{ q:  1, r:  0 }, { q:  1, r: -1 }, { q:  0, r: -1 },
@@ -435,201 +436,13 @@
 
 	// This is the single source of truth for all simulation parameters.
 	// It is applied on page load to set the default state.
-	const SIMULATION_DEFAULTS = {
-		"Arena_Radius": 20,
-		"Simulation_Duration_Minutes": 600,
-		"Simulation_Step_Delay_ms": 50,
-		"Simulation_Render_Rate_every_N_steps": 1,
-		"Arena_State_Export_Enabled": true,
-		"Full_State_History_Enabled": true,
-		"Image_Export_Enabled": false,
-		"Image_Export_Size_px": 1000,
-		"Image_Buffer_Size_Limit_MB": 500,
-		"History_Buffer_Size_Limit_MB": 1500,
-		"Arena_State_Buffer_Size_Limit_MB": 200,
-
-		"Attacker_Initial_Count": 30,
-		"Attacker_Replication_Mean_min": 30,
-		"Attacker_Replication_Range_min": 5,
-		"Attacker_T6SS_Fire_Cooldown_Min_min": 3,
-		"Attacker_T6SS_Fire_Cooldown_Max_min": 5,
-		"Attacker_T6SS_Precision_Percent": 25,
-		"Attacker_T6SS_Contact_Sensing_Bias_Percent": 0,
-		"Attacker_T6SS_Kin_Exclusion_Percent": 0,
-		"Attacker_T6SS_Kin_Exclusion_Penalty_min": -1,
-		"Attacker_T6SS_NL_Units_per_Hit": 3,
-		"Attacker_T6SS_NL_Delivery_Chance_Percent": 90,
-		"Attacker_T6SS_L_Units_per_Hit": 3,
-		"Attacker_T6SS_L_Delivery_Chance_Percent": 90,
-		"Attacker_Sensitivity_NL_Units_to_Die": 5,
-		"Attacker_Sensitivity_L_Units_to_Lyse": 5,
-		"Attacker_Sensitivity_Base_Lysis_Delay_min": 20,
-		"Attacker_Movement_Cooldown_Min_min": 5,
-		"Attacker_Movement_Cooldown_Max_min": 10,
-		"Attacker_Movement_Probability_Percent": 0,
-		"Attacker_Movement_Directionality_Percent": 100,
-		"Attacker_Movement_Prey_AI_Attraction_Percent": 100,
-		"Attacker_Movement_Prey_AI_Attraction_Threshold": 5,
-		"Attacker_QS_Production_Rate_per_min": 0,
-		"Attacker_QS_Degradation_Rate_Percent_per_min": 2,
-		"Attacker_QS_Diffusion_Rate": 0.05,
-		"Attacker_QS_Activation_Midpoint_K": -1,
-		"Attacker_QS_Cooperativity_n": 4,
-		"Attacker_Replication_Reward_Lyses_per_Reward": 0,
-		"Attacker_Replication_Reward_Mean_min": 30,
-		"Attacker_Replication_Reward_Range_min": 5,
-
-		"Prey_Initial_Count": 20,
-		"Prey_Replication_Mean_min": 20,
-		"Prey_Replication_Range_min": 5,
-		"Prey_Sensitivity_vs_Att_NL_Units_to_Die": 3,
-		"Prey_Sensitivity_vs_Att_L_Units_to_Lyse": 5,
-		"Prey_Sensitivity_vs_Att_Base_Lysis_Delay_min": 20,
-		"Prey_Resistance_vs_Att_NL_Percent": 10,
-		"Prey_Resistance_vs_Att_L_Percent": 10,
-		"Prey_Sensitivity_vs_Def_NL_Units_to_Die": 3,
-		"Prey_Sensitivity_vs_Def_L_Units_to_Lyse": 5,
-		"Prey_Sensitivity_vs_Def_Base_Lysis_Delay_min": 20,
-		"Prey_Resistance_vs_Def_NL_Percent": 10,
-		"Prey_Resistance_vs_Def_L_Percent": 10,
-		"Prey_LacZ_Units_per_Lysis": 5,
-		"Prey_Movement_Cooldown_Min_min": 5,
-		"Prey_Movement_Cooldown_Max_min": 10,
-		"Prey_Movement_Probability_Percent": 0,
-		"Prey_Movement_Directionality_Percent": 100,
-		"Prey_QS_Production_Rate_per_min": 0,
-		"Prey_QS_Degradation_Rate_Percent_per_min": 2,
-		"Prey_QS_Diffusion_Rate": 0.05,
-		"Prey_Capsule_System_Enabled": false,
-		"Prey_Capsule_Max_Protection_Percent": 100,
-		"Prey_Capsule_Derepression_Midpoint_K": -1,
-		"Prey_Capsule_Cooperativity_n": 4,
-		"Prey_Capsule_Cooldown_Min_min": 10,
-		"Prey_Capsule_Cooldown_Max_min": 20,
-
-		"Defender_Initial_Count": 10,
-		"Defender_Replication_Mean_min": 25,
-		"Defender_Replication_Range_min": 5,
-		"Defender_Replication_Reward_Lyses_per_Reward": 0,
-		"Defender_Replication_Reward_Mean_min": 25,
-		"Defender_Replication_Reward_Range_min": 5,
-		"Defender_Retaliation_Sense_Chance_Percent": 50,
-		"Defender_Retaliation_Max_Shots": 7,
-		"Defender_Random_Fire_Cooldown_Min_min": 25,
-		"Defender_Random_Fire_Cooldown_Max_min": 35,
-		"Defender_Random_Fire_Chance_Percent": 0.1,
-		"Defender_T6SS_NL_Units_per_Hit": 2,
-		"Defender_T6SS_NL_Delivery_Chance_Percent": 80,
-		"Defender_T6SS_L_Units_per_Hit": 2,
-		"Defender_T6SS_L_Delivery_Chance_Percent": 80,
-		"Defender_Sensitivity_vs_Att_NL_Units_to_Die": 10,
-		"Defender_Sensitivity_vs_Att_L_Units_to_Lyse": 10,
-		"Defender_Sensitivity_vs_Att_Base_Lysis_Delay_min": 40,
-		"Defender_Resistance_vs_Att_NL_Percent": 50,
-		"Defender_Resistance_vs_Att_L_Percent": 50,
-		"Defender_Movement_Cooldown_Min_min": 5,
-		"Defender_Movement_Cooldown_Max_min": 10,
-		"Defender_Movement_Probability_Percent": 0,
-		"Defender_Movement_Directionality_Percent": 100,
-
-		"CPRG_Initial_Substrate_Units": 1000000,
-		"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 5,
-		"CPRG_LacZ_Km_Units": 1000000
-	};
+	// All constants are in config.js
+	const SIMULATION_DEFAULTS = AppConfig.defaults;
 
 	// This table lists *only* the parameters that *differ* from the baseline.
-	// More settings in functions like "applyBattleRoyaleSettings()"
-	const PRESET_OVERRIDES = {
-		'density': {
-			"Defender_Initial_Count": 0
-		},
-		'sensitivity': {
-			"Defender_Initial_Count": 0
-		},
-		'contactkin': {
-			"Defender_Initial_Count": 0
-		},
-		'titfortat': {
-			"Prey_Sensitivity_vs_Att_NL_Units_to_Die": 50,
-			"Prey_Sensitivity_vs_Att_L_Units_to_Lyse": 50,
-			"Prey_Resistance_vs_Att_NL_Percent": 90,
-			"Prey_Resistance_vs_Att_L_Percent": 90,
-			"Prey_Sensitivity_vs_Def_NL_Units_to_Die": 3,
-			"Prey_Sensitivity_vs_Def_L_Units_to_Lyse": 3,
-			"Prey_Resistance_vs_Def_NL_Percent": 0,
-			"Prey_Resistance_vs_Def_L_Percent": 0,
-			"Attacker_Sensitivity_NL_Units_to_Die": 3,
-			"Attacker_Sensitivity_L_Units_to_Lyse": 3,
-			"Defender_T6SS_NL_Units_per_Hit": 2,
-			"Defender_T6SS_L_Units_per_Hit": 1,
-			"Defender_T6SS_NL_Delivery_Chance_Percent": 75,
-			"Defender_T6SS_L_Delivery_Chance_Percent": 75,
-			"Defender_Retaliation_Max_Shots": 5,
-			"Defender_Random_Fire_Cooldown_Min_min": 8,
-			"Defender_Random_Fire_Cooldown_Max_min": 12,
-			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
-
-		},
-		'capsule': {
-			"Defender_Initial_Count": 0,
-			"Prey_Capsule_System_Enabled": true,
-			"Prey_Capsule_Derepression_Midpoint_K": -1,
-			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
-
-		},
-		'predation': {
-			"Defender_Initial_Count": 0,
-			"Attacker_Replication_Mean_min": -1,
-			"Attacker_T6SS_Precision_Percent": 100,
-			"Attacker_T6SS_Contact_Sensing_Bias_Percent": 100,
-			"Attacker_T6SS_Kin_Exclusion_Percent": 100,
-			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
-
-		},
-		'movement': {
-			"Arena_Radius": 50,
-			"Simulation_Duration_Minutes": 3000,
-			"History_Buffer_Size_Limit_MB": 1500,
-			"Defender_Initial_Count": 0,
-			"Attacker_Replication_Mean_min": 300,
-			"Attacker_Replication_Range_min": 50,
-			"Attacker_Movement_Cooldown_Min_min": 2,
-			"Attacker_Movement_Cooldown_Max_min": 4,
-			"Attacker_T6SS_Precision_Percent": 100,
-			"Attacker_T6SS_Contact_Sensing_Bias_Percent": 100,
-			"Attacker_T6SS_Kin_Exclusion_Percent": 100,
-			"Attacker_Replication_Reward_Lyses_per_Reward": 3,
-			"Prey_Replication_Mean_min": 30,
-			"Prey_Replication_Range_min": 5,
-			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
-
-		},
-		'qs': {
-			"Simulation_Duration_Minutes": 1200,
-			"Defender_Initial_Count": 0,
-			"Prey_Capsule_System_Enabled": true,
-			"Prey_Capsule_Max_Protection_Percent": 100,
-			"Attacker_T6SS_Precision_Percent": 100,
-			"Attacker_T6SS_Contact_Sensing_Bias_Percent": 100,
-			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
-		},
-		'battleroyale': {
-			"Simulation_Duration_Minutes": 3000,
-			"History_Buffer_Size_Limit_MB": 2000,
-			"Arena_State_Export_Enabled": false,
-			"Full_State_History_Enabled": true,
-			"Attacker_T6SS_Fire_Cooldown_Min_min": 1,
-			"Attacker_T6SS_Fire_Cooldown_Max_min": 3,
-			"Attacker_T6SS_Precision_Percent": 100,
-			"Prey_Replication_Mean_min": 60,
-			"Prey_Replication_Range_min": 10,
-			"Prey_Capsule_Max_Protection_Percent": 75,
-			"Defender_Resistance_vs_Att_NL_Percent": 80,
-			"Defender_Resistance_vs_Att_L_Percent": 80,
-			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
-		}
-	};
-
+	// All constants are in config.js
+	const PRESET_OVERRIDES = AppConfig.baselineOverrides;
+	
 	// This schema is CRUCIAL for saving and loading space-efficiently.
 	// --- Mappings to convert repetitive strings to integers for space efficiency ---
 	const TYPE_TO_INT = { 'attacker': 0, 'prey': 1, 'defender': 2, 'barrier': 3 };
@@ -676,68 +489,8 @@
 		directoryHandle: null, // New property to store the directory handle
 		isDrawingWithDrag: false,       // True when mouse is down and dragging to draw
 		lastPlacedHexKeyDuringDrag: null, // Stores the 'q,r' key of the last hex a cell was placed in during a drag
-		activePresetConfig: {
-			group: 'density', // Default active group
-			// Density Preset
-			densityFillPercent: 10,
-			densityAttPreyRatioIndex: 4, // 1:1
-			// Sensitivity Preset
-			sensitivityType: 'both_sensitive',
-			sensitivityFillPercent: 10,
-			sensitivityAttPreyRatioIndex: 4, // 1:1
-			// Contact & Kin Exclusion Preset
-			contactKinFillPercent: 20,
-			contactKinAttPreyRatioIndex: 4, // 1:1
-			contactKinContactSensingBias: 50, // Default 50%
-			contactKinKinExclusion: 50,       // Default 50%
-			// Tit-for-Tat Preset
-			titfortatLevel: 'medium',
-			titfortatFillPercent: 50,
-			// Preset 5: Capsule
-			capsuleProtectionPercent: 100,
-			capsuleLayerTime: 5,
-			capsuleFillPercent: 10,
-			capsuleAttPreyRatioIndex: 4, // 1:1
-			// Preset 6: Predation
-			predationEffectorType: 'both_sensitive',
-			predationLysesPerRep: 3,
-			predationFillPercent: 10,
-			predationAttPreyRatioIndex: 4, // 1:1
-			// Preset 7: Movement
-			movementPredation: 'on',
-			movementPreyAiProd: 100,
-			movementAttMoveProb: 50,
-			movementAttMoveDir: 100,
-			movementArenaRadius: 50,
-			movementFillPercent: 5,
-			movementAttPreyRatioIndex: 6, // 1:1
-			// Preset 8: Quorum Sensing
-			attackerQSProd: 20,
-			attackerQSK: 1000,
-			attackerQSN: 4,
-			attackerQSFillPercent: 10,
-			attackerQSAttPreyRatioIndex: 4,
-			preyQSProd: 30,
-			preyQSK: 3000,
-			preyQSN: 4,
-			// Preset 9: Battle Royale
-			brArenaRadius: 50,
-			brFillPercent: 10,
-			brAttackerPercent: 10,
-			brDefenderPercent: 10,
-			brAttMovement: 2, // 0=No, 1=Yes, 2=AI
-			brAttQs: false,
-			brAttKin: true,
-			brAttContact: true,
-			brAttPredation: true,
-			brPreyMovement: false,
-			brPreyAi: true,
-			brPreyCapsule: true,
-			brDefMovement: true,
-			brDefSelectivity: 2, // 0=Low, 1=Med, 2=High
-			brDefPredation: true,
-		},
-		config: {}, // will be populated from defaults
+		activePresetConfig: { ...AppConfig.presetDefaults }, // will be populated from defaults in config.js
+		config: {}, // will be populated from defaults in config.js
 		offsetX: 0,
 		offsetY: 0,
 		activeFiringsThisStep: new Map(),
@@ -2803,10 +2556,10 @@ stopButton.addEventListener('click', () => {
 		} else console.warn(`Element ${elementId} not found for preset update or settings import.`);
 	}
 
-	const ratioMap = ["100:1", "30:1", "10:1", "3:1", "1:1", "1:3", "1:10", "1:30", "1:100"];
-	const ratioValues = [100, 30, 10, 3, 1, 1/3, 1/10, 1/30, 1/100];
-	const brAttMovementMap = ['No', 'Yes', 'AI'];
-	const brDefSelectivityMap = ['Low', 'Med', 'High'];
+	const ratioMap = AppConfig.ui.RATIO_MAP;
+	const ratioValues = AppConfig.ui.RATIO_VALUES;
+	const brAttMovementMap = AppConfig.ui.BR_ATT_MOVEMENT_MAP;
+	const brDefSelectivityMap = AppConfig.ui.BR_DEF_SELECTIVITY_MAP;
 
 	function updateSliderDisplay(sliderElement, displayElement, mapArray, valueOverride = null) {
 		const value = valueOverride !== null ? parseInt(valueOverride) : parseInt(sliderElement.value);
@@ -2876,6 +2629,26 @@ stopButton.addEventListener('click', () => {
 		} else if (button.dataset.action === 'selectMovementPredation') {
 			simState.activePresetConfig.movementPredation = button.dataset.type;
 			setActiveSubtypeButton(button);
+		}
+	});
+
+	// This new listener makes the entire preset group box clickable for selection
+	presetsModalBody.addEventListener('click', (event) => {
+		// Find the clicked preset group, if any
+		const groupDiv = event.target.closest('.preset-group');
+		
+		if (groupDiv) {
+			// Get the group name from the new data-group attribute
+			const groupName = groupDiv.dataset.group;
+			
+			if (groupName) {
+				// Set this as the active group
+				simState.activePresetConfig.group = groupName;
+				
+				// Update the visual highlight
+				// The setActivePresetGroup function takes the full ID, e.g., "presetGroupDensity"
+				setActivePresetGroup(groupDiv.id);
+			}
 		}
 	});
 
@@ -3118,33 +2891,33 @@ stopButton.addEventListener('click', () => {
 
 	applyActivePresetButton.addEventListener('click', () => {
 		const group = simState.activePresetConfig.group;
-		
-		// 1. Get the baseline and the specific overrides
-		const overrideSettings = PRESET_OVERRIDES[group] || {};
-		
-		// 2. Apply *only* these overrides to the UI.
-		//    This will not touch any other setting the user has changed.
-		applySettingsObject(overrideSettings);
+		const config = simState.activePresetConfig; // User's UI choices
 
-		// 3. Call the *specific* function for the preset.
-		//    This function will *only* handle dynamic logic (sliders, buttons)
-		//    and *overwrite* any settings as needed.
-		if (group === 'density') applyDensitySettings();
-		else if (group === 'sensitivity') applySensitivitySettings();
-		else if (group === 'contactkin') applyContactKinSettings(); 
-		else if (group === 'titfortat') applyTitForTatSettings();
-		else if (group === 'capsule') applyCapsuleSettings();
-		else if (group === 'predation') applyPredationSettings();
-		else if (group === 'movement') applyMovementSettings();
-		else if (group === 'qs') applyQSSettings();
-		else if (group === 'battleroyale') applyBattleRoyaleSettings();
-		
-		// 4. Finalize (this is unchanged)
-		// This will read the final UI state back into simState.config
+		// 1. Get the baseline overrides from config and apply them
+		const baselineOverrides = PRESET_OVERRIDES[group] || {};
+		applySettingsObject(baselineOverrides);
+
+		// 2. Get the specific logic handler for this preset from config
+		const presetLogicHandler = AppConfig.presetLogic[group]?.handler;
+
+		let dynamicSettings = {};
+		if (presetLogicHandler) {
+			// 3. Call the handler. It will perform all complex logic
+			// (like calculateAndSetCellCounts) and return an
+			// object of the dynamic settings to apply.
+			dynamicSettings = presetLogicHandler(config);
+		}
+
+		// 4. Apply the dynamic settings returned by the handler
+		if (dynamicSettings) {
+			applySettingsObject(dynamicSettings);
+		}
+
+		// 5. Finalize the application
 		finalizePresetApplication();
 	});
 
- 
+
 	function calculateAndSetCellCounts(fillPercent, attToPreyRatioValue, includeDefenders = false, defenderRatioPart = 1) {
 		const arenaRadius = parseInt(arenaGridRadiusInput.value) || simState.config.hexGridActualRadius; 
 		const totalSpaces = 1 + 3 * arenaRadius * (arenaRadius + 1);
@@ -3180,199 +2953,6 @@ stopButton.addEventListener('click', () => {
 		updateInputElement('initialDefendersInput', Math.max(0, defCount));
 	}
 
-
-	function applyDensitySettings() {
-		const config = simState.activePresetConfig;
-		calculateAndSetCellCounts(config.densityFillPercent, ratioValues[config.densityAttPreyRatioIndex], false);
-	}
-
-	function applySensitivitySettings() {
-		const config = simState.activePresetConfig;
-		calculateAndSetCellCounts(config.sensitivityFillPercent, ratioValues[config.sensitivityAttPreyRatioIndex], false); 
-		
-		// This dynamic logic is still needed
-		let nlDie = 3, lLyse = 3, nlRes = 10, lRes = 10; 
-		switch (config.sensitivityType) {
-			case 'lytic_only': nlDie = 999; lLyse = 3; nlRes = 100; lRes = 0; break;
-			case 'nonlytic_only': nlDie = 3; lLyse = 999; nlRes = 0; lRes = 100; break;
-			case 'both_sensitive': nlDie = 4; lLyse = 4; nlRes = 10; lRes = 10; break; 
-		}
-		updateInputElement('preyNonLyticUnitsToDieAttInput', nlDie); 
-		updateInputElement('preyLyticUnitsToLyseAttInput', lLyse);
-		updateInputElement('preyNonLyticResistanceAttInput', nlRes); 
-		updateInputElement('preyLyticResistanceAttInput', lRes);
-		updateInputElement('preyNonLyticUnitsToDieDefInput', nlDie); 
-		updateInputElement('preyLyticUnitsToLyseDefInput', lLyse); 
-		updateInputElement('preyNonLyticResistanceDefInput', nlRes); 
-		updateInputElement('preyLyticResistanceDefInput', lRes);
-	}
-
-	function applyContactKinSettings() { 
-		const config = simState.activePresetConfig;
-		calculateAndSetCellCounts(config.contactKinFillPercent, ratioValues[config.contactKinAttPreyRatioIndex], false); 
-		
-		// Apply dynamic slider values
-		updateInputElement('attackerContactSensingBiasInput', config.contactKinContactSensingBias);
-		updateInputElement('attackerKinExclusionInput', config.contactKinKinExclusion);
-	}
-
-	function applyTitForTatSettings() {
-		const config = simState.activePresetConfig;
-		// The 'titfortat' preset has defenderRatioPart=1
-		calculateAndSetCellCounts(config.titfortatFillPercent, 1, true, 1); 
-
-		// Apply dynamic button logic
-		switch (config.titfortatLevel) {
-			case 'high': updateInputElement('defenderSenseChanceInput', 90); updateInputElement('defenderRandomFireChanceInput', 0.1); break;
-			case 'medium': updateInputElement('defenderSenseChanceInput', 50); updateInputElement('defenderRandomFireChanceInput', 1); break;
-			case 'poor': updateInputElement('defenderSenseChanceInput', 10); updateInputElement('defenderRandomFireChanceInput', 10); break;
-		}
-	}
-
-	function applyCapsuleSettings() {
-		const config = simState.activePresetConfig;
-		calculateAndSetCellCounts(config.capsuleFillPercent, ratioValues[config.capsuleAttPreyRatioIndex], false);
-		
-		// Apply dynamic slider values
-		updateInputElement('preyCapsuleMaxProtectionInput', config.capsuleProtectionPercent);
-		updateInputElement('preyCapsuleCooldownMinInput', config.capsuleLayerTime);
-		updateInputElement('preyCapsuleCooldownMaxInput', config.capsuleLayerTime);
-	}
-
-	function applyPredationSettings() {
-		const config = simState.activePresetConfig;
-		calculateAndSetCellCounts(config.predationFillPercent, ratioValues[config.predationAttPreyRatioIndex], false);
-		
-		// Apply dynamic button logic
-		let nlDie = 3, lLyse = 3, nlRes = 10, lRes = 10; 
-		switch (config.predationEffectorType) {
-			case 'lytic_only': nlDie = 999; lLyse = 3; nlRes = 100; lRes = 0; break;
-			case 'nonlytic_only': nlDie = 3; lLyse = 999; nlRes = 0; lRes = 100; break;
-			case 'both_sensitive': nlDie = 4; lLyse = 4; nlRes = 10; lRes = 10; break; 
-		}
-		updateInputElement('preyNonLyticUnitsToDieAttInput', nlDie); 
-		updateInputElement('preyLyticUnitsToLyseAttInput', lLyse);
-		updateInputElement('preyNonLyticResistanceAttInput', nlRes); 
-		updateInputElement('preyLyticResistanceAttInput', lRes);
-
-		// Apply dynamic slider value
-		updateInputElement('attackerLysesPerReplicationInput', config.predationLysesPerRep);
-	}
-
-	function applyMovementSettings() {
-		const config = simState.activePresetConfig;
-		calculateAndSetCellCounts(config.movementFillPercent, ratioValues[config.movementAttPreyRatioIndex], false);
-
-		// Apply dynamic slider values
-		updateInputElement('preyQSProductionRateInput', config.movementPreyAiProd);
-		updateInputElement('attackerMoveProbabilityInput', config.movementAttMoveProb);
-		updateInputElement('attackerMoveDirectionalityInput', config.movementAttMoveDir);
-		updateInputElement('arenaGridRadiusInput', config.movementArenaRadius);
-
-		// Apply dynamic button logic
-		if (config.movementPredation === 'on') {
-			updateInputElement('attackerReplicationMeanInput', -1);
-//			updateInputElement('attackerLysesPerReplicationInput', 3);
-		} else { // 'off'
-			updateInputElement('attackerLysesPerReplicationInput', 0);
-		}
-	}
-	
-	function applyQSSettings() {
-		const config = simState.activePresetConfig;
-
-		// 1. Set cell counts from sliders
-		calculateAndSetCellCounts(config.attackerQSFillPercent, ratioValues[config.attackerQSAttPreyRatioIndex], false);
-
-		// 2. Apply dynamic Attacker QS settings
-		updateInputElement('attackerQSProductionRateInput', config.attackerQSProd);
-		updateInputElement('attackerQSMidpointInput', config.attackerQSK);
-		updateInputElement('attackerQSCooperativityInput', config.attackerQSN);
-
-		// 3. Apply dynamic Prey QS settings
-		updateInputElement('preyQSProductionRateInput', config.preyQSProd);
-		updateInputElement('preyCapsuleDerepressionMidpointInput', config.preyQSK);
-		updateInputElement('preyCapsuleCooperativityInput', config.preyQSN);
-	}
-
-	function applyBattleRoyaleSettings() {
-		const config = simState.activePresetConfig;
-
-		// 1. Set Arena Radius
-		updateInputElement('arenaGridRadiusInput', config.brArenaRadius);
-
-		// 2. Set cell counts based on percentages
-		calculateAndSetCellCountsByPercentage(config.brFillPercent, config.brAttackerPercent, config.brDefenderPercent);
-
-		// 3. Apply Attacker Strategies
-		switch (config.brAttMovement) {
-			case 0: // No
-				updateInputElement('attackerMoveProbabilityInput', 0);
-				break;
-			case 1: // Yes
-				updateInputElement('attackerMoveProbabilityInput', 50);
-				updateInputElement('attackerMovePreyAiAttractionInput', 0);
-				break;
-			case 2: // AI
-				updateInputElement('attackerMoveProbabilityInput', 50);
-				updateInputElement('attackerMovePreyAiAttractionInput', 100);
-				break;
-		}
-		updateInputElement('attackerQSMidpointInput', config.brAttQs ? 1000 : -1);
-		updateInputElement('attackerKinExclusionInput', config.brAttKin ? 100 : 0);
-		updateInputElement('attackerContactSensingBiasInput', config.brAttContact ? 100 : 0);
-		
-		if (config.brAttPredation) {
-			updateInputElement('attackerReplicationMeanInput', -1);
-			updateInputElement('attackerLysesPerReplicationInput', 3);
-		} else {
-			updateInputElement('attackerReplicationMeanInput', 120);
-			updateInputElement('attackerLysesPerReplicationInput', 0);
-		}
-
-		// 4. Apply Prey Strategies
-		updateInputElement('preyMoveProbabilityInput', config.brPreyMovement ? 50 : 0);
-		updateInputElement('preyQSProductionRateInput', config.brPreyAi ? 100 : 0);
-		
-		if (!config.brPreyCapsule) {
-			updateInputElement('preyCapsuleSystemEnabledCheckbox', false);
-		} else { // 'yes'
-			updateInputElement('preyCapsuleSystemEnabledCheckbox', true);
-			// Linked logic: if AI is on, make capsule QS-dependent. Otherwise, make it constitutive.
-			if (config.brPreyAi) {
-				updateInputElement('preyCapsuleDerepressionMidpointInput', 5000);
-			} else {
-				updateInputElement('preyCapsuleDerepressionMidpointInput', -1);
-			}
-		}
-
-		// 5. Apply Defender Strategies
-		updateInputElement('defenderMoveProbabilityInput', config.brDefMovement ? 50 : 0);
-		
-		switch (config.brDefSelectivity) {
-			case 0: // Low
-				updateInputElement('defenderSenseChanceInput', 10); 
-				updateInputElement('defenderRandomFireChanceInput', 10); 
-				break;
-			case 1: // Medium
-				updateInputElement('defenderSenseChanceInput', 50); 
-				updateInputElement('defenderRandomFireChanceInput', 1); 
-				break;
-			case 2: // High
-				updateInputElement('defenderSenseChanceInput', 90); 
-				updateInputElement('defenderRandomFireChanceInput', 0.1); 
-				break;
-		}
-		
-		if (config.brDefPredation) {
-			updateInputElement('defenderReplicationMeanInput', -1);
-			updateInputElement('defenderLysesPerReplicationInput', 3);
-		} else {
-			updateInputElement('defenderReplicationMeanInput', 180);
-			updateInputElement('defenderLysesPerReplicationInput', 0);
-		}
-	}	
-
 	function finalizePresetApplication() {
 		updateConfigFromUI(true); 
 		resetSimulationState(); 
@@ -3389,6 +2969,7 @@ stopButton.addEventListener('click', () => {
 		drawGrid(); updateStats(); updateButtonStatesAndUI();
 		presetsModalOverlay.classList.add('hidden');
 	}
+
 
 	// New: Function to capture current arena state as TSV string
 	function captureCurrentArenaStateTSV(currentCellsMap) {
