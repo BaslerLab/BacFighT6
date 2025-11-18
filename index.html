@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulation of T6SS-mediated Bacterial Interactions</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+
+    <script src="libs/tailwind.js"></script>
+    <script src="libs/chart.js"></script>
+    <script src="libs/jszip.min.js"></script>
+    <script src="libs/msgpack.min.js"></script>
+    <script src="libs/seedrandom.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
 
+	<script src="config.js"></script>
 
 </head>
+
 <body class="bg-gray-100 text-gray-800 p-4 md:p-6">
     <div class="container-fluid mx-auto">
         <header class="mb-4 text-center">
@@ -27,7 +30,7 @@
                 </button>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 6.1 - 17.11.2025). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 6.2 - 18.11.2025). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 Pro.<br>
             </p>
         </header>
@@ -1412,7 +1415,6 @@
         </div>
     </div>
 
-<script src="config.js"></script>
 <script src="script.js"></script>
 
 </body>

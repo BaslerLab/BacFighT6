@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.1 (17.11.2025)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.2 (18.11.2025)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -204,7 +204,7 @@ const AppConfig = {
 		},
 		'battleroyale': {
 			"Simulation_Duration_Minutes": 3000,
-			"History_Buffer_Size_Limit_MB": 1800,
+			"History_Buffer_Size_Limit_MB": 1500,
 			"Arena_State_Export_Enabled": false,
 			"Full_State_History_Enabled": true,
 			"Attacker_T6SS_Fire_Cooldown_Min_min": 1,
