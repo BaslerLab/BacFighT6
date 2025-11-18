@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 6.1 (17.11.2025)
+**Version:** 6.2 (18.11.2025)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 Pro.
 
