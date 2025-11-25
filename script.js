@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.2 (18.11.2025)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.3 (25.11.2025)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -539,6 +539,144 @@
 				}
 			}
 		}
+	}
+
+	function applyPresetByName(presetName) {
+		// 1. Validate the preset name exists in the config
+		// We check if it exists in overrides OR logic. 
+		// Note: The UI uses keys like 'battleroyale', 'density', etc.
+		const group = presetName.toLowerCase();
+		
+		if (!PRESET_OVERRIDES[group] && !AppConfig.presetLogic[group]) {
+			console.warn(`Preset '${group}' not found.`);
+			return;
+		}
+
+		console.log(`Applying preset defaults for: ${group}`);
+
+		// 2. Update the internal active config state to match the requested group
+		simState.activePresetConfig.group = group;
+
+		// 3. Apply Baseline Overrides (Static settings from config.js)
+		const baselineOverrides = PRESET_OVERRIDES[group] || {};
+		applySettingsObject(baselineOverrides);
+
+		// 4. Execute Dynamic Logic
+		// We use AppConfig.presetDefaults as the source of truth for the preset's 
+		// "default" slider positions (e.g., brFillPercent: 30).
+		const presetLogicHandler = AppConfig.presetLogic[group]?.handler;
+
+		if (presetLogicHandler) {
+			// We pass the global preset defaults. The handler picks the specific fields it needs.
+			const dynamicSettings = presetLogicHandler(AppConfig.presetDefaults);
+			if (dynamicSettings) {
+				applySettingsObject(dynamicSettings);
+			}
+		}
+
+		// 5. Update UI to reflect that a preset is active (Optional, but good for UX)
+		// This highlights the correct group in the modal if the user opens it later.
+		const groupElementId = `presetGroup${group.charAt(0).toUpperCase() + group.slice(1)}`;
+		setActivePresetGroup(groupElementId);
+	}
+
+	function generateShareableLink() {
+		const baseUrl = window.location.href.split('?')[0];
+		const params = new URLSearchParams();
+
+		// 1. Capture the Seed (Always included for reproducibility)
+		const currentSeed = document.getElementById('simulationSeedInput').value;
+		params.append('Simulation_Seed', currentSeed);
+
+		// 2. Capture All Other Settings (Only if different from Default)
+		for (const [paramName, elementId] of Object.entries(parameterToElementIdMap)) {
+			// Skip Seed (handled above)
+			if (paramName === 'Simulation_Seed') continue;
+
+			const element = document.getElementById(elementId);
+			if (!element) continue;
+
+			let currentValue;
+			
+			// Handle Checkboxes vs Numbers/Strings
+			if (element.type === 'checkbox') {
+				currentValue = element.checked;
+			} else {
+				const val = parseFloat(element.value);
+				currentValue = isNaN(val) ? element.value : val;
+			}
+
+			// Retrieve Default Value
+			const defaultValue = SIMULATION_DEFAULTS[paramName];
+
+			// logic: If the UI value differs from the default, add it to the URL
+			if (currentValue !== defaultValue && defaultValue !== undefined) {
+				params.append(paramName, currentValue);
+			}
+		}
+
+		// 3. Generate the Full URL
+		const fullUrl = `${baseUrl}?${params.toString()}`;
+
+		// 4. Copy to Clipboard AND Show to User
+		navigator.clipboard.writeText(fullUrl).then(() => {
+			showLinkModal(fullUrl, true); // true = success copy
+		}).catch(err => {
+			console.error('Clipboard write failed', err);
+			showLinkModal(fullUrl, false); // false = manual copy needed
+		});
+	}
+
+	// Helper function to reuse the Info Alert Modal for displaying links
+	function showLinkModal(url, clipboardSuccess) {
+		const overlay = document.getElementById('infoAlertModalOverlay');
+		const title = document.getElementById('infoAlertModalTitle');
+		const body = document.getElementById('infoAlertModalBody');
+		const okBtn = document.getElementById('okInfoAlertButton');
+		
+		// Customize Title
+		title.textContent = clipboardSuccess ? "Link Copied & Generated!" : "Link Generated";
+
+		// Customize Body with an Input Field for the URL
+		body.innerHTML = `
+			<p class="mb-2 text-sm text-gray-600">
+				${clipboardSuccess 
+					? "The configuration link has been copied to your clipboard." 
+					: "Could not auto-copy. Please copy the link below:"}
+			</p>
+			<div class="relative">
+				<input type="text" readonly value="${url}" 
+					class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-xs font-mono text-blue-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+					onclick="this.select();">
+			</div>
+			<p class="mt-2 text-xs text-gray-500">
+				Includes Seed + only changed settings. Cell positions are random unless an Arena file is used.
+			</p>
+		`;
+
+		const closeModal = () => {
+			overlay.classList.add('hidden');
+		};
+
+		// 1. Clone the button to remove any old event listeners from previous alerts
+		//    This prevents "stacking" actions or zombie listeners.
+		const newOkBtn = okBtn.cloneNode(true);
+		okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+
+		// 2. Add the new click listener to close the modal
+		newOkBtn.addEventListener('click', closeModal, { once: true });
+		
+		// 3. Also allow closing by clicking the background overlay
+		//    (We assume the previous overlay listener is either gone or harmless, 
+		//     but adding a specific one for this instance is good practice)
+		overlay.addEventListener('click', (e) => {
+			if (e.target === overlay) {
+				closeModal();
+			}
+		}, { once: true });
+
+		// Show Modal
+		overlay.classList.remove('hidden');
 	}
 
 	function generateTimestamp() {
@@ -5588,6 +5726,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("No sessionFileURL found, processing other URL parameters...");
         let configModifiedByUrl = false;
         
+		if (urlParams.has('preset')) {
+            const presetName = urlParams.get('preset');
+            applyPresetByName(presetName);
+            configModifiedByUrl = true;
+        }
+		
         urlParams.forEach((value, key) => {
             const elementId = parameterToElementIdMap[key];
             if (elementId) {
@@ -5632,14 +5776,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (configModifiedByUrl) {
             console.log("Finalizing UI state after processing URL parameters.");
             updateConfigFromUI(true);
-            if (simState.cells.size > 0) {
-                simState.isInitialized = true;
-            }
+
+		if (simState.cells.size === 0) {
+				// Check if we should populate
+				const totalRequested = simState.config.attacker.initialCount + 
+									   simState.config.prey.initialCount + 
+									   simState.config.defender.initialCount;
+				
+				if (totalRequested > 0) {
+					// Apply the seed from the URL or the preset default
+					initializeSeededRNG(simulationSeedInput.value);
+					populateCellsRandomly();
+					simState.isInitialized = true;
+				}
+			}			
+
             drawGrid();
             updateStats();
             updateButtonStatesAndUI();
         }
     }
+
+	const shareButton = document.getElementById('shareConfigurationButton');
+	if (shareButton) {
+		shareButton.addEventListener('click', generateShareableLink);
+	}
 
     // --- Step 4: Final UI Polish ---
     switchCellParamsTab('attacker');

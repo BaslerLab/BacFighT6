@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 6.2 (18.11.2025)
+**Version:** 6.3 (25.11.2025)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 Pro.
 
@@ -145,6 +145,9 @@ This panel features the main simulation parameters as well as advanced controls 
 ### 5.5. General Settings (Panel)
 * **Load Preset Scenario:** Opens a modal allowing selection from various pre-defined parameter configurations.
 * **Import/Export Settings (TSV):** Loads or saves a full set of simulation parameters from a TSV file.
+* **Copy Shareable Link 🔗:** Generates and copies a URL to your clipboard that reproduces your current simulation state.
+    * **What it saves:** The current **RNG Seed** and every **Parameter** that differs from the default values.
+    * **What it doesn't save:** Specific positions of manually placed cells. (It relies on the Seed + Initial Counts to reproduce random populations).
 * **Reset Settings to Defaults:** Resets all simulation parameters in the control panel to their original default values. This action does *not* clear the arena or change the current simulation seed.
 
 ### 5.6. Exports (Panel)
@@ -499,6 +502,8 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
     * The simulation page first loads with its default blank arena and settings (due to an initial `initializeBlankSlate()` call).
     * Then, each URL parameter is applied sequentially, potentially altering the simulation state.
 
+> **🚀 Pro Tip:** You don't need to write these URLs manually! Configure the simulation exactly how you want it in the UI, then click the **"Copy Shareable Link 🔗"** button in the **General Settings** panel. This will automatically generate the optimized URL for you.
+
 **Available Parameter Types:**
 
 1.  **Loading a Full Simulation Session from a URL (Highest Priority):**
@@ -509,7 +514,14 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
         `...?sessionFileURL=https://yourserver.com/sessions/tit_for_tat_run_01.bft6`
     * **🔴 Important (File Access & CORS):** See "Important General Notes" below.
 
-2.  **Individual Settings Overrides:**
+2.  **Loading a Preset Scenario (Baseline Configuration):**
+    * **Parameter:** `preset`
+    * **Value:** The ID of the preset scenario.
+    * **Valid Values:** `density`, `sensitivity`, `contactkin`, `titfortat`, `capsule`, `predation`, `movement`, `qs`, `battleroyale`.
+    * **Behavior:** Loads the default configuration for the chosen scenario (e.g., enabling specific rules, setting specific ratios). This is applied **before** other individual parameter overrides, making it the perfect "base" for custom links.
+    * **Example:** `...?preset=battleroyale`
+
+3.  **Individual Settings Overrides:**
     * You can change most simulation settings found in the control panel.
     * **Parameter Names:** These names **must exactly match** those listed in the first column of a "Settings (TSV)" file that you can export from the simulation's report modal (e.g., `Arena_Radius`, `Attacker_Initial_Count`, `Attacker_T6SS_Precision_Percent`, `Image_Export_Enabled`).
     * **Behavior:**
@@ -525,7 +537,7 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
         * Enable the capsule system and set its max protection to 50%:
             `...?Prey_Capsule_System_Enabled=true&Prey_Capsule_Max_Protection_Percent=50`
 
-3.  **Loading All Settings from a File URL:**
+4.  **Loading All Settings from a File URL:**
     * **Parameter:** `settingsFileURL`
     * **Value:** The full, URL-encoded web address of a settings TSV file. This file must be in the same format as the one exported by the "Download Settings (TSV)" button.
     * **Behavior:** This loads all parameters from the specified file.
@@ -535,7 +547,7 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
         `...?settingsFileURL=https://yourserver.com/path/my_experiment_settings.tsv`
     * **🔴 Important (File Access & CORS):** See "Important General Notes" below.
 
-4.  **Loading/Modifying Arena Cell Layout from a File URL (TSV Format):**
+5.  **Loading/Modifying Arena Cell Layout from a File URL (TSV Format):**
     * **Parameter:** `arenaFileURL`
     * **Value:** The full, URL-encoded web address of an arena TSV file (must be `q\tr\ttype` format).
     * **Behavior (Additive/Overwriting):** This parameter **adds cells to the current arena or overwrites cells at the same coordinates.** It does *not* automatically clear the entire arena before loading. Cells are placed onto the grid whose size is determined by the `Arena_Radius` active at the moment this parameter is processed (which itself could have been set by a preceding parameter).
@@ -543,7 +555,7 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
         `...?Arena_Radius=12&arenaFileURL=https://yourserver.com/arenas/base_colony.tsv`
     * **🔴 Important (File Access & CORS):** See "Important General Notes" below.
 
-5.  **Loading/Modifying Arena Cell Layout with Compact `cellsData` String:**
+6.  **Loading/Modifying Arena Cell Layout with Compact `cellsData` String:**
     * **Parameter:** `cellsData`
     * **Value:** A continuous string where each cell operation is `q<number>r<number><Type>`. No spaces or other separators.
         * `q<number>`: Axial `q` coordinate (e.g., `q-5`, `q0`, `q12`).
@@ -560,6 +572,20 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
             `...?cellsData=q0r0Aq1r-1P`
         * Place a Defender at (2,0), then remove any cell at (0,0):
             `...?cellsData=q2r0Dq0r0E` *(Result: Defender at (2,0), (0,0) is empty)*
+
+**Combined Examples:**
+
+1.  **The "Challenge" Link:**
+    Load the **Battle Royale** preset, but force a specific **Seed** and extend the **Duration** to 10,000 steps.
+    `...?preset=battleroyale&Simulation_Seed=12345&Simulation_Duration_Minutes=10000`
+
+2.  **The "High-Res" Run:**
+    Load the **Tit-For-Tat** preset, but increase the **Arena Radius** to 50 and enable **Image Export**.
+    `...?preset=titfortat&Arena_Radius=50&Image_Export_Enabled=true`
+
+3.  **Specific Arena Configuration:**
+    Set the radius to 10, set specific initial counts (for random seeding), and force a specific seed.
+    `...?Arena_Radius=10&Attacker_Initial_Count=50&Prey_Initial_Count=50&Simulation_Seed=888`
 
 **Understanding Order and Arena State Interactions:**
 

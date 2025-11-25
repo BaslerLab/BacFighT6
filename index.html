@@ -30,7 +30,7 @@
                 </button>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 6.2 - 18.11.2025). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 6.3 - 25.11.2025). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 Pro.<br>
             </p>
         </header>
@@ -167,6 +167,7 @@
                             <button id="importSettingsButton" title="Load all simulation parameters from a previously exported TSV file." class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Import Settings</button>
                             <button id="exportSettingsButtonMain" title="Save all current simulation parameters to a TSV file." class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Export Settings</button>
                         </div>
+						<button id="shareConfigurationButton" title="Copy a URL to the clipboard that reproduces the current settings and seed." class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm mt-2">Copy Shareable Link 🔗</button>
                         <button id="resetSettingsToDefaultsButton" title="Resets all simulation parameters to their default values. Does NOT clear the arena or change the seed." class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Reset Settings to Defaults</button>
                     </div>
                     <div id="importStatusMessage" class="text-xs text-center mt-2"></div>
@@ -911,6 +912,7 @@
             <h4>Data Export & Import 💾</h4>
             <p>You can save and load both parameters and results, enabling reproducible experiments.</p>
             <ul class="list-disc ml-5 space-y-1 text-sm mt-2">
+				<li><strong>Shareable Link 🔗:</strong> Use the <strong>'Copy Shareable Link'</strong> button (in General Settings) to copy a URL to your clipboard. This link encodes your current Seed and any modified parameters, allowing anyone to instantly load your exact experimental setup.</li>
                 <li><strong>Settings (TSV):</strong> The 'Import/Export Settings' buttons let you save and load your entire parameter setup.</li>
                 <li><strong>Arena (TSV):</strong> The 'Import/Export Arena' buttons save or load the specific spatial layout of cells you have placed manually.</li>
                 <li><strong>Simulation Data (TSV):</strong> From the final report, download a time-series table of cell counts and cumulative events, ideal for plotting.</li>
