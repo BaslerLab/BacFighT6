@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.3 (25.11.2025)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.4 (26.11.2025)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -5776,6 +5776,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (configModifiedByUrl) {
             console.log("Finalizing UI state after processing URL parameters.");
             updateConfigFromUI(true);
+			simState.remainingCPRGSubstrate = simState.config.cprg.initialSubstrate;
 
 		if (simState.cells.size === 0) {
 				// Check if we should populate

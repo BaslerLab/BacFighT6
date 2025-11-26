@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.3 (25.11.2025)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.4 (26.11.2025)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -35,7 +35,7 @@ const AppConfig = {
 		"Image_Export_Enabled": false,
 		"Image_Export_Size_px": 1000,
 		"Image_Buffer_Size_Limit_MB": 500,
-		"History_Buffer_Size_Limit_MB": 1500,
+		"History_Buffer_Size_Limit_MB": 1200,
 		"Arena_State_Buffer_Size_Limit_MB": 200,
 
 		"Attacker_Initial_Count": 30,
@@ -176,9 +176,8 @@ const AppConfig = {
 
 		},
 		'movement': {
-			"Arena_Radius": 50,
 			"Simulation_Duration_Minutes": 3000,
-			"History_Buffer_Size_Limit_MB": 1500,
+			"Arena_State_Export_Enabled": false,
 			"Defender_Initial_Count": 0,
 			"Attacker_Replication_Mean_min": 300,
 			"Attacker_Replication_Range_min": 50,
@@ -204,9 +203,7 @@ const AppConfig = {
 		},
 		'battleroyale': {
 			"Simulation_Duration_Minutes": 3000,
-			"History_Buffer_Size_Limit_MB": 1500,
 			"Arena_State_Export_Enabled": false,
-			"Full_State_History_Enabled": true,
 			"Attacker_T6SS_Fire_Cooldown_Min_min": 1,
 			"Attacker_T6SS_Fire_Cooldown_Max_min": 3,
 			"Attacker_T6SS_Precision_Percent": 100,
