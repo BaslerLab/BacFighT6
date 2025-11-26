@@ -43,6 +43,7 @@ Cells inhabit a two-dimensional hexagonal grid and compete for space. The simula
 * **Reporter System:** Lysis of Prey cells releases a reporter enzyme (LacZ), which converts a substrate (CPRG) in the environment. This conversion is visualized by a change in the arena's background color, providing a proxy for overall Prey lysis.
 
 The simulation allows users to configure a vast array of parameters, offering a flexible platform to explore complex ecological dynamics, the evolution of T6SS strategies, and the outcomes of bacterial warfare under different conditions. It is inspired by numerous experimental findings and theoretical models in microbial ecology and T6SS research.
+[**🎮 Click here to launch "Battle Royale" demo**](https://baslerlab.github.io/BacFighT6/index.html?preset=battleroyale)
 
 ## 2. Getting Started & User Interface
 
@@ -126,7 +127,7 @@ This panel features the main simulation parameters as well as advanced controls 
 * **Seed:** The input field for the random number generator (RNG) seed. The simulation's outcome is determined by this seed.
 * **New Seed Button (🔄):** Generates a new, random seed for starting a completely new experiment.
 * **RNG Reset Button (🡄):** This button appears (in green) when the RNG has been used. Clicking it resets the random number sequence to the beginning for the *current* seed, without changing the seed itself. This is essential for precisely replicating starting conditions.
-* **Cell Sync Button (🔄):** This button appears (in red) at the top of the "Setup Arena" panel whenever placed cells become de-synchronized from the RNG (e.g., if you change the seed *after* placing cells). Clicking the red `🔄` button will iterate through every cell on the grid and re-calculate all of its initial, randomly-determined properties, bringing the population back into a valid, reproducible state with the current seed.
+* **Cell Sync Button (🔄):** This button appears (in red) at the top of the "Setup Arena" panel whenever placed cells become de-synchronized from the RNG (e.g., if you change the seed *after* placing cells). Clicking the red `🔄` button will iterate through every cell on the grid and re-calculate all of its initial, randomly-determined properties using the currently active seed, bringing the population back into a valid, reproducible state with the current seed.
 * **Reset Simulation Button:** This performs a hard reset. It clears the arena, erases all history, and generates a new random seed.
 
 ### 5.3. Main Control Buttons
@@ -490,17 +491,19 @@ Saving per-step data is memory-intensive. To prevent browser crashes during very
 
 ### 10.1 Configuring Simulation via URL Parameters (Advanced)
 
-You can pre-configure many aspects of the "BacFighT6" simulation by adding parameters directly to the browser's URL (the web address displayed in your browser, e.g., `bacfight6.html`). This is a powerful feature for saving specific setups, sharing them with collaborators, or scripting different starting conditions for experiments.
+You can pre-configure many aspects of the "BacFighT6" simulation by adding parameters directly to the browser's URL (the web address displayed in your browser, e.g., `https://baslerlab.github.io/BacFighT6/index.html`). This is a powerful feature for saving specific setups, sharing them with collaborators, or scripting different starting conditions for experiments.
 
 **How it Works:**
 
 * Parameters are appended to the main page URL, starting with a `?`.
 * Each parameter consists of a `name=value` pair.
 * Multiple parameters are separated by an `&`.
-    * Example: `bacfight6.html?param1=value1&param2=value2`
-* **Order Matters:** Parameters are processed strictly from **left to right** as they appear in the URL. This is crucial because later parameters can override settings or modify the arena state established by earlier ones.
-    * The simulation page first loads with its default blank arena and settings (due to an initial `initializeBlankSlate()` call).
-    * Then, each URL parameter is applied sequentially, potentially altering the simulation state.
+    * Example: `https://baslerlab.github.io/BacFighT6/index.html?param1=value1&param2=value2`
+
+* **Order Matters:** The simulation applies settings in a specific hierarchy:
+    1.  **System Defaults** are loaded first.
+    2.  **Presets** (if `?preset=` is present) are applied next, establishing a baseline scenario.
+    3.  **URL Overrides** are applied last. These are processed left-to-right and will override both the defaults and the preset values. This is crucial because later parameters can override settings or modify the arena state established by earlier ones.
 
 > **🚀 Pro Tip:** You don't need to write these URLs manually! Configure the simulation exactly how you want it in the UI, then click the **"Copy Shareable Link 🔗"** button in the **General Settings** panel. This will automatically generate the optimized URL for you.
 
@@ -578,14 +581,18 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
 1.  **The "Challenge" Link:**
     Load the **Battle Royale** preset, but force a specific **Seed** and extend the **Duration** to 10,000 steps.
     `...?preset=battleroyale&Simulation_Seed=12345&Simulation_Duration_Minutes=10000`
+    [**🚀 Launch Battle Royale Challenge**](https://baslerlab.github.io/BacFighT6/index.html?preset=battleroyale&Simulation_Seed=12345&Simulation_Duration_Minutes=10000)
 
 2.  **The "High-Res" Run:**
     Load the **Tit-For-Tat** preset, but increase the **Arena Radius** to 50 and enable **Image Export**.
     `...?preset=titfortat&Arena_Radius=50&Image_Export_Enabled=true`
+    [**📸 Launch High-Res Simulation**](https://baslerlab.github.io/BacFighT6/index.html?preset=titfortat&Arena_Radius=50&Image_Export_Enabled=true)
 
 3.  **Specific Arena Configuration:**
     Set the radius to 10, set specific initial counts (for random seeding), and force a specific seed.
     `...?Arena_Radius=10&Attacker_Initial_Count=50&Prey_Initial_Count=50&Simulation_Seed=888`
+    [**🔬 Launch Small Colony Setup**](https://baslerlab.github.io/BacFighT6/index.html?Arena_Radius=10&Attacker_Initial_Count=50&Prey_Initial_Count=50&Simulation_Seed=888)	
+
 
 **Understanding Order and Arena State Interactions:**
 
@@ -653,7 +660,7 @@ The sequence of these parameters in your URL dictates the final setup.
 
 ## License and Attribution
 
-This work (BacFighT6: Simulation of T6SS-mediated Bacterial Interactions and its associated code) is licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.
+This work (BacFighT6: Simulation of T6SS-mediated Bacterial Interactions), available at [GitHub](https://github.com/BaslerLab/BacFighT6), is licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.
 
 [![CC BY 4.0][cc-by-shield]][cc-by]
 
