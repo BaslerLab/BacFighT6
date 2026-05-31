@@ -3769,7 +3769,7 @@ function updateAiGrid(currentAiGrid, qsConfig, allCells, gridRadius, isToxin = f
         let newConcentration = C_key_old + netChangeForKey;
         newConcentration *= (1 - qsConfig.degradationRate);
 
-        const finalConcentration = isToxin ? Math.round(newConcentration) : (Math.round(newConcentration * 1e5) / 1e5);
+        const finalConcentration = isToxin ? Math.floor(newConcentration) : (Math.round(newConcentration * 1e5) / 1e5);
 
         // We use the rounded value for the check and for storage.
         if (finalConcentration > 0) { // Check against 0 is fine now
