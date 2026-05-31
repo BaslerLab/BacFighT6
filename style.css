@@ -20,7 +20,7 @@ body {
 	min-height: 480px; /* Ensure canvas has a minimum height */
 	display: flex;
 	justify-content: center;
-	align-items: center;
+	align-items: flex-start;
 	padding: 0.5rem;
 }
 canvas#simulationCanvas { /* Specific ID for simulation canvas */

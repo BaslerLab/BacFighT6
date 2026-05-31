@@ -1,8 +1,8 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 6.4 (26.11.2025)
+**Version:** 8.0 (31.05.2026)
 
-**Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 Pro.
+**Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 - 3.5.
 
 **Inspired by:**
 * Pukatzki et al. 2006 (<https://doi.org/10.1073/pnas.0510322103>)
@@ -280,6 +280,10 @@ A cell's initial random state (e.g., its starting `replicationCooldown`) is set 
 
 * **T6SS Effectors (vs Prey/Defenders):** Parameters define `NL Units/Hit`, `NL Delivery Chance %`, `L Units/Hit`, and `L Delivery Chance %` when attacking Prey or Defenders.
 * **Sensitivity (to Defender Attack):** Attackers have their own thresholds (`NL Die Thresh.`, `L Lyse Thresh.`, `Base Lysis Delay`) for damage received from Defender attacks. They do not have % resistance values like Prey/Defenders.
+* **Sensitivity & Resistance vs. Prey Toxin:**
+    * `NL Resist. (%)` and `L Resist. (%)`: Chance (0-100%) to completely ignore NL or L toxin absorbed from a local grid cell in a step.
+    * `NL Absorp. (%)` and `L Absorp. (%)`: Percentage of local grid-based Prey toxin absorbed by the Attacker cell in each step.
+    * `NL Die Thresh.` and `L Lyse Thresh.`: The cumulative Prey toxin units (absorbed from the grid) required to kill (growth arrest) or lyse the Attacker cell.
 
 ### 6.3. Prey Cells
 * **Role:** Primary targets for Attackers and Defenders. Can replicate.
@@ -298,6 +302,15 @@ A cell's initial random state (e.g., its starting `replicationCooldown`) is set 
         * If **K = 0**: Synthesis is triggered if **any** AI is present (`AI > 0`).
         * If **K < 0**: Synthesis is **Always ON** (constitutively derepressed), regardless of the AI level.
     * **Protection Effect:** When an attack hits a prey with a capsule, there is a chance the attack is rendered harmless. The maximum protection offered by a full 5-layer capsule is set by the user via the **"Max Protection (%)"** setting. Each layer provides 1/5th of this total protection (e.g., if Max Protection is 80%, each layer gives a 16% chance to block an attack).
+* **Toxin Production & Release:** Prey cells can synthesize their own bacteriocin toxins (Bacteriocin NL and L) to damage or compete against rival cell types.
+    * **Release Modes:**
+        * *Continuous (Standard) Release:* Toxins are secreted directly and continuously into the local grids (`preyToxinNLGrid` and `preyToxinLGrid`) at each step.
+        * *Lysis-Dependent Release:* Toxins are accumulated internally (`internalPreyToxinNL` and `internalPreyToxinL`). Once the sum of accumulated internal toxins reaches the **Lysis Threshold**, the cell lyses (dies and bursts), dumping its accumulated internal toxins onto the hex grid. Toxin-producing cells halt cell division while producing. If a cell divides (if production is inactive), any accumulated internal toxins are split equally (halved and rounded down to the nearest integer) between the parent and daughter cells. If a cell is lysed by attackers' T6SS before hitting its own threshold, its accumulated internal toxins are still successfully released.
+        * *Lysis Visualization:* Prey cells with accumulated internal toxins are drawn with a green inner circle that darkens as they approach the lysis threshold.
+    * **Activation Mechanisms (Trigger Modes):**
+        * *Standard / Constitutive:* Production is constitutively active (or governed stochastically by the **Stochastic Start Prob.** if lysis mode is active).
+        * *QS Triggered:* Activated based on local Prey AI concentration, modeled by a Hill equation with midpoint $K$ and cooperativity $n$. If lysis mode is active, the chance is gated by the **Stochastic Start Prob.**. This mode is dynamic and reversible: if AI concentration drops, the cell ceases production and can divide again.
+        * *Attacker NL Toxin Triggered:* Activated once the cell has been hit by attacker non-lytic toxins such that the accumulated units are $\ge$ **NL Init. Threshold**, with a chance defined by **Init. Chance** (scaled by **Stochastic Start Prob.** if lysis mode is active). This is a permanent one-way transition once activated.
 * **Reporter System:** Upon lysis, each Prey cell releases `lacZPerPrey` units of LacZ enzyme.
 
 ### 6.4. Defender Cells
@@ -316,6 +329,10 @@ A cell's initial random state (e.g., its starting `replicationCooldown`) is set 
     * `Rand. Fire %`: Chance per step (if not on cooldown) to fire one shot at a randomly chosen adjacent cell (Attacker, Prey, or another Defender).
 * **T6SS Effectors (vs Attackers/Prey):** Parameters define `NL Units/Hit`, `NL Delivery Chance %`, `L Units/Hit`, and `L Delivery Chance %` for their attacks.
 * **Sensitivity (to Attacker Attack):** Defenders have their own thresholds and resistance values against Attacker toxins.
+* **Sensitivity & Resistance vs. Prey Toxin:**
+    * `NL Resist. (%)` and `L Resist. (%)`: Chance (0-100%) to completely ignore NL or L toxin absorbed from a local grid cell in a step.
+    * `NL Absorp. (%)` and `L Absorp. (%)`: Percentage of local grid-based Prey toxin absorbed by the Defender cell in each step.
+    * `NL Die Thresh.` and `L Lyse Thresh.`: The cumulative Prey toxin units (absorbed from the grid) required to kill (growth arrest) or lyse the Defender cell.
 * **Defender vs. Defender Interaction:** Defenders are **immune to toxin damage** from other Defender cells (they don't accumulate NL/L units from them). However, they **do sense these hits** and can initiate retaliation against the attacking Defender based on their `Sense Chance`.
 
 ### 6.5. Barriers

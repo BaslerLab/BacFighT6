@@ -33,8 +33,8 @@
                 </a>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 6.4 - 26.11.2025). Developed by
-                <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 Pro.<br>
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 8.0 - 31.05.2026). Developed by
+                <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 - 3.5.<br>
             </p>
         </header>
 
@@ -187,7 +187,7 @@
 						</label>
 						<div class="flex-grow"></div>
 						<div class="flex items-center">
-							<input type="number" id="historyBufferSizeLimitInput" value="500" min="0" step="100" class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mr-1.5">
+							<input type="number" id="historyBufferSizeLimitInput" value="1200" min="0" step="100" class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mr-1.5">
 							<label for="historyBufferSizeLimitInput" class="text-sm font-medium text-gray-700 tooltip-trigger">
 								MB
 								<span class="tooltip-content">Automatically stop saving full state history when the buffer exceeds this size to prevent browser crashes. The simulation will continue to run. Set to 0 for no limit.</span>
@@ -427,6 +427,45 @@
                                 <input type="number" id="attBaseLysisDelayInput" value="20" min="1" class="mt-1 block w-full">
                             </div>
                         </div>
+                        <h5 class="text-sm font-semibold mt-3 mb-1">Resistance & Threshold vs Prey Toxin:</h5>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end">
+                            <div>
+                                <label for="attackerResistanceVsPreyToxinNLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Resist. (%):
+                                    <span class="tooltip-content">Chance (%) to completely ignore Non-Lytic damage from local Prey diffusible toxin.</span>
+                                </label>
+                                <input type="number" id="attackerResistanceVsPreyToxinNLInput" value="50" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="attackerResistanceVsPreyToxinLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Resist. (%):
+                                    <span class="tooltip-content">Chance (%) to completely ignore Lytic damage from local Prey diffusible toxin.</span>
+                                </label>
+                                <input type="number" id="attackerResistanceVsPreyToxinLInput" value="50" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="attackerAbsorptRateVsPreyToxinNLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Absorp. (%):
+                                    <span class="tooltip-content">Percentage of local NL toxin absorbed by this cell in each step.</span>
+                                </label>
+                                <input type="number" id="attackerAbsorptRateVsPreyToxinNLInput" value="10" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="attackerAbsorptRateVsPreyToxinLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Absorp. (%):
+                                    <span class="tooltip-content">Percentage of local L toxin absorbed by this cell in each step.</span>
+                                </label>
+                                <input type="number" id="attackerAbsorptRateVsPreyToxinLInput" value="10" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="attackerThresholdVsPreyToxinNLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:
+                                    <span class="tooltip-content">Accumulated Prey NL toxin required to kill this cell.</span>
+                                </label>
+                                <input type="number" id="attackerThresholdVsPreyToxinNLInput" value="5" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="attackerThresholdVsPreyToxinLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:
+                                    <span class="tooltip-content">Accumulated Prey L toxin required to lyse this cell.</span>
+                                </label>
+                                <input type="number" id="attackerThresholdVsPreyToxinLInput" value="5" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
                     </div>
 
                     <div id="preyParamsSection" class="cell-params-section">
@@ -485,6 +524,114 @@
                                     <span class="tooltip-content">Fraction (0-0.16) of the concentration difference exchanged with each neighbor per minute.</span>
                                 </label>
                                 <input type="number" id="preyQSDiffusionRateInput" value="0.05" min="0" max="0.166" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
+                        <h5 class="text-sm font-semibold mt-3 mb-1 text-green-700">Toxin Release Mode</h5>
+                        <div class="flex items-center space-x-2 mb-2">
+                            <input type="checkbox" id="preyToxinReleaseOnLysisCheckbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="preyToxinReleaseOnLysisCheckbox" class="font-medium" title="If checked, Prey toxins are only released upon cell lysis. Else, they are released continuously.">Release Only On Cell Lysis</label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end mb-2">
+                            <div>
+                                <label for="preyToxinLysisThresholdInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Threshold:
+                                    <span class="tooltip-content">Total internal toxin units (NL + L) required to cause lysis in the producing cell. Default is 1000.</span>
+                                </label>
+                                <input type="number" id="preyToxinLysisThresholdInput" value="1000" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="preyToxinStartProbabilityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Stochastic Start Prob. (%/min):
+                                    <span class="tooltip-content">Chance (%) per cell per minute to start toxin synthesis when Release On Lysis is active. Default is 0.1%.</span>
+                                </label>
+                                <input type="number" id="preyToxinStartProbabilityInput" value="0.1" min="0" max="100" step="0.001" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
+
+                        <h5 class="text-sm font-semibold mt-3 mb-1 text-green-700">Diffusible Non-Lytic Toxin (Bacteriocin NL):</h5>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end border-b border-gray-100 pb-2 mb-2">
+                            <div>
+                                <label for="preyToxinNLProductionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Tox. Prod. Rate (U/min):
+                                    <span class="tooltip-content">Units of NL toxin produced per live Prey cell per minute.</span>
+                                </label>
+                                <input type="number" id="preyToxinNLProductionRateInput" value="0" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="preyToxinNLDegradationRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Tox. Degrad. Rate (%/min):
+                                    <span class="tooltip-content">Percentage of NL toxin that decays per minute.</span>
+                                </label>
+                                <input type="number" id="preyToxinNLDegradationRateInput" value="2" min="0" max="100" step="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="preyToxinNLDiffusionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Tox. Diffusion Rate:
+                                    <span class="tooltip-content">Diffusion rate of NL toxin to neighboring hexes. Default is 0.01.</span>
+                                </label>
+                                <input type="number" id="preyToxinNLDiffusionRateInput" value="0.01" min="0" max="0.166" step="0.001" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
+
+                        <h5 class="text-sm font-semibold mt-2 mb-1 text-green-700">Diffusible Lytic Toxin (Bacteriocin L):</h5>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end border-b border-gray-100 pb-2 mb-2">
+                            <div>
+                                <label for="preyToxinLProductionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Tox. Prod. Rate (U/min):
+                                    <span class="tooltip-content">Units of L toxin produced per live Prey cell per minute.</span>
+                                </label>
+                                <input type="number" id="preyToxinLProductionRateInput" value="0" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="preyToxinLDegradationRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Tox. Degrad. Rate (%/min):
+                                    <span class="tooltip-content">Percentage of L toxin that decays per minute.</span>
+                                </label>
+                                <input type="number" id="preyToxinLDegradationRateInput" value="2" min="0" max="100" step="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="preyToxinLDiffusionRateInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Tox. Diffusion Rate:
+                                    <span class="tooltip-content">Diffusion rate of L toxin to neighboring hexes. Default is 0.01.</span>
+                                </label>
+                                <input type="number" id="preyToxinLDiffusionRateInput" value="0.01" min="0" max="0.166" step="0.001" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
+
+                        <h5 class="text-sm font-semibold mt-3 mb-1 text-green-700">Toxin Activation Mechanisms</h5>
+                        
+                        <div class="mb-2">
+                            <label for="preyToxinTriggerModeSelect" class="block text-sm font-medium text-gray-700 tooltip-trigger">Activation Trigger Mode:
+                                <span class="tooltip-content">Standard: Constant production from start (or stochastic start if Release On Lysis is checked). QS Triggered: Triggered by autoinducer levels. Attacker NL Toxin: Triggered by attacker T6SS hits.</span>
+                            </label>
+                            <select id="preyToxinTriggerModeSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="standard">Standard Production (Constitutive)</option>
+                                <option value="qs">QS Triggered Production</option>
+                                <option value="attacker">Attacker NL Toxin Triggered</option>
+                            </select>
+                        </div>
+
+                        <!-- QS Settings -->
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end mb-2">
+                            <div>
+                                <label for="preyToxinQSDerepressionMidpointInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Derepression Midpoint (K):
+                                    <span class="tooltip-content">AI concentration for 50% activation midpoint (EC50). Default is 50.</span>
+                                </label>
+                                <input type="number" id="preyToxinQSDerepressionMidpointInput" value="50" min="-1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="preyToxinQSCooperativityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Cooperativity (n):
+                                    <span class="tooltip-content">Hill coefficient. Controls the steepness of the switch. Default is 4.</span>
+                                </label>
+                                <input type="number" id="preyToxinQSCooperativityInput" value="4" min="1" step="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
+
+                        <!-- Attacker Toxin Triggered Settings -->
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end mb-2">
+                            <div>
+                                <label for="preyToxinInitiationThresholdInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Init. Threshold:
+                                    <span class="tooltip-content">Attacker NL hits needed to start checking for production initiation. Default is 2.</span>
+                                </label>
+                                <input type="number" id="preyToxinInitiationThresholdInput" value="2" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="preyToxinInitiationChanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Init. Chance (%/step):
+                                    <span class="tooltip-content">Probability (%) per step that toxin production will be initiated once the threshold is crossed. Default is 10%.</span>
+                                </label>
+                                <input type="number" id="preyToxinInitiationChanceInput" value="10.0" min="0" max="100" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                         </div>
                         <h5 class="text-sm font-semibold mt-3 mb-1">Capsule Synthesis</h5>
@@ -641,6 +788,45 @@
                             <div><label for="defNonLyticResistanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore NL toxins from a single Attacker hit.</span></label><input type="number" id="defNonLyticResistanceInput" value="50" min="0" max="100" class="mt-1 block w-full"></div>
                             <div><label for="defLyticResistanceInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Resist. %:<span class="tooltip-content">Innate chance (%) to completely ignore Lytic toxins from a single Attacker hit.</span></label><input type="number" id="defLyticResistanceInput" value="50" min="0" max="100" class="mt-1 block w-full"></div>
                         </div>
+                        <h5 class="text-sm font-semibold mt-3 mb-1">Resistance & Threshold vs Prey Toxin:</h5>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end">
+                            <div>
+                                <label for="defenderResistanceVsPreyToxinNLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Resist. (%):
+                                    <span class="tooltip-content">Chance (%) to completely ignore Non-Lytic damage from local Prey diffusible toxin.</span>
+                                </label>
+                                <input type="number" id="defenderResistanceVsPreyToxinNLInput" value="50" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="defenderResistanceVsPreyToxinLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Resist. (%):
+                                    <span class="tooltip-content">Chance (%) to completely ignore Lytic damage from local Prey diffusible toxin.</span>
+                                </label>
+                                <input type="number" id="defenderResistanceVsPreyToxinLInput" value="50" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="defenderAbsorptRateVsPreyToxinNLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Absorp. (%):
+                                    <span class="tooltip-content">Percentage of local NL toxin absorbed by this cell in each step.</span>
+                                </label>
+                                <input type="number" id="defenderAbsorptRateVsPreyToxinNLInput" value="10" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="defenderAbsorptRateVsPreyToxinLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Absorp. (%):
+                                    <span class="tooltip-content">Percentage of local L toxin absorbed by this cell in each step.</span>
+                                </label>
+                                <input type="number" id="defenderAbsorptRateVsPreyToxinLInput" value="10" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="defenderThresholdVsPreyToxinNLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">NL Die Thresh.:
+                                    <span class="tooltip-content">Accumulated Prey NL toxin required to kill this cell.</span>
+                                </label>
+                                <input type="number" id="defenderThresholdVsPreyToxinNLInput" value="10" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label for="defenderThresholdVsPreyToxinLInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">L Lyse Thresh.:
+                                    <span class="tooltip-content">Accumulated Prey L toxin required to lyse this cell.</span>
+                                </label>
+                                <input type="number" id="defenderThresholdVsPreyToxinLInput" value="10" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -673,9 +859,9 @@
 			<div class="lg:col-span-3 grid grid-cols-1 lg:grid-cols-5 gap-2"> <div id="canvasContainer" class="lg:col-span-4 bg-white rounded-xl shadow-lg overflow-hidden"> <canvas id="simulationCanvas"></canvas>
 				</div>
 				
-				<div class="lg:col-span-1 flex flex-col gap-4">
+				<div class="lg:col-span-1 flex flex-col gap-4 min-w-0 w-full">
 
-					<div id="simulationStatsContainer" class="bg-white p-4 rounded-xl shadow-lg self-start">
+					<div id="simulationStatsContainer" class="bg-white p-4 rounded-xl shadow-lg w-full">
 						<h3 class="text-gray-700 text-base font-semibold mb-2 border-b pb-1">Simulation Statistics</h3>
 						<div class="overflow-x-auto">
 							<table class="table-auto w-full text-sm text-left">
@@ -731,7 +917,7 @@
 					</div>
 
 
-				<div id="inspectorContainer" class="lg:col-span-1 bg-white p-4 rounded-xl shadow-lg self-start">
+				<div id="inspectorContainer" class="bg-white p-4 rounded-xl shadow-lg w-full">
 					<div id="hoverInfoPanel" class="text-xs space-y-1 min-h-[100px] max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar pr-1">
 						Mouse over the arena ...
 					</div>
@@ -816,6 +1002,7 @@
             <ul class="list-disc ml-5 space-y-1">
                 <li><strong>Cell States:</strong> Live cells are solid colors. Dead cells are dark gray, and lysing cells are light gray, both with a faint inner dot of their original color.</li>
                 <li><strong>Prey Capsule:</strong> A thick, purple inner border on a Prey cell indicates it has synthesized protective capsule layers.</li>
+                <li><strong>Prey Toxin Lysis Indicator:</strong> In lysis-dependent release mode, Prey cells with accumulated internal toxins display a green inner circle that darkens as they get closer to the lysis threshold.</li>
                 <li><strong>T6SS Firing:</strong> A bright green sector indicates a 'precise hit' capable of delivering toxins. A darker, transparent green sector (Attackers only) indicates a 'miss' that causes no damage but still triggers a cooldown.</li>
                 <li><strong>CPRG Reporter:</strong> The arena's background color shifts from white towards magenta as lysed Prey cells release LacZ enzyme, which converts the CPRG substrate.</li>
 			    <li><strong>Prey AI Field:</strong> A blue overlay on empty hexes visualizes the concentration of the Prey autoinducer signal. The overlay becomes more opaque as the concentration crosses key thresholds (the Attacker's attraction limit and a fraction of the theoretical maximum AI level).
@@ -886,6 +1073,7 @@
 						<br> &bull; <strong>Contact Sensing:</strong> First, it decides whether to target a specific adjacent contact (cell or barrier) or fire randomly, based on the <strong>Contact Sensing Bias %</strong>. If it attempts a contact-biased shot but no targets are available, the firing is aborted for that turn.
 						<br> &bull; <strong>Kin Recognition:</strong> After a preliminary target is chosen, the <strong>Kin Exclusion %</strong> determines if self-recognition occurs when targeting another Attacker. The outcome is set by the penalty value (either cancelling the shot or smartly re-targeting a non-kin cell).
 						<br> &bull; <strong>Quorum Sensing (QS):</strong> The entire firing sequence is gated by a flexible Quorum Sensing system, which can activate firing based on local Attacker density.
+						<br> &bull; <strong>Prey Toxin Sensitivity:</strong> Attackers can absorb grid-based Prey toxins. They have configurable parameters for NL and L resistance chances, absorption rates (percentage absorbed per step), and thresholds (units required to die or lyse).
 					</p>
 				</div>                
 
@@ -894,6 +1082,7 @@
                     <p class="text-sm">
                         Prey are the primary targets but can have their own defense mechanisms:
                         <br> &bull; <strong>Capsule Synthesis:</strong> If enabled, Prey can produce up to 5 protective capsule layers, reducing damage from T6SS attacks. Synthesis can be constitutive (always on) or dependent on their own AI concentration.
+                        <br> &bull; <strong>Toxin Production & Release:</strong> Prey can synthesize their own Bacteriocin NL and L toxins. They can release them in <em>Continuous Mode</em> (secreted directly into the hex grid) or in <em>Lysis-Dependent Mode</em> (accumulated internally until a threshold is reached, causing the cell to lyse and release the toxins; while producing, division is arrested, and upon replication, internal toxins are split 50/50 and rounded down). Firing can be standard/constitutive, QS-regulated (reversible if AI drops), or Attacker NL toxin-induced (requires attacker hits above a threshold).
                         <br> &bull; <strong>Resistance:</strong> Prey have separate resistance percentages and toxin sensitivity thresholds against attacks from Attackers and Defenders.
                         <br> &bull; <strong>Reporter Release:</strong> Upon lysis, Prey release a set amount of LacZ enzyme, driving the CPRG color change.
                     </p>
@@ -906,6 +1095,7 @@
                         <br> &bull; <strong>Retaliation:</strong> Their key feature. After being hit by a T6SS, they have a set chance to fire a burst of shots back at their attacker.
                         <br> &bull; <strong>Random Firing:</strong> Defenders can also be set to fire randomly at adjacent cells based on a chance and cooldown timer.
                         <br> &bull; <strong>Immunity:</strong> Defenders are immune to toxin damage from other Defenders but will still sense the hit and retaliate.
+                        <br> &bull; <strong>Prey Toxin Sensitivity:</strong> Defenders can absorb grid-based Prey toxins. They have separate NL and L resistance chances, absorption rates (percentage absorbed per step), and thresholds (units required to die or lyse).
                     </p>
                 </div>
             </div>

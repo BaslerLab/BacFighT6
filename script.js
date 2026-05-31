@@ -93,6 +93,12 @@
 	const attNonLyticUnitsToDieInput = document.getElementById('attNonLyticUnitsToDieInput');
 	const attLyticUnitsToLyseInput = document.getElementById('attLyticUnitsToLyseInput');
 	const attBaseLysisDelayInput = document.getElementById('attBaseLysisDelayInput');
+	const attackerResistanceVsPreyToxinNLInput = document.getElementById('attackerResistanceVsPreyToxinNLInput');
+	const attackerResistanceVsPreyToxinLInput = document.getElementById('attackerResistanceVsPreyToxinLInput');
+	const attackerAbsorptRateVsPreyToxinNLInput = document.getElementById('attackerAbsorptRateVsPreyToxinNLInput');
+	const attackerAbsorptRateVsPreyToxinLInput = document.getElementById('attackerAbsorptRateVsPreyToxinLInput');
+	const attackerThresholdVsPreyToxinNLInput = document.getElementById('attackerThresholdVsPreyToxinNLInput');
+	const attackerThresholdVsPreyToxinLInput = document.getElementById('attackerThresholdVsPreyToxinLInput');
 	// Attacker movement
 	const attackerMoveCooldownMinInput = document.getElementById('attackerMoveCooldownMinInput');
 	const attackerMoveCooldownMaxInput = document.getElementById('attackerMoveCooldownMaxInput');
@@ -131,6 +137,20 @@
 	const preyCapsuleCooperativityInput = document.getElementById('preyCapsuleCooperativityInput');
 	const preyCapsuleCooldownMinInput = document.getElementById('preyCapsuleCooldownMinInput');
 	const preyCapsuleCooldownMaxInput = document.getElementById('preyCapsuleCooldownMaxInput');
+	const preyToxinNLProductionRateInput = document.getElementById('preyToxinNLProductionRateInput');
+	const preyToxinNLDegradationRateInput = document.getElementById('preyToxinNLDegradationRateInput');
+	const preyToxinNLDiffusionRateInput = document.getElementById('preyToxinNLDiffusionRateInput');
+	const preyToxinLProductionRateInput = document.getElementById('preyToxinLProductionRateInput');
+	const preyToxinLDegradationRateInput = document.getElementById('preyToxinLDegradationRateInput');
+	const preyToxinLDiffusionRateInput = document.getElementById('preyToxinLDiffusionRateInput');
+	const preyToxinTriggerModeSelect = document.getElementById('preyToxinTriggerModeSelect');
+	const preyToxinQSDerepressionMidpointInput = document.getElementById('preyToxinQSDerepressionMidpointInput');
+	const preyToxinQSCooperativityInput = document.getElementById('preyToxinQSCooperativityInput');
+	const preyToxinReleaseOnLysisCheckbox = document.getElementById('preyToxinReleaseOnLysisCheckbox');
+	const preyToxinLysisThresholdInput = document.getElementById('preyToxinLysisThresholdInput');
+	const preyToxinStartProbabilityInput = document.getElementById('preyToxinStartProbabilityInput');
+	const preyToxinInitiationThresholdInput = document.getElementById('preyToxinInitiationThresholdInput');
+	const preyToxinInitiationChanceInput = document.getElementById('preyToxinInitiationChanceInput');
 	// Prey movement
 	const preyMoveCooldownMinInput = document.getElementById('preyMoveCooldownMinInput');
 	const preyMoveCooldownMaxInput = document.getElementById('preyMoveCooldownMaxInput');
@@ -154,6 +174,12 @@
 	const defBaseLysisDelayInput = document.getElementById('defBaseLysisDelayInput');
 	const defNonLyticResistanceInput = document.getElementById('defNonLyticResistanceInput');
 	const defLyticResistanceInput = document.getElementById('defLyticResistanceInput');
+	const defenderResistanceVsPreyToxinNLInput = document.getElementById('defenderResistanceVsPreyToxinNLInput');
+	const defenderResistanceVsPreyToxinLInput = document.getElementById('defenderResistanceVsPreyToxinLInput');
+	const defenderAbsorptRateVsPreyToxinNLInput = document.getElementById('defenderAbsorptRateVsPreyToxinNLInput');
+	const defenderAbsorptRateVsPreyToxinLInput = document.getElementById('defenderAbsorptRateVsPreyToxinLInput');
+	const defenderThresholdVsPreyToxinNLInput = document.getElementById('defenderThresholdVsPreyToxinNLInput');
+	const defenderThresholdVsPreyToxinLInput = document.getElementById('defenderThresholdVsPreyToxinLInput');
 	// Defender movement
 	const defenderMoveCooldownMinInput = document.getElementById('defenderMoveCooldownMinInput');
 	const defenderMoveCooldownMaxInput = document.getElementById('defenderMoveCooldownMaxInput');
@@ -430,8 +456,33 @@
         "Defender_Replication_Reward_Range_min": "defenderReplicationRewardRangeInput",
 		"CPRG_Initial_Substrate_Units": "initialCPRGSubstrateInput",
 		"CPRG_LacZ_kcat_Units_per_min_per_LacZ": "lacZKcatInput",
-		"CPRG_LacZ_Km_Units": "lacZKmInput"
-		// Add any other parameters you export/import here
+		"CPRG_LacZ_Km_Units": "lacZKmInput",
+		"Prey_Toxin_NL_Production_Rate_per_min": "preyToxinNLProductionRateInput",
+		"Prey_Toxin_NL_Degradation_Rate_Percent_per_min": "preyToxinNLDegradationRateInput",
+		"Prey_Toxin_NL_Diffusion_Rate": "preyToxinNLDiffusionRateInput",
+		"Prey_Toxin_L_Production_Rate_per_min": "preyToxinLProductionRateInput",
+		"Prey_Toxin_L_Degradation_Rate_Percent_per_min": "preyToxinLDegradationRateInput",
+		"Prey_Toxin_L_Diffusion_Rate": "preyToxinLDiffusionRateInput",
+		"Prey_Toxin_Trigger_Mode": "preyToxinTriggerModeSelect",
+		"Prey_Toxin_QS_Derepression_Midpoint_K": "preyToxinQSDerepressionMidpointInput",
+		"Prey_Toxin_QS_Cooperativity_n": "preyToxinQSCooperativityInput",
+		"Prey_Toxin_Release_On_Lysis": "preyToxinReleaseOnLysisCheckbox",
+		"Prey_Toxin_Lysis_Threshold": "preyToxinLysisThresholdInput",
+		"Prey_Toxin_Start_Probability_Percent": "preyToxinStartProbabilityInput",
+		"Prey_Toxin_Initiation_Threshold": "preyToxinInitiationThresholdInput",
+		"Prey_Toxin_Initiation_Chance_Percent": "preyToxinInitiationChanceInput",
+		"Attacker_Resistance_vs_Prey_Toxin_NL_Percent": "attackerResistanceVsPreyToxinNLInput",
+		"Attacker_Resistance_vs_Prey_Toxin_L_Percent": "attackerResistanceVsPreyToxinLInput",
+		"Attacker_Prey_Toxin_NL_Threshold": "attackerThresholdVsPreyToxinNLInput",
+		"Attacker_Prey_Toxin_L_Threshold": "attackerThresholdVsPreyToxinLInput",
+		"Attacker_Prey_Toxin_NL_Absorption_Rate_Percent": "attackerAbsorptRateVsPreyToxinNLInput",
+		"Attacker_Prey_Toxin_L_Absorption_Rate_Percent": "attackerAbsorptRateVsPreyToxinLInput",
+		"Defender_Resistance_vs_Prey_Toxin_NL_Percent": "defenderResistanceVsPreyToxinNLInput",
+		"Defender_Resistance_vs_Prey_Toxin_L_Percent": "defenderResistanceVsPreyToxinLInput",
+		"Defender_Prey_Toxin_NL_Threshold": "defenderThresholdVsPreyToxinNLInput",
+		"Defender_Prey_Toxin_L_Threshold": "defenderThresholdVsPreyToxinLInput",
+		"Defender_Prey_Toxin_NL_Absorption_Rate_Percent": "defenderAbsorptRateVsPreyToxinNLInput",
+		"Defender_Prey_Toxin_L_Absorption_Rate_Percent": "defenderAbsorptRateVsPreyToxinLInput"
 	};
 
 	// This is the single source of truth for all simulation parameters.
@@ -453,6 +504,7 @@
 		'q', 'r', 'type', 'id_num', // 'id' is now 'id_num'
 		'movementCooldown', 'replicationCooldown',
 		'accumulatedNonLyticToxins', 'accumulatedLyticToxins',
+		'accumulatedPreyToxinNL', 'accumulatedPreyToxinL',
 		'isDead', 'isLysing', 'lysisTimer', 'isEffectivelyGone',
 		// Attacker-specific
 		't6ssFireCooldownTimer',
@@ -463,7 +515,8 @@
 		// Prey-specific
 		'capsuleLayers', 'capsuleCooldown', 'isFormingCapsule',
 		'kills', 'lyses',
-		'claimedReplicationRewards'
+		'claimedReplicationRewards',
+		'internalPreyToxinNL', 'internalPreyToxinL', 'isPreyToxinProducer'
 	];
 
 	let rng; // This will hold our PRNG instance
@@ -496,6 +549,8 @@
 		activeFiringsThisStep: new Map(),
 		attackerAiGrid: new Map(),
 		preyAiGrid: new Map(),
+		preyToxinNLGrid: new Map(),
+		preyToxinLGrid: new Map(),
 		lastHoveredHexKey: null, // To store the 'q,r' key of the last valid hex hovered
 		firingsThisStep: 0,
 		killedThisStep: { attacker: 0, prey: 0, defender: 0 },
@@ -524,10 +579,117 @@
 
 	};
 
+	let neighborCache = new Map();
+	let pixelCoordinatesCache = new Map();
+	let mainEmptyGridCanvas = null;
+	let exportEmptyGridCanvas = null;
+	let exportEmptyGridCanvasKey = "";
+
+	function rebuildNeighborCache(radius) {
+		neighborCache.clear();
+		for (let q = -radius; q <= radius; q++) {
+			const rMin = Math.max(-radius, -q - radius);
+			const rMax = Math.min(radius, -q + radius);
+			for (let r = rMin; r <= rMax; r++) {
+				const key = `${q},${r}`;
+				const neighbors = [];
+				for (let i = 0; i < AXIAL_DIRECTIONS.length; i++) {
+					const dir = AXIAL_DIRECTIONS[i];
+					const nq = q + dir.q;
+					const nr = r + dir.r;
+					const isValid = isWithinHexBounds(nq, nr, radius);
+					neighbors.push({
+						q: nq,
+						r: nr,
+						key: `${nq},${nr}`,
+						direction: dir,
+						directionIndex: i,
+						isValid: isValid
+					});
+				}
+				neighborCache.set(key, neighbors);
+			}
+		}
+	}
+
+	function rebuildPixelCoordinatesCache(radius, visualHexRadius, offsetX, offsetY) {
+		pixelCoordinatesCache.clear();
+		for (let q = -radius; q <= radius; q++) {
+			const rMin = Math.max(-radius, -q - radius);
+			const rMax = Math.min(radius, -q + radius);
+			for (let r = rMin; r <= rMax; r++) {
+				const key = `${q},${r}`;
+				const x = offsetX + visualHexRadius * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r);
+				const y = offsetY + visualHexRadius * (3 / 2 * r);
+				pixelCoordinatesCache.set(key, { x, y });
+			}
+		}
+	}
+
+	function rebuildEmptyGridCanvas() {
+		if (!mainEmptyGridCanvas) {
+			mainEmptyGridCanvas = document.createElement('canvas');
+		}
+		mainEmptyGridCanvas.width = canvas.width;
+		mainEmptyGridCanvas.height = canvas.height;
+		const oCtx = mainEmptyGridCanvas.getContext('2d');
+		oCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+		const logicalGridRadius = simState.config.hexGridActualRadius;
+		const visualHexRadius = simState.config.hexRadius;
+
+		for (let q = -logicalGridRadius; q <= logicalGridRadius; q++) {
+			const rMin = Math.max(-logicalGridRadius, -q - logicalGridRadius);
+			const rMax = Math.min(logicalGridRadius, -q + logicalGridRadius);
+			for (let r = rMin; r <= rMax; r++) {
+				const key = `${q},${r}`;
+				const coords = pixelCoordinatesCache.get(key);
+				if (coords) {
+					drawHexagonOutline(oCtx, coords.x, coords.y, visualHexRadius);
+				}
+			}
+		}
+	}
+
+	function updateMainCanvasSizing() {
+		const mainCanvasSizing = setupCanvasAndHexSize(
+			canvasContainer.clientWidth, 
+			canvasContainer.clientHeight, 
+			simState.config.hexGridActualRadius
+		);
+		canvas.width = mainCanvasSizing.actualCanvasWidth;
+		canvas.height = mainCanvasSizing.actualCanvasHeight;
+		simState.config.hexRadius = mainCanvasSizing.visualHexRadius;
+		simState.offsetX = mainCanvasSizing.calculatedOffsetX;
+		simState.offsetY = mainCanvasSizing.calculatedOffsetY;
+
+		rebuildNeighborCache(simState.config.hexGridActualRadius);
+		rebuildPixelCoordinatesCache(
+			simState.config.hexGridActualRadius, 
+			simState.config.hexRadius, 
+			simState.offsetX, 
+			simState.offsetY
+		);
+		rebuildEmptyGridCanvas();
+	}
+
 	// --- Utility Functions ---
 
 	function applySettingsObject(settingsObject) {
-		for (const [paramName, value] of Object.entries(settingsObject)) {
+		for (let [paramName, value] of Object.entries(settingsObject)) {
+			// Convert legacy parameters
+			if (paramName === "Prey_Toxin_QS_Regulated") {
+				paramName = "Prey_Toxin_Trigger_Mode";
+				value = (value === true || value === 'true' || value === '1') ? 'qs' : 'standard';
+			} else if (paramName === "Prey_Toxin_Activation_Mode") {
+				paramName = "Prey_Toxin_Trigger_Mode";
+				if (value === 'constitutive' || value === 'stochastic') {
+					value = 'standard';
+				} else if (value === 'toxin') {
+					value = 'attacker';
+				}
+			}
+
 			const elementId = parameterToElementIdMap[paramName];
 			if (elementId) {
 				// Use "true" to dispatch a change event, just in case
@@ -778,7 +940,9 @@
 			currentIndex--;
 
 			// And swap it with the current element.
-			[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+			const temp = array[currentIndex];
+			array[currentIndex] = array[randomIndex];
+			array[randomIndex] = temp;
 		}
 		return array;
 	}
@@ -892,6 +1056,7 @@
 			this.r = r;
 			this.type = type;
 			this.id = id;
+			this.key = `${q},${r}`;
 
 			// This is crucial for the optimized save/load functions.
 			// Universal properties
@@ -906,6 +1071,8 @@
 			this.movementCooldown = Infinity;  // Default to non-motile
 			this.accumulatedNonLyticToxins = 0;
 			this.accumulatedLyticToxins = 0;
+			this.accumulatedPreyToxinNL = 0;
+			this.accumulatedPreyToxinL = 0;
 
 			// Attacker-specific properties (defaults for others)
 			this.t6ssFireCooldownTimer = 0;
@@ -922,6 +1089,15 @@
 			this.capsuleLayers = 0;
 			this.capsuleCooldown = 0;
 			this.isFormingCapsule = false;
+			this.internalPreyToxinNL = 0;
+			this.internalPreyToxinL = 0;
+			this.isPreyToxinProducer = false;
+			if (typeof simState !== 'undefined' && simState.config && simState.config.prey) {
+				const isQs = simState.config.prey.toxinQS && simState.config.prey.toxinQS.isRegulated;
+				const isToxinTriggered = simState.config.prey.toxinAttackerTriggered;
+				const isLysis = simState.config.prey.releaseOnLysis;
+				this.isPreyToxinProducer = (!isQs && !isToxinTriggered && !isLysis);
+			}
 
 			if (type === 'barrier') {
 				// Barrier-specific overrides. This part is simple and has no RNG.
@@ -1062,6 +1238,21 @@
 			}
 		}
 
+		releasePreyToxins() {
+			if (this.type === 'prey') {
+				if (this.internalPreyToxinNL > 0) {
+					const currentNL = simState.preyToxinNLGrid.get(this.key) || 0;
+					simState.preyToxinNLGrid.set(this.key, currentNL + this.internalPreyToxinNL);
+					this.internalPreyToxinNL = 0;
+				}
+				if (this.internalPreyToxinL > 0) {
+					const currentL = simState.preyToxinLGrid.get(this.key) || 0;
+					simState.preyToxinLGrid.set(this.key, currentL + this.internalPreyToxinL);
+					this.internalPreyToxinL = 0;
+				}
+			}
+		}
+
 		decrementCooldowns() {
 			if (this.type === 'barrier') return; // Barriers have no cooldowns
 
@@ -1096,6 +1287,7 @@
 					simState.lysedThisStep[this.type]++;
 					if (this.type === 'prey') {
 						simState.totalActiveLacZReleased += simState.config.prey.lacZPerPrey;
+						this.releasePreyToxins();
 					}
 				}
 			}
@@ -1106,6 +1298,7 @@
 		    
 		    if (this.replicationCooldown === Infinity) return false;
 			if (this.isDead || this.isLysing || this.isEffectivelyGone) return false;
+			if (this.type === 'prey' && simState.config.prey.releaseOnLysis && this.isPreyToxinProducer) return false; // Stop dividing if producing toxin in lysis-dependent mode
 			return this.replicationCooldown <= 0;
 		}
 		
@@ -1127,8 +1320,38 @@
 			if (this.type !== 'attacker' || this.t6ssFireCooldownTimer > 0) return null;
 
 			let chosenDirectionInfo;
-			const neighborInfos = getNeighborInfos(this.q, this.r, currentCellMap);
-			const occupiedNeighborInfos = neighborInfos.filter(n => n.cell && !n.cell.isEffectivelyGone && isWithinHexBounds(n.q, n.r, simState.config.hexGridActualRadius));
+			const radius = simState.config.hexGridActualRadius;
+			const cachedNeighbors = neighborCache.get(this.key);
+			const occupiedNeighborInfos = [];
+
+			if (cachedNeighbors) {
+				const len = cachedNeighbors.length;
+				for (let i = 0; i < len; i++) {
+					const n = cachedNeighbors[i];
+					if (n.isValid) {
+						const cell = currentCellMap.get(n.key);
+						if (cell && !cell.isEffectivelyGone) {
+							occupiedNeighborInfos.push({
+								q: n.q,
+								r: n.r,
+								cell: cell,
+								direction: n.direction,
+								directionIndex: n.directionIndex
+							});
+						}
+					}
+				}
+			} else {
+				// Fallback if cache is missed
+				const neighborInfos = getNeighborInfos(this.q, this.r, currentCellMap);
+				const len = neighborInfos.length;
+				for (let i = 0; i < len; i++) {
+					const n = neighborInfos[i];
+					if (n.cell && !n.cell.isEffectivelyGone && isWithinHexBounds(n.q, n.r, radius)) {
+						occupiedNeighborInfos.push(n);
+					}
+				}
+			}
 
 			if (rng() < simState.config.attacker.t6ss.contactSensingBias && occupiedNeighborInfos.length > 0) {
 				chosenDirectionInfo = occupiedNeighborInfos[Math.floor(rng() * occupiedNeighborInfos.length)];
@@ -1261,6 +1484,7 @@
 						simState.lysedThisStep[this.type]++;
 						 if (this.type === 'prey') {
 							simState.totalActiveLacZReleased += simState.config.prey.lacZPerPrey;
+							this.releasePreyToxins();
 						}
 					}
 				}
@@ -1327,6 +1551,7 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 			percentFullDisplay.textContent = 'N/A';
 		}
 	}
+
 
 	function updateConfigFromUI(isFullConfigRead = false) {
 		
@@ -1411,6 +1636,12 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		simState.config.attacker.sensitivity.nonLyticUnitsToDie = parseInt(attNonLyticUnitsToDieInput.value);
 		simState.config.attacker.sensitivity.lyticUnitsToLyse = parseInt(attLyticUnitsToLyseInput.value);
 		simState.config.attacker.sensitivity.baseLysisDelay = parseInt(attBaseLysisDelayInput.value);
+		simState.config.attacker.sensitivity.preyToxinNLResistanceChance = (parseFloat(attackerResistanceVsPreyToxinNLInput.value) || 0) / 100;
+		simState.config.attacker.sensitivity.preyToxinLResistanceChance = (parseFloat(attackerResistanceVsPreyToxinLInput.value) || 0) / 100;
+		simState.config.attacker.sensitivity.preyToxinNLAbsorptionRate = (parseFloat(attackerAbsorptRateVsPreyToxinNLInput.value) || 0) / 100;
+		simState.config.attacker.sensitivity.preyToxinLAbsorptionRate = (parseFloat(attackerAbsorptRateVsPreyToxinLInput.value) || 0) / 100;
+		simState.config.attacker.sensitivity.preyToxinNLThreshold = parseInt(attackerThresholdVsPreyToxinNLInput.value) || 1;
+		simState.config.attacker.sensitivity.preyToxinLThreshold = parseInt(attackerThresholdVsPreyToxinLInput.value) || 1;
 
 		simState.config.prey.initialCount = parseInt(initialPreyInput.value);
 		simState.config.prey.replication = { mean: parseInt(preyReplicationMeanInput.value), range: parseInt(preyReplicationRangeInput.value) };
@@ -1423,6 +1654,37 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		simState.config.prey.qs.productionRate = parseFloat(document.getElementById('preyQSProductionRateInput').value);
 		simState.config.prey.qs.degradationRate = parseFloat(document.getElementById('preyQSDegradationRateInput').value) / 100;
 		simState.config.prey.qs.diffusionRate = parseFloat(document.getElementById('preyQSDiffusionRateInput').value);
+		simState.config.prey.toxinNL = {
+			productionRate: parseFloat(preyToxinNLProductionRateInput.value) || 0,
+			degradationRate: (parseFloat(preyToxinNLDegradationRateInput.value) || 0) / 100,
+			diffusionRate: parseFloat(preyToxinNLDiffusionRateInput.value) || 0
+		};
+		simState.config.prey.toxinL = {
+			productionRate: parseFloat(preyToxinLProductionRateInput.value) || 0,
+			degradationRate: (parseFloat(preyToxinLDegradationRateInput.value) || 0) / 100,
+			diffusionRate: parseFloat(preyToxinLDiffusionRateInput.value) || 0
+		};
+		// Backward compatibility fallback object
+		simState.config.prey.toxin = {
+			productionRate: simState.config.prey.toxinNL.productionRate,
+			degradationRate: simState.config.prey.toxinNL.degradationRate,
+			diffusionRate: simState.config.prey.toxinNL.diffusionRate,
+			nlToxicity: 1.0,
+			lToxicity: 1.0
+		};
+		const triggerMode = preyToxinTriggerModeSelect ? preyToxinTriggerModeSelect.value : 'standard';
+		simState.config.prey.triggerMode = triggerMode;
+		simState.config.prey.toxinQS = {
+			isRegulated: (triggerMode === 'qs'),
+			midpoint: parseFloat(preyToxinQSDerepressionMidpointInput.value),
+			cooperativity: parseFloat(preyToxinQSCooperativityInput.value)
+		};
+		simState.config.prey.toxinAttackerTriggered = (triggerMode === 'attacker');
+		simState.config.prey.releaseOnLysis = preyToxinReleaseOnLysisCheckbox.checked;
+		simState.config.prey.lysisThreshold = parseInt(preyToxinLysisThresholdInput.value) || 1000;
+		simState.config.prey.startProbability = parseFloat(preyToxinStartProbabilityInput.value) / 100;
+		simState.config.prey.toxinInitiationThreshold = parseInt(preyToxinInitiationThresholdInput.value) || 2;
+		simState.config.prey.toxinInitiationChance = (parseFloat(preyToxinInitiationChanceInput.value) || 10.0) / 100;
 		simState.config.prey.capsule = {
 			isEnabled: preyCapsuleSystemEnabledCheckbox.checked,
 			maxProtection: parseInt(preyCapsuleMaxProtectionInput.value),
@@ -1471,8 +1733,17 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		simState.config.defender.sensitivity.baseLysisDelay = parseInt(defBaseLysisDelayInput.value);
 		simState.config.defender.sensitivity.nonLyticResistanceChance = parseFloat(defNonLyticResistanceInput.value) / 100;
 		simState.config.defender.sensitivity.lyticResistanceChance = parseFloat(defLyticResistanceInput.value) / 100;
+		simState.config.defender.sensitivity.preyToxinNLResistanceChance = (parseFloat(defenderResistanceVsPreyToxinNLInput.value) || 0) / 100;
+		simState.config.defender.sensitivity.preyToxinLResistanceChance = (parseFloat(defenderResistanceVsPreyToxinLInput.value) || 0) / 100;
+		simState.config.defender.sensitivity.preyToxinNLAbsorptionRate = (parseFloat(defenderAbsorptRateVsPreyToxinNLInput.value) || 0) / 100;
+		simState.config.defender.sensitivity.preyToxinLAbsorptionRate = (parseFloat(defenderAbsorptRateVsPreyToxinLInput.value) || 0) / 100;
+		simState.config.defender.sensitivity.preyToxinNLThreshold = parseInt(defenderThresholdVsPreyToxinNLInput.value) || 1;
+		simState.config.defender.sensitivity.preyToxinLThreshold = parseInt(defenderThresholdVsPreyToxinLInput.value) || 1;
 
 		simState.config.cprg.initialSubstrate = parseInt(initialCPRGSubstrateInput.value) || 1; 
+		if (simState.simulationStepCount === 0) {
+			simState.remainingCPRGSubstrate = simState.config.cprg.initialSubstrate;
+		}
 		simState.config.cprg.k_cat = parseFloat(lacZKcatInput.value) || 0;
 		simState.config.cprg.Km = parseFloat(lacZKmInput.value) || 1; 
 		simState.config.simulationControl.simulationSpeedMs = parseInt(simulationSpeedInput.value);
@@ -1480,6 +1751,20 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 	    simState.config.simulationControl.renderRate = parseInt(document.getElementById('renderRateInput').value) || 1;
 
 		updatePercentFullDisplay(); 
+
+		// If simulation has not started, sync existing cells' producer state with the updated config
+		if (simState.simulationStepCount === 0 && simState.cells) {
+			simState.cells.forEach(cell => {
+				if (cell.type === 'prey') {
+					const isQs = simState.config.prey.toxinQS && simState.config.prey.toxinQS.isRegulated;
+					const isToxinTriggered = simState.config.prey.toxinAttackerTriggered;
+					const isLysis = simState.config.prey.releaseOnLysis;
+					cell.isPreyToxinProducer = (!isQs && !isToxinTriggered && !isLysis);
+					cell.internalPreyToxinNL = 0;
+					cell.internalPreyToxinL = 0;
+				}
+			});
+		}
 	}
 
 	function setupCanvasAndHexSize(targetCanvasWidth, targetCanvasHeight, logicalGridRadius) {
@@ -1554,6 +1839,8 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		simState.firingsThisStep = 0;
 		simState.attackerAiGrid.clear();
 		simState.preyAiGrid.clear();
+		simState.preyToxinNLGrid.clear();
+		simState.preyToxinLGrid.clear();
 		simState.killedThisStep = { attacker: 0, prey: 0, defender: 0 };
 		simState.lysedThisStep = { attacker: 0, prey: 0, defender: 0 };
 		simState.cumulativeFirings = 0;
@@ -1575,6 +1862,8 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		simState.isScrubbing = false;
 		simState.isInitialized = false;
 	    simState.runTimestamp = null;
+		exportEmptyGridCanvas = null;
+		exportEmptyGridCanvasKey = "";
 
 		// 4. Update the UI
 		canvas.style.backgroundColor = DEFAULT_CANVAS_BG_COLOR;
@@ -1649,31 +1938,67 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 	}
 
 	function getNeighborInfos(q, r, currentCellMap) {
-		const neighborDetails = [];
-		AXIAL_DIRECTIONS.forEach((dir, index) => {
-			const nq = q + dir.q;
-			const nr = r + dir.r;
-			const nKey = `${nq},${nr}`;
-			neighborDetails.push({
-				q: nq,
-				r: nr,
-				cell: currentCellMap.get(nKey),
-				direction: dir,
-				directionIndex: index
+		const cacheKey = `${q},${r}`;
+		const cachedNeighbors = neighborCache.get(cacheKey);
+		if (!cachedNeighbors) {
+			const neighborDetails = [];
+			AXIAL_DIRECTIONS.forEach((dir, index) => {
+				const nq = q + dir.q;
+				const nr = r + dir.r;
+				const nKey = `${nq},${nr}`;
+				neighborDetails.push({
+					q: nq,
+					r: nr,
+					cell: currentCellMap.get(nKey),
+					direction: dir,
+					directionIndex: index
+				});
 			});
-		});
-		return neighborDetails;
+			return neighborDetails;
+		}
+
+		const len = cachedNeighbors.length;
+		const result = new Array(len);
+		for (let i = 0; i < len; i++) {
+			const n = cachedNeighbors[i];
+			result[i] = {
+				q: n.q,
+				r: n.r,
+				cell: currentCellMap.get(n.key),
+				direction: n.direction,
+				directionIndex: n.directionIndex
+			};
+		}
+		return result;
 	}
 
 
 	function getEmptyValidNeighbors(q, r, currentCellMap) {
-		const neighborInfos = getNeighborInfos(q, r, currentCellMap);
+		const cacheKey = `${q},${r}`;
+		const cachedNeighbors = neighborCache.get(cacheKey);
 		const emptyValidNeighbors = [];
-		const currentGridRadius = simState.config.hexGridActualRadius;
+		if (!cachedNeighbors) {
+			const currentGridRadius = simState.config.hexGridActualRadius;
+			for (let i = 0; i < AXIAL_DIRECTIONS.length; i++) {
+				const dir = AXIAL_DIRECTIONS[i];
+				const nq = q + dir.q;
+				const nr = r + dir.r;
+				if (isWithinHexBounds(nq, nr, currentGridRadius)) {
+					const cell = currentCellMap.get(`${nq},${nr}`);
+					if (!cell || cell.isEffectivelyGone) {
+						emptyValidNeighbors.push({ q: nq, r: nr });
+					}
+				}
+			}
+			return emptyValidNeighbors;
+		}
 
-		for (const nInfo of neighborInfos) {
-			if (isWithinHexBounds(nInfo.q, nInfo.r, currentGridRadius)) {
-				if (!nInfo.cell || nInfo.cell.isEffectivelyGone) {
+		const len = cachedNeighbors.length;
+		for (let i = 0; i < len; i++) {
+			const nInfo = cachedNeighbors[i];
+			if (nInfo.isValid) {
+				const cell = currentCellMap.get(nInfo.key);
+				if (!cell || cell.isEffectivelyGone) {
 					emptyValidNeighbors.push({ q: nInfo.q, r: nInfo.r });
 				}
 			}
@@ -1775,6 +2100,20 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 				if (cell.type !== 'barrier') {
 					targetCtx.fill();
 				}
+			} else if (cell.type === 'prey' && simState.config.prey.releaseOnLysis) {
+				const totalInternalToxin = (cell.internalPreyToxinNL || 0) + (cell.internalPreyToxinL || 0);
+				if (totalInternalToxin > 0) {
+					const thresh = simState.config.prey.lysisThreshold || 1000;
+					const progress = Math.min(1.0, totalInternalToxin / thresh);
+					const r = Math.round(187 + (21 - 187) * progress);
+					const g = Math.round(247 + (128 - 247) * progress);
+					const b = Math.round(208 + (61 - 208) * progress);
+
+					targetCtx.beginPath();
+					targetCtx.arc(x, y, visualHexRadius / 2.5, 0, 2 * Math.PI, false);
+					targetCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+					targetCtx.fill();
+				}
 			}
 		}
 
@@ -1827,32 +2166,61 @@ function drawFilledHexagon(targetCtx, x, y, visualHexRadius, fillColor) {
     targetCtx.fill();
 }
 
-function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, currentFirings, preyAiGrid, logicalGridRadius, visualHexRadius, offsetX, offsetY, cprgBgColor) {
+function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, currentFirings, preyAiGrid, preyToxinNLGrid, preyToxinLGrid, logicalGridRadius, visualHexRadius, offsetX, offsetY, cprgBgColor) {
+    const isMainCanvas = (
+        logicalGridRadius === simState.config.hexGridActualRadius &&
+        visualHexRadius === simState.config.hexRadius &&
+        offsetX === simState.offsetX &&
+        offsetY === simState.offsetY
+    );
+
     targetCtx.fillStyle = cprgBgColor;
     targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    if (isMainCanvas && mainEmptyGridCanvas) {
+        targetCtx.drawImage(mainEmptyGridCanvas, 0, 0);
+    } else {
+        // Draw empty grid outlines for offscreen/export canvas (using cache if possible)
+        const exportKey = `${logicalGridRadius}_${visualHexRadius}_${offsetX}_${offsetY}_${canvasWidth}_${canvasHeight}`;
+        if (exportEmptyGridCanvas && exportEmptyGridCanvasKey === exportKey) {
+            targetCtx.drawImage(exportEmptyGridCanvas, 0, 0);
+        } else {
+            exportEmptyGridCanvas = document.createElement('canvas');
+            exportEmptyGridCanvas.width = canvasWidth;
+            exportEmptyGridCanvas.height = canvasHeight;
+            const exportEmptyCtx = exportEmptyGridCanvas.getContext('2d');
+            
+            for (let q = -logicalGridRadius; q <= logicalGridRadius; q++) {
+                const rMin = Math.max(-logicalGridRadius, -q - logicalGridRadius);
+                const rMax = Math.min(logicalGridRadius, -q + logicalGridRadius);
+                for (let r = rMin; r <= rMax; r++) {
+                    const pt = axialToPixel(q, r, visualHexRadius, offsetX, offsetY);
+                    drawHexagonOutline(exportEmptyCtx, pt.x, pt.y, visualHexRadius);
+                }
+            }
+            exportEmptyGridCanvasKey = exportKey;
+            targetCtx.drawImage(exportEmptyGridCanvas, 0, 0);
+        }
+    }
 
     const maxAI = calculateTheoreticalMaxAI();
     const attackerAttractionThreshold = simState.config.attacker.movement.preyAiAttractionThreshold;
     const hasAIConfiguration = maxAI > 0 || attackerAttractionThreshold > 0;
 
-    for (let q_iter = -logicalGridRadius; q_iter <= logicalGridRadius; q_iter++) {
-        for (let r_iter = -logicalGridRadius; r_iter <= logicalGridRadius; r_iter++) {
-            if (isWithinHexBounds(q_iter, r_iter, logicalGridRadius)) {
-                const key = `${q_iter},${r_iter}`;
-                const { x, y } = axialToPixel(q_iter, r_iter, visualHexRadius, offsetX, offsetY);
+    if (hasAIConfiguration) {
+        preyAiGrid.forEach((aiConcentration, key) => {
+            if (aiConcentration > 0) {
                 const cellAtKey = currentCells.get(key);
-                if (hasAIConfiguration && (!cellAtKey || cellAtKey.isEffectivelyGone)) {
-                    // --- THIS NOW USES THE 'preyAiGrid' PARAMETER ---
-                    const aiConcentration = preyAiGrid.get(key) || 0;
-                    if (aiConcentration > 0) {
+                if (!cellAtKey || cellAtKey.isEffectivelyGone) {
+                    const [q_str, r_str] = key.split(',');
+                    const q = parseInt(q_str, 10);
+                    const r = parseInt(r_str, 10);
+                    if (isWithinHexBounds(q, r, logicalGridRadius)) {
+                        const coords = isMainCanvas ? pixelCoordinatesCache.get(key) : null;
+                        const { x, y } = coords || axialToPixel(q, r, visualHexRadius, offsetX, offsetY);
                         let alpha = 0.0;
-						// above 5% of max AI conc.
                         if (maxAI > 0 && aiConcentration > maxAI / 20) {
                             alpha = 0.2;
-// above 1%
-//                        } else if (maxAI > 0 && aiConcentration > maxAI / 100) {
-//                            alpha = 0.2;
-						// above attacker sensing concentration
                         } else if (attackerAttractionThreshold > 0 && aiConcentration > attackerAttractionThreshold) {
                             alpha = 0.1;
                         }
@@ -1863,16 +2231,63 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
                         }
                     }
                 }
-                
-                drawHexagonOutline(targetCtx, x, y, visualHexRadius);
             }
-        }
+        });
+    }
+
+    // Draw Prey Toxin overlays (combined from NL and L grids)
+    if (preyToxinNLGrid || preyToxinLGrid) {
+        const uniqueToxinKeys = new Set();
+        if (preyToxinNLGrid) preyToxinNLGrid.forEach((val, key) => { if (val >= 1) uniqueToxinKeys.add(key); });
+        if (preyToxinLGrid) preyToxinLGrid.forEach((val, key) => { if (val >= 1) uniqueToxinKeys.add(key); });
+
+        const pNL = simState.config.prey.toxinNL.productionRate || 0;
+        const dNL = simState.config.prey.toxinNL.degradationRate; // decimal
+        const maxNL = (pNL > 0 && dNL > 0) ? (pNL / dNL) : 0;
+
+        const pL = simState.config.prey.toxinL.productionRate || 0;
+        const dL = simState.config.prey.toxinL.degradationRate; // decimal
+        const maxL = (pL > 0 && dL > 0) ? (pL / dL) : 0;
+
+        uniqueToxinKeys.forEach(key => {
+            const cellAtKey = currentCells.get(key);
+            if (!cellAtKey || cellAtKey.isEffectivelyGone) {
+                const [q_str, r_str] = key.split(',');
+                const q = parseInt(q_str, 10);
+                const r = parseInt(r_str, 10);
+                if (isWithinHexBounds(q, r, logicalGridRadius)) {
+                    const nlVal = preyToxinNLGrid ? (preyToxinNLGrid.get(key) || 0) : 0;
+                    const lVal = preyToxinLGrid ? (preyToxinLGrid.get(key) || 0) : 0;
+                    const maxVal = Math.max(nlVal, lVal);
+
+                    let alpha = 0.0;
+                    if (maxVal >= 1) {
+                        alpha = 0.18;
+
+                        const threshNL = (maxNL === Infinity || maxNL <= 0) ? 10 : (maxNL / 20);
+                        const threshL = (maxL === Infinity || maxL <= 0) ? 10 : (maxL / 20);
+
+                        if (nlVal >= threshNL || lVal >= threshL) {
+                            alpha = 0.40;
+                        }
+                    }
+
+                    if (alpha > 0) {
+                        const coords = isMainCanvas ? pixelCoordinatesCache.get(key) : null;
+                        const { x, y } = coords || axialToPixel(q, r, visualHexRadius, offsetX, offsetY);
+                        const fillColor = `rgba(34, 197, 94, ${alpha})`;
+                        drawFilledHexagon(targetCtx, x, y, visualHexRadius, fillColor);
+                    }
+                }
+            }
+        });
     }
 
     // This part for drawing the cells on top remains the same
     currentCells.forEach((cell) => {
         if (isWithinHexBounds(cell.q, cell.r, logicalGridRadius)) {
-            const { x, y } = axialToPixel(cell.q, cell.r, visualHexRadius, offsetX, offsetY);
+            const coords = isMainCanvas ? pixelCoordinatesCache.get(cell.key) : null;
+            const { x, y } = coords || axialToPixel(cell.q, cell.r, visualHexRadius, offsetX, offsetY);
             let color = EMPTY_COLOR_STROKE;
             if (cell.isEffectivelyGone) return;
 
@@ -1894,7 +2309,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 
 	function drawGrid() {
 		const cprgBgColor = canvas.style.backgroundColor || DEFAULT_CANVAS_BG_COLOR;
-		drawArenaOnContext(ctx, canvas.width, canvas.height, simState.cells, simState.activeFiringsThisStep, simState.preyAiGrid, simState.config.hexGridActualRadius, simState.config.hexRadius, simState.offsetX, simState.offsetY, cprgBgColor);
+		drawArenaOnContext(ctx, canvas.width, canvas.height, simState.cells, simState.activeFiringsThisStep, simState.preyAiGrid, simState.preyToxinNLGrid, simState.preyToxinLGrid, simState.config.hexGridActualRadius, simState.config.hexRadius, simState.offsetX, simState.offsetY, cprgBgColor);
 	}
 
 
@@ -1989,6 +2404,16 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
             }
             if (cell.type === 'defender') {
                 cell.resetRandomFireCooldown(true); // isInitial = true
+            }
+            if (cell.type === 'prey') {
+                const isQs = simState.config.prey.toxinQS && simState.config.prey.toxinQS.isRegulated;
+                const isToxinTriggered = simState.config.prey.toxinAttackerTriggered;
+                const isLysis = simState.config.prey.releaseOnLysis;
+                cell.isPreyToxinProducer = (!isQs && !isToxinTriggered && !isLysis);
+                cell.internalPreyToxinNL = 0;
+                cell.internalPreyToxinL = 0;
+                cell.accumulatedNonLyticToxins = 0;
+                cell.accumulatedLyticToxins = 0;
             }
         });
 
@@ -2091,8 +2516,8 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		saveArenaStatesCheckbox.disabled = controlsDisabled;
 		document.getElementById('saveFullHistoryCheckbox').disabled = controlsDisabled;
 		imageExportWidthInput.disabled = controlsDisabled;
-		document.querySelectorAll('#attackerParamsSection input, #preyParamsSection input, #defenderParamsSection input, #cellTypeSelectionButtons button').forEach(input => {
-			input.disabled = controlsDisabled;
+		document.querySelectorAll('#attackerParamsSection input, #attackerParamsSection select, #preyParamsSection input, #preyParamsSection select, #defenderParamsSection input, #defenderParamsSection select, #cellTypeSelectionButtons button').forEach(el => {
+			el.disabled = controlsDisabled;
 		});
 
 		// Hide/Show defender-specific report lines based on cell presence
@@ -2277,6 +2702,8 @@ function updateUiFromState(stateObject) {
     const historicalCells = stateObject.cells;
     const historicalFirings = stateObject.activeFiringsThisStep;
     const historicalPreyAiGrid = stateObject.preyAiGrid;
+    const historicalPreyToxinNLGrid = stateObject.preyToxinNLGrid || stateObject.preyToxinGrid || new Map();
+    const historicalPreyToxinLGrid = stateObject.preyToxinLGrid || new Map();
 
 
     let liveAttackerCount = 0, livePreyCount = 0, liveDefenderCount = 0;
@@ -2309,7 +2736,7 @@ function updateUiFromState(stateObject) {
     const b_val = Math.round(255 + (255 - 255) * cprgRatio);
     const bgColor = `rgb(${r_val}, ${g_val}, ${b_val})`;
     
-    drawArenaOnContext(ctx, canvas.width, canvas.height, historicalCells, historicalFirings, historicalPreyAiGrid, simState.config.hexGridActualRadius, simState.config.hexRadius, simState.offsetX, simState.offsetY, bgColor);
+    drawArenaOnContext(ctx, canvas.width, canvas.height, historicalCells, historicalFirings, historicalPreyAiGrid, historicalPreyToxinNLGrid, historicalPreyToxinLGrid, simState.config.hexGridActualRadius, simState.config.hexRadius, simState.offsetX, simState.offsetY, bgColor);
 }
 
 function restoreSimStateFromHistoryObject(stateToRestore) {
@@ -2319,6 +2746,8 @@ function restoreSimStateFromHistoryObject(stateToRestore) {
     simState.activeFiringsThisStep = new Map(stateToRestore.activeFiringsThisStep);
     simState.attackerAiGrid = new Map(stateToRestore.attackerAiGrid);
     simState.preyAiGrid = new Map(stateToRestore.preyAiGrid);
+    simState.preyToxinNLGrid = new Map(stateToRestore.preyToxinNLGrid || stateToRestore.preyToxinGrid || []);
+    simState.preyToxinLGrid = new Map(stateToRestore.preyToxinLGrid || []);
     simState.cumulativeFirings = stateToRestore.cumulativeFirings;
     simState.cumulativeKills = { ...stateToRestore.cumulativeKills };
     simState.cumulativeLyses = { ...stateToRestore.cumulativeLyses };
@@ -2649,13 +3078,8 @@ stopButton.addEventListener('click', () => {
 		// 1. Read the new radius value from the UI.
 		updateConfigFromUI(true);
 
-		// 2. Recalculate the canvas and hexagon dimensions based on the new radius.
-		const mainCanvasSizing = setupCanvasAndHexSize(canvasContainer.clientWidth, canvasContainer.clientHeight, simState.config.hexGridActualRadius);
-		canvas.width = mainCanvasSizing.actualCanvasWidth;
-		canvas.height = mainCanvasSizing.actualCanvasHeight;
-		simState.config.hexRadius = mainCanvasSizing.visualHexRadius;
-		simState.offsetX = mainCanvasSizing.calculatedOffsetX;
-		simState.offsetY = mainCanvasSizing.calculatedOffsetY;
+		// 2. Recalculate the canvas and hexagon dimensions based on the new radius and rebuild caches.
+		updateMainCanvasSizing();
 
 		// 3. Update the statistics display for the new size.
 		simState.totalArenaSpaces = calculateTotalArenaSpaces(simState.config.hexGridActualRadius);
@@ -2680,6 +3104,21 @@ stopButton.addEventListener('click', () => {
 	initialAttackersInput.addEventListener('input', () => { if (!simState.isRunning && !simState.manualSetupActive) updateConfigFromUI(false); });
 	initialPreyInput.addEventListener('input', () => { if (!simState.isRunning && !simState.manualSetupActive) updateConfigFromUI(false); });
 	initialDefendersInput.addEventListener('input', () => { if (!simState.isRunning && !simState.manualSetupActive) updateConfigFromUI(false); });
+
+	document.querySelectorAll('#preyParamsSection input, #preyParamsSection select').forEach(element => {
+		element.addEventListener('change', () => {
+			if (!simState.isRunning && !simState.manualSetupActive) {
+				updateConfigFromUI(false);
+				drawGrid();
+			}
+		});
+		element.addEventListener('input', () => {
+			if (!simState.isRunning && !simState.manualSetupActive) {
+				updateConfigFromUI(false);
+				drawGrid();
+			}
+		});
+	});
 
 	function updateInputElement(elementId, value, dispatchChangeEvent = false) {
 		const element = document.getElementById(elementId);
@@ -3140,6 +3579,8 @@ function captureFullState() {
         activeFiringsThisStep: Array.from(simState.activeFiringsThisStep.entries()),
         attackerAiGrid: Array.from(simState.attackerAiGrid.entries()),
         preyAiGrid: Array.from(simState.preyAiGrid.entries()),
+        preyToxinNLGrid: Array.from(simState.preyToxinNLGrid.entries()),
+        preyToxinLGrid: Array.from(simState.preyToxinLGrid.entries()),
         cells: Array.from(simState.cells.values()).map(cellObject => {
             const valueArray = [];
             for (const schemaKey of CELL_SCHEMA) {
@@ -3224,11 +3665,12 @@ function rehydrateOptimizedStep(inputObject) {
 		// --- This simplified logic now correctly handles all maps from all sources ---
 		attackerAiGrid: new Map(sourceForState.attackerAiGrid || []),
 		preyAiGrid: new Map(sourceForState.preyAiGrid || []),
+		preyToxinNLGrid: new Map(sourceForState.preyToxinNLGrid || sourceForState.preyToxinGrid || []),
+		preyToxinLGrid: new Map(sourceForState.preyToxinLGrid || []),
 		activeFiringsThisStep: new Map(sourceForState.activeFiringsThisStep || [])
 	};
 }
-
-function updateAiGrid(currentAiGrid, qsConfig, allCells, gridRadius) {
+function updateAiGrid(currentAiGrid, qsConfig, allCells, gridRadius, isToxin = false) {
     if (qsConfig.diffusionRate <= 0 && qsConfig.degradationRate <= 0) {
         return currentAiGrid; // Skip calculations if there's nothing to do
     }
@@ -3240,23 +3682,31 @@ function updateAiGrid(currentAiGrid, qsConfig, allCells, gridRadius) {
     currentAiGrid.forEach((value, key) => {
         if (value > 1e-6) {
             keysToProcess.add(key);
-            const [q_str, r_str] = key.split(',');
-            const q = parseInt(q_str);
-            const r = parseInt(r_str);
-            const neighbors = getNeighborInfos(q, r, new Map());
-            for (const neighbor of neighbors) {
-                if (isWithinHexBounds(neighbor.q, neighbor.r, gridRadius)) {
-                    keysToProcess.add(`${neighbor.q},${neighbor.r}`);
+            const cachedNeighbors = neighborCache.get(key);
+            if (cachedNeighbors) {
+                const len = cachedNeighbors.length;
+                for (let i = 0; i < len; i++) {
+                    const neighbor = cachedNeighbors[i];
+                    if (neighbor.isValid) {
+                        keysToProcess.add(neighbor.key);
+                    }
+                }
+            } else {
+                // Fallback if not in cache (should not happen, but safe)
+                const [q_str, r_str] = key.split(',');
+                const q = parseInt(q_str);
+                const r = parseInt(r_str);
+                const neighbors = getNeighborInfos(q, r, new Map());
+                for (const neighbor of neighbors) {
+                    if (isWithinHexBounds(neighbor.q, neighbor.r, gridRadius)) {
+                        keysToProcess.add(`${neighbor.q},${neighbor.r}`);
+                    }
                 }
             }
         }
     });
 
     keysToProcess.forEach(key => {
-        const [q_str, r_str] = key.split(',');
-        const q = parseInt(q_str);
-        const r = parseInt(r_str);
-
         const currentCell = allCells.get(key);
         if (currentCell && currentCell.type === 'barrier') {
             return; // Barriers block diffusion and hold no AI
@@ -3264,37 +3714,67 @@ function updateAiGrid(currentAiGrid, qsConfig, allCells, gridRadius) {
 
         let C_key_old = currentAiGrid.get(key) || 0;
         let netChangeForKey = 0;
-        const neighbors = getNeighborInfos(q, r, allCells);
+        const cachedNeighbors = neighborCache.get(key);
 
-        for (const neighbor of neighbors) {
-            let C_neighbor_old = 0;
-            let isNeighborBlocked = false;
+        if (cachedNeighbors) {
+            const len = cachedNeighbors.length;
+            for (let i = 0; i < len; i++) {
+                const neighbor = cachedNeighbors[i];
+                let C_neighbor_old = 0;
+                let isNeighborBlocked = false;
 
-            if (!isWithinHexBounds(neighbor.q, neighbor.r, gridRadius)) {
-                isNeighborBlocked = true;
-            } else {
-                const neighborCell = neighbor.cell;
-                if (neighborCell && neighborCell.type === 'barrier') {
+                if (!neighbor.isValid) {
                     isNeighborBlocked = true;
                 } else {
-                    C_neighbor_old = currentAiGrid.get(`${neighbor.q},${neighbor.r}`) || 0;
+                    const neighborCell = allCells.get(neighbor.key);
+                    if (neighborCell && neighborCell.type === 'barrier') {
+                        isNeighborBlocked = true;
+                    } else {
+                        C_neighbor_old = currentAiGrid.get(neighbor.key) || 0;
+                    }
+                }
+
+                if (!isNeighborBlocked) {
+                    netChangeForKey += qsConfig.diffusionRate * (C_neighbor_old - C_key_old);
                 }
             }
+        } else {
+            // Fallback if not in cache
+            const [q_str, r_str] = key.split(',');
+            const q = parseInt(q_str);
+            const r = parseInt(r_str);
+            const neighbors = getNeighborInfos(q, r, allCells);
 
-            if (!isNeighborBlocked) {
-                netChangeForKey += qsConfig.diffusionRate * (C_neighbor_old - C_key_old);
+            for (const neighbor of neighbors) {
+                let C_neighbor_old = 0;
+                let isNeighborBlocked = false;
+
+                if (!isWithinHexBounds(neighbor.q, neighbor.r, gridRadius)) {
+                    isNeighborBlocked = true;
+                } else {
+                    const neighborCell = neighbor.cell;
+                    if (neighborCell && neighborCell.type === 'barrier') {
+                        isNeighborBlocked = true;
+                    } else {
+                        C_neighbor_old = currentAiGrid.get(`${neighbor.q},${neighbor.r}`) || 0;
+                    }
+                }
+
+                if (!isNeighborBlocked) {
+                    netChangeForKey += qsConfig.diffusionRate * (C_neighbor_old - C_key_old);
+                }
             }
         }
 
         let newConcentration = C_key_old + netChangeForKey;
         newConcentration *= (1 - qsConfig.degradationRate);
 
-		const roundedConcentration = Math.round(newConcentration * 1e5) / 1e5;
+        const finalConcentration = isToxin ? Math.round(newConcentration) : (Math.round(newConcentration * 1e5) / 1e5);
 
-		// We use the rounded value for the check and for storage.
-		if (roundedConcentration > 0) { // Check against 0 is fine now
-			nextAiGrid.set(key, roundedConcentration);
-		}
+        // We use the rounded value for the check and for storage.
+        if (finalConcentration > 0) { // Check against 0 is fine now
+            nextAiGrid.set(key, finalConcentration);
+        }
 
     });
 
@@ -3465,16 +3945,78 @@ async function runSimulationStep() {
 
 		// --- Perform Calculations for State Transition (from current simState.simulationStepCount to next) ---
 		let newCellsWorkingCopy = new Map(simState.cells);
-		const cellsToRemoveFromMapThisStep = new Set();
-		// const currentGridRadius = simState.config.hexGridActualRadius; // Already defined above
-
-		// Remove effectively gone cells (does not apply to barriers)
-		newCellsWorkingCopy.forEach((cell, key) => { if (cell.isEffectivelyGone) cellsToRemoveFromMapThisStep.add(key); });
-		cellsToRemoveFromMapThisStep.forEach(key => newCellsWorkingCopy.delete(key));
-		newCellsWorkingCopy.forEach(cell => cell.decrementCooldowns()); // Lysis can happen here, lacZ released
+		// Remove effectively gone cells and decrement cooldowns on the remaining ones (Lysis can happen here, lacZ released)
+		for (const [key, cell] of newCellsWorkingCopy) {
+			if (cell.isEffectivelyGone) {
+				newCellsWorkingCopy.delete(key);
+			} else {
+				cell.decrementCooldowns();
+				
+				// Prey Toxin Damage accumulation
+				if (cell.type !== 'prey' && cell.type !== 'barrier' && !cell.isLysing) {
+					const localPreyNL = simState.preyToxinNLGrid.get(key) || 0;
+					const localPreyL = simState.preyToxinLGrid.get(key) || 0;
+					if (localPreyNL > 0 || localPreyL > 0) {
+						let nlResistance = 0;
+						let lResistance = 0;
+						let sensitivityConfig = null;
+						if (cell.type === 'attacker') {
+							nlResistance = simState.config.attacker.sensitivity.preyToxinNLResistanceChance || 0;
+							lResistance = simState.config.attacker.sensitivity.preyToxinLResistanceChance || 0;
+							sensitivityConfig = simState.config.attacker.sensitivity;
+						} else if (cell.type === 'defender') {
+							nlResistance = simState.config.defender.sensitivity.preyToxinNLResistanceChance || 0;
+							lResistance = simState.config.defender.sensitivity.preyToxinLResistanceChance || 0;
+							sensitivityConfig = simState.config.defender.sensitivity;
+						}
+						
+						if (sensitivityConfig) {
+							if (localPreyNL > 0 && rng() >= nlResistance && !cell.isDead) {
+								const absorptionRate = sensitivityConfig.preyToxinNLAbsorptionRate !== undefined ? sensitivityConfig.preyToxinNLAbsorptionRate : 0.1;
+								const absorbedNL = localPreyNL * absorptionRate;
+								cell.accumulatedPreyToxinNL += absorbedNL;
+								simState.preyToxinNLGrid.set(key, Math.max(0, localPreyNL - absorbedNL));
+								if (cell.accumulatedPreyToxinNL >= (sensitivityConfig.preyToxinNLThreshold || 1)) {
+									if (!cell.isDead) {
+										cell.isDead = true;
+										simState.killedThisStep[cell.type]++;
+									}
+								}
+							}
+							if (localPreyL > 0 && rng() >= lResistance) {
+								if (!cell.isLysing && !cell.isEffectivelyGone) {
+									const absorptionRate = sensitivityConfig.preyToxinLAbsorptionRate !== undefined ? sensitivityConfig.preyToxinLAbsorptionRate : 0.1;
+									const absorbedL = localPreyL * absorptionRate;
+									cell.accumulatedPreyToxinL += absorbedL;
+									simState.preyToxinLGrid.set(key, Math.max(0, localPreyL - absorbedL));
+									if (cell.accumulatedPreyToxinL >= (sensitivityConfig.preyToxinLThreshold || 1)) {
+										const oldIsDead = cell.isDead;
+										cell.isDead = true;
+										if (!oldIsDead) {
+											simState.killedThisStep[cell.type]++;
+										}
+										cell.isLysing = true;
+										const effectiveL = Math.max(1, cell.accumulatedPreyToxinL);
+										cell.lysisTimer = Math.ceil(sensitivityConfig.baseLysisDelay / effectiveL);
+										if (cell.lysisTimer <= 0) {
+											cell.isEffectivelyGone = true;
+											simState.lysedThisStep[cell.type]++;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 
 		const cellsToProcess = Array.from(newCellsWorkingCopy.values());
-		cellsToProcess.sort((a, b) => a.id.localeCompare(b.id));
+		cellsToProcess.sort((a, b) => {
+			if (a.id < b.id) return -1;
+			if (a.id > b.id) return 1;
+			return 0;
+		});
 
 		// Snapshot for actions, using the working copy that has had cooldowns decremented and gone cells removed
 		const currentCellsSnapshotForActions = new Map(newCellsWorkingCopy);
@@ -3487,7 +4029,7 @@ async function runSimulationStep() {
 			if (attacker.type !== 'attacker' || attacker.isDead || attacker.isLysing || !isWithinHexBounds(attacker.q, attacker.r, currentGridRadius)) continue;
 
 			// --- MODIFIED QUORUM SENSING CHECK ---
-			const attackerKey = `${attacker.q},${attacker.r}`;
+			const attackerKey = attacker.key;
 			const qsConfig = simState.config.attacker.qs;
 			const aiConcentration = simState.attackerAiGrid.get(attackerKey) || 0;
 
@@ -3586,7 +4128,7 @@ async function runSimulationStep() {
 						if (isPreciseHit) {
 							const targetCell = finalTarget.cell;
 							if (targetCell && !targetCell.isEffectivelyGone) {
-								const targetCellInWorkingCopy = newCellsWorkingCopy.get(`${targetCell.q},${targetCell.r}`);
+								const targetCellInWorkingCopy = newCellsWorkingCopy.get(targetCell.key);
 								if (targetCellInWorkingCopy && (targetCellInWorkingCopy.type === 'prey' || targetCellInWorkingCopy.type === 'defender' || targetCellInWorkingCopy.type === 'barrier')) {
 									targetCellInWorkingCopy.receiveHit(attacker);
 								}
@@ -3676,77 +4218,138 @@ async function runSimulationStep() {
 
 		// Replication Logic (same as before, operates on newCellsWorkingCopy)
 		const pendingReplications = [];
-		const currentSnapshotForReplicationDecision = new Map(newCellsWorkingCopy); // Use updated working copy for decision
 		for (const cell of cellsToProcess) {
-			// ... (existing replication decision logic) ...
-			if (cell.type === 'barrier' || !isWithinHexBounds(cell.q, cell.r, currentGridRadius) || cell.isEffectivelyGone) continue; // Barriers don't replicate
+			if (cell.type === 'barrier' || !isWithinHexBounds(cell.q, cell.r, currentGridRadius) || cell.isEffectivelyGone) continue;
+			
 			if (cell.canReplicate()) {
-				// --- FIX: Reconstruct the key ---
-				const key = `${cell.q},${cell.r}`;
+				const key = cell.key;
+				const cachedNeighbors = neighborCache.get(key);
+				const emptyNeighbors = [];
 
-				const emptyNeighbors = getEmptyValidNeighbors(cell.q, cell.r, newCellsWorkingCopy);
+				if (cachedNeighbors) {
+					const len = cachedNeighbors.length;
+					for (let i = 0; i < len; i++) {
+						const n = cachedNeighbors[i];
+						const neighborCell = newCellsWorkingCopy.get(n.key);
+						if (n.isValid && (!neighborCell || neighborCell.isEffectivelyGone)) {
+							emptyNeighbors.push({ q: n.q, r: n.r });
+						}
+					}
+				} else {
+					// Fallback if cache is missed
+					const neighborInfos = getNeighborInfos(cell.q, cell.r, newCellsWorkingCopy);
+					const len = neighborInfos.length;
+					for (let i = 0; i < len; i++) {
+						const n = neighborInfos[i];
+						if (isWithinHexBounds(n.q, n.r, currentGridRadius) && (!n.cell || n.cell.isEffectivelyGone)) {
+							emptyNeighbors.push({ q: n.q, r: n.r });
+						}
+					}
+				}
+
 				if (emptyNeighbors.length > 0) {
 					const spot = emptyNeighbors[Math.floor(rng() * emptyNeighbors.length)];
 					pendingReplications.push({ parentOriginalKey: key, parentType: cell.type, spot: spot });
 				} else {
-					// This part is also important to get the right cell to reset
-					const cellToResetInWorkingCopy = newCellsWorkingCopy.get(key);
-					if (cellToResetInWorkingCopy) cellToResetInWorkingCopy.resetReplicationCooldown();
+					cell.resetReplicationCooldown();
 				}
 			}
-		};
+		}
+
 		seededShuffle(pendingReplications, rng);
 
 		for (const rep of pendingReplications) {
 			const spotKey = `${rep.spot.q},${rep.spot.r}`;
 			if (isWithinHexBounds(rep.spot.q, rep.spot.r, currentGridRadius) && !newCellsWorkingCopy.has(spotKey)) { // Check against working copy
 				const daughter = new Cell(rep.spot.q, rep.spot.r, rep.parentType, `${rep.parentType}-${simState.nextCellId++}`);
-				newCellsWorkingCopy.set(spotKey, daughter); // Add to working copy
 				const parentCell = newCellsWorkingCopy.get(rep.parentOriginalKey);
-				if(parentCell) parentCell.resetReplicationCooldown();
+				if (parentCell) {
+					parentCell.resetReplicationCooldown();
+					if (parentCell.type === 'prey') {
+						daughter.isPreyToxinProducer = parentCell.isPreyToxinProducer;
+						// Halve the toxins: parent and daughter inherit half each, rounded down to integer
+						const halfNL = Math.floor((parentCell.internalPreyToxinNL || 0) / 2);
+						const halfL = Math.floor((parentCell.internalPreyToxinL || 0) / 2);
+						parentCell.internalPreyToxinNL = halfNL;
+						parentCell.internalPreyToxinL = halfL;
+						daughter.internalPreyToxinNL = halfNL;
+						daughter.internalPreyToxinL = halfL;
+					}
+				}
+				newCellsWorkingCopy.set(spotKey, daughter); // Add to working copy
 			} else {
 				const parentCell = newCellsWorkingCopy.get(rep.parentOriginalKey);
-				if(parentCell && parentCell.replicationCooldown === 0) parentCell.resetReplicationCooldown();
+				if (parentCell && parentCell.replicationCooldown === 0) parentCell.resetReplicationCooldown();
 			}
 		}
-		
+
 		// Movement Logic
 		const pendingMovements = [];
-		const currentSnapshotForMovementDecision = new Map(newCellsWorkingCopy);
 
 		for (const cell of cellsToProcess) {
 			if (cell.type === 'barrier' || !isWithinHexBounds(cell.q, cell.r, currentGridRadius) || cell.isEffectivelyGone) continue;
 
 			if (cell.canMove()) {
-		        const key = `${cell.q},${cell.r}`;
+				const key = cell.key;
+				const cellToModifyInWorkingCopy = newCellsWorkingCopy.get(key);
+				if (!cellToModifyInWorkingCopy) continue;
 
+				let moveConfig;
 				if (cell.type === 'attacker') moveConfig = simState.config.attacker.movement;
 				else if (cell.type === 'prey') moveConfig = simState.config.prey.movement;
 				else if (cell.type === 'defender') moveConfig = simState.config.defender.movement;
 
-				const cellToModifyInWorkingCopy = newCellsWorkingCopy.get(key); 
-				if (!cellToModifyInWorkingCopy) continue;
-
 				// Check probability of attempting a move
 				if (rng() < moveConfig.probability) {
 					let targetSpot = null;
-					const emptyNeighbors = getEmptyValidNeighbors(cell.q, cell.r, newCellsWorkingCopy);
-					const allNeighbors = getNeighborInfos(cell.q, cell.r, newCellsWorkingCopy);
+					const cachedNeighbors = neighborCache.get(key);
+					const allNeighbors = [];
+					const emptyNeighbors = [];
+
+					if (cachedNeighbors) {
+						const len = cachedNeighbors.length;
+						for (let i = 0; i < len; i++) {
+							const n = cachedNeighbors[i];
+							const neighborCell = newCellsWorkingCopy.get(n.key);
+							const nInfo = {
+								q: n.q,
+								r: n.r,
+								cell: neighborCell,
+								direction: n.direction,
+								directionIndex: n.directionIndex
+							};
+							allNeighbors.push(nInfo);
+							if (n.isValid && (!neighborCell || neighborCell.isEffectivelyGone)) {
+								emptyNeighbors.push({ q: n.q, r: n.r });
+							}
+						}
+					} else {
+						// Fallback if cache is missed
+						const neighborInfos = getNeighborInfos(cell.q, cell.r, newCellsWorkingCopy);
+						const len = neighborInfos.length;
+						for (let i = 0; i < len; i++) {
+							const n = neighborInfos[i];
+							allNeighbors.push(n);
+							if (isWithinHexBounds(n.q, n.r, currentGridRadius) && (!n.cell || n.cell.isEffectivelyGone)) {
+								emptyNeighbors.push({ q: n.q, r: n.r });
+							}
+						}
+					}
 
 					// Decide target based on directionality
 					if (rng() < moveConfig.directionality) {
 						// Prefer empty spot
 						if (emptyNeighbors.length > 0) {
-							if (cell.type === 'attacker' && moveConfig.preyAiAttraction > 0 && rng() < moveConfig.preyAiAttraction) { // Check if attraction is enabled and passes probability
+							if (cell.type === 'attacker' && moveConfig.preyAiAttraction > 0 && rng() < moveConfig.preyAiAttraction) {
 								let bestSpotsAboveThreshold = [];
-								let maxPreyAIAboveThreshold = -1; // Start with a value lower than any possible AI concentration above threshold
+								let maxPreyAIAboveThreshold = -1;
 								const attractionThreshold = moveConfig.preyAiAttractionThreshold;
 
 								for (const emptyNeighbor of emptyNeighbors) {
 									const neighborKey = `${emptyNeighbor.q},${emptyNeighbor.r}`;
 									const preyAI = simState.preyAiGrid.get(neighborKey) || 0;
 
-									if (preyAI >= attractionThreshold) { // Only consider spots meeting or exceeding the threshold
+									if (preyAI >= attractionThreshold) {
 										if (preyAI > maxPreyAIAboveThreshold) {
 											maxPreyAIAboveThreshold = preyAI;
 											bestSpotsAboveThreshold = [emptyNeighbor];
@@ -3755,43 +4358,34 @@ async function runSimulationStep() {
 										}
 									}
 								}
-								// If bestSpotsAboveThreshold is not empty, pick one of the best. Otherwise, fall back to random empty.
 								targetSpot = bestSpotsAboveThreshold.length > 0 ? 
 									bestSpotsAboveThreshold[Math.floor(rng() * bestSpotsAboveThreshold.length)] :
-									emptyNeighbors[Math.floor(rng() * emptyNeighbors.length)]; // Fallback
+									emptyNeighbors[Math.floor(rng() * emptyNeighbors.length)];
 							} else {
-								// Original random empty spot selection (no attraction or attraction check failed)
 								targetSpot = emptyNeighbors[Math.floor(rng() * emptyNeighbors.length)];
 							}
 						}
 					} else {
-						// Move in a random direction
 						const randomNeighborInfo = allNeighbors[Math.floor(rng() * allNeighbors.length)];
-						// Check if the randomly chosen spot is empty. If not, the move fails.
-						// This also prevents moving through barriers since barriers are 'cells'.
 						if (!randomNeighborInfo.cell || randomNeighborInfo.cell.isEffectivelyGone) {
 							targetSpot = { q: randomNeighborInfo.q, r: randomNeighborInfo.r };
 						}
 					}
 
 					if (targetSpot && isWithinHexBounds(targetSpot.q, targetSpot.r, currentGridRadius)) {
-						// The move is valid, add it to pending list
 						pendingMovements.push({
 							fromKey: key,
 							toQ: targetSpot.q,
 							toR: targetSpot.r,
-							cell: cellToModifyInWorkingCopy // The actual cell object from the working copy
+							cell: cellToModifyInWorkingCopy
 						});
 					}
-					// Whether the move was successful, pending, or failed, reset the cooldown.
 					cellToModifyInWorkingCopy.resetMovementCooldown();
-
 				} else {
-					// Move was not attempted due to probability check, still reset cooldown
 					cellToModifyInWorkingCopy.resetMovementCooldown();
 				}
 			}
-		};
+		}
 
 		// Process pending movements, shuffling to handle conflicts randomly
 		seededShuffle(pendingMovements, rng);
@@ -3804,6 +4398,7 @@ async function runSimulationStep() {
 				newCellsWorkingCopy.delete(move.fromKey); // Remove from old position
 				move.cell.q = move.toQ;
 				move.cell.r = move.toR;
+				move.cell.key = toKey;
 				newCellsWorkingCopy.set(toKey, move.cell); // Place in new position
 				occupiedThisStep.add(toKey); // Mark spot as taken for this step's movements
 			}
@@ -3850,7 +4445,7 @@ async function runSimulationStep() {
 		simState.cells = newCellsWorkingCopy; // Finalize changes to the main cells Map
 
 
-				// 1. AI Production (for both Attacker and Prey)
+				// 1. AI & Toxin Production (for Attacker and Prey)
 				newCellsWorkingCopy.forEach((cell, key) => {
 					// Attacker AI Production
 					if (cell.type === 'attacker' && !cell.isDead && !cell.isLysing) {
@@ -3862,11 +4457,96 @@ async function runSimulationStep() {
 						const currentPreyAI = simState.preyAiGrid.get(key) || 0;
 						simState.preyAiGrid.set(key, currentPreyAI + simState.config.prey.qs.productionRate);
 					}
+					// Prey Toxin Production
+					if (cell.type === 'prey' && !cell.isDead && !cell.isLysing) {
+						const triggerMode = simState.config.prey.triggerMode;
+						const releaseOnLysis = simState.config.prey.releaseOnLysis;
+
+						if (triggerMode === 'qs') {
+							// QS activation evaluated dynamically at each step (reversible)
+							const qsConfig = simState.config.prey.toxinQS;
+							const preyAiConcentration = simState.preyAiGrid.get(key) || 0;
+							const K = qsConfig.midpoint;
+							const n = qsConfig.cooperativity;
+							let p_synthesis = 0.0;
+							
+							if (K < 0) {
+								p_synthesis = 1.0;
+							} else if (K === 0) {
+								p_synthesis = (preyAiConcentration > 0) ? 1.0 : 0.0;
+							} else {
+								const K_pow_n = Math.pow(K, n);
+								const AI_pow_n = Math.pow(preyAiConcentration, n);
+								if ((K_pow_n + AI_pow_n) > 0) {
+									p_synthesis = AI_pow_n / (K_pow_n + AI_pow_n);
+								}
+							}
+							if (Number.isNaN(p_synthesis)) p_synthesis = 0.0;
+
+							const probability = releaseOnLysis ? (p_synthesis * (simState.config.prey.startProbability || 0.0)) : p_synthesis;
+							cell.isPreyToxinProducer = (probability > 0 && rng() < probability);
+						} else {
+							// For Attacker and Standard mode, check transition if not already producing (permanent transition)
+							if (!cell.isPreyToxinProducer) {
+								if (triggerMode === 'attacker') {
+									const initThreshold = simState.config.prey.toxinInitiationThreshold !== undefined ? simState.config.prey.toxinInitiationThreshold : 2;
+									const initChance = simState.config.prey.toxinInitiationChance !== undefined ? simState.config.prey.toxinInitiationChance : 0.1;
+									if ((cell.accumulatedNonLyticToxins || 0) >= initThreshold) {
+										const probability = releaseOnLysis ? (initChance * (simState.config.prey.startProbability || 0.0)) : initChance;
+										if (probability > 0 && rng() < probability) {
+											cell.isPreyToxinProducer = true;
+										}
+									}
+								} else {
+									// Standard mode
+									if (releaseOnLysis) {
+										const startProb = simState.config.prey.startProbability || 0.0;
+										if (startProb > 0 && rng() < startProb) {
+											cell.isPreyToxinProducer = true;
+										}
+									} else {
+										// Continuous standard mode cells start as producers
+										cell.isPreyToxinProducer = true;
+									}
+								}
+							}
+						}
+
+						// 2. Production execution
+						if (cell.isPreyToxinProducer) {
+							if (releaseOnLysis) {
+								const prodNL = simState.config.prey.toxinNL.productionRate || 0;
+								const prodL = simState.config.prey.toxinL.productionRate || 0;
+								cell.internalPreyToxinNL += prodNL;
+								cell.internalPreyToxinL += prodL;
+
+								const totalInternal = cell.internalPreyToxinNL + cell.internalPreyToxinL;
+								const thresh = simState.config.prey.lysisThreshold || 1000;
+								if (totalInternal >= thresh) {
+									cell.isDead = true;
+									cell.isLysing = true;
+									cell.lysisTimer = 10;
+									simState.killedThisStep.prey++;
+								}
+							} else {
+								// Constant standard production
+								const currentPreyNL = simState.preyToxinNLGrid.get(key) || 0;
+								const prodNL = simState.config.prey.toxinNL.productionRate || 0;
+								simState.preyToxinNLGrid.set(key, currentPreyNL + prodNL);
+
+								const currentPreyL = simState.preyToxinLGrid.get(key) || 0;
+								const prodL = simState.config.prey.toxinL.productionRate || 0;
+								simState.preyToxinLGrid.set(key, currentPreyL + prodL);
+							}
+						}
+					}
 				});
 
-				// 2. AI Diffusion & Degradation (for both systems)
+				// 2. AI & Toxin Diffusion & Degradation
 				simState.attackerAiGrid = updateAiGrid(simState.attackerAiGrid, simState.config.attacker.qs, newCellsWorkingCopy, currentGridRadius);
 				simState.preyAiGrid = updateAiGrid(simState.preyAiGrid, simState.config.prey.qs, newCellsWorkingCopy, currentGridRadius);
+				simState.preyToxinNLGrid = updateAiGrid(simState.preyToxinNLGrid, simState.config.prey.toxinNL, newCellsWorkingCopy, currentGridRadius, true);
+				simState.preyToxinLGrid = updateAiGrid(simState.preyToxinLGrid, simState.config.prey.toxinL, newCellsWorkingCopy, currentGridRadius, true);
 
 		// Update Cumulative Stats (based on what happened in *this* step's calculations)
 		simState.cumulativeFirings += simState.firingsThisStep;
@@ -3989,6 +4669,8 @@ async function runSimulationStep() {
 			simState.cells,
 			simState.activeFiringsThisStep,
 			simState.preyAiGrid,
+			simState.preyToxinNLGrid,
+			simState.preyToxinLGrid,
 			simState.config.hexGridActualRadius,
 			sizing.visualHexRadius,
 			sizing.calculatedOffsetX,
@@ -4235,6 +4917,14 @@ async function runSimulationStep() {
 		settingsContent += `Prey_Capsule_Cooperativity_n\t${simState.config.prey.capsule.cooperativity}\n`;
 		settingsContent += `Prey_Capsule_Cooldown_Min_min\t${simState.config.prey.capsule.cooldownMin}\n`;
 		settingsContent += `Prey_Capsule_Cooldown_Max_min\t${simState.config.prey.capsule.cooldownMax}\n`;
+		settingsContent += `Prey_Toxin_Trigger_Mode\t${simState.config.prey.triggerMode}\n`;
+		settingsContent += `Prey_Toxin_QS_Derepression_Midpoint_K\t${simState.config.prey.toxinQS.midpoint}\n`;
+		settingsContent += `Prey_Toxin_QS_Cooperativity_n\t${simState.config.prey.toxinQS.cooperativity}\n`;
+		settingsContent += `Prey_Toxin_Release_On_Lysis\t${simState.config.prey.releaseOnLysis}\n`;
+		settingsContent += `Prey_Toxin_Lysis_Threshold\t${simState.config.prey.lysisThreshold}\n`;
+		settingsContent += `Prey_Toxin_Start_Probability_Percent\t${simState.config.prey.startProbability * 100}\n`;
+		settingsContent += `Prey_Toxin_Initiation_Threshold\t${simState.config.prey.toxinInitiationThreshold}\n`;
+		settingsContent += `Prey_Toxin_Initiation_Chance_Percent\t${simState.config.prey.toxinInitiationChance * 100}\n`;
 
 		// Defender Settings
 		settingsContent += `Defender_Initial_Count\t${simState.config.defender.initialCount}\n`;
@@ -4666,6 +5356,8 @@ async function exportCurrentStepState() {
                 cells: Array.from(stateSource.cells.values()),
 				attackerAiGrid: Array.from(stateSource.attackerAiGrid.entries()),
 				preyAiGrid: Array.from(stateSource.preyAiGrid.entries()),
+				preyToxinNLGrid: Array.from(stateSource.preyToxinNLGrid.entries()),
+				preyToxinLGrid: Array.from(stateSource.preyToxinLGrid.entries()),
 	            activeFiringsThisStep: Array.from(stateSource.activeFiringsThisStep.entries())
             }
         };
@@ -4985,8 +5677,22 @@ async function loadFullSimulationFromFile(fileContent) { // fileContent is an Ar
 
 			const parts = trimmedLine.split('\t');
 			if (parts.length === 2) {
-				const paramName = parts[0].trim();
+				let paramName = parts[0].trim();
 				let valueFromFile = parts[1].trim();
+
+				// Convert legacy parameters
+				if (paramName === "Prey_Toxin_QS_Regulated") {
+					paramName = "Prey_Toxin_Trigger_Mode";
+					valueFromFile = (valueFromFile.toLowerCase() === 'true' || valueFromFile === '1') ? 'qs' : 'standard';
+				} else if (paramName === "Prey_Toxin_Activation_Mode") {
+					paramName = "Prey_Toxin_Trigger_Mode";
+					if (valueFromFile === 'constitutive' || valueFromFile === 'stochastic') {
+						valueFromFile = 'standard';
+					} else if (valueFromFile === 'toxin') {
+						valueFromFile = 'attacker';
+					}
+				}
+
 				const elementId = parameterToElementIdMap[paramName];
 
 				if (elementId) {
@@ -5252,20 +5958,10 @@ async function loadFullSimulationFromFile(fileContent) { // fileContent is an Ar
 			updateConfigFromUI(true); 
 			if (simState.manualSetupActive) simState.config.hexGridActualRadius = oldLogicalRadius; 
 
-			const mainCanvasSizing = setupCanvasAndHexSize(canvasContainer.clientWidth, canvasContainer.clientHeight, simState.config.hexGridActualRadius);
-			canvas.width = mainCanvasSizing.actualCanvasWidth;
-			canvas.height = mainCanvasSizing.actualCanvasHeight;
-			simState.config.hexRadius = mainCanvasSizing.visualHexRadius;
-			simState.offsetX = mainCanvasSizing.calculatedOffsetX;
-			simState.offsetY = mainCanvasSizing.calculatedOffsetY;
+			updateMainCanvasSizing();
 			drawGrid();
 		} else { 
-			 const mainCanvasSizing = setupCanvasAndHexSize(canvasContainer.clientWidth, canvasContainer.clientHeight, simState.config.hexGridActualRadius);
-			canvas.width = mainCanvasSizing.actualCanvasWidth;
-			canvas.height = mainCanvasSizing.actualCanvasHeight;
-			simState.config.hexRadius = mainCanvasSizing.visualHexRadius;
-			simState.offsetX = mainCanvasSizing.calculatedOffsetX;
-			simState.offsetY = mainCanvasSizing.calculatedOffsetY;
+			updateMainCanvasSizing();
 			drawGrid();
 		}
 	});
@@ -5298,7 +5994,7 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
     simState.lastHoveredHexKey = simpleKey;
 
     // --- This part is robust and correct ---
-    let attackerAiGrid, preyAiGrid;
+    let attackerAiGrid, preyAiGrid, preyToxinNLGrid, preyToxinLGrid;
     const sourceForGrids = rawStateSource.state || rawStateSource;
 
     if (sourceForGrids.attackerAiGrid instanceof Map) {
@@ -5315,12 +6011,36 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
     } else {
         preyAiGrid = new Map(Object.entries(sourceForGrids.preyAiGrid || {}));
     }
+    
+    // Non-Lytic Toxin Grid
+    const rawNL = sourceForGrids.preyToxinNLGrid || sourceForGrids.preyToxinGrid;
+    if (rawNL instanceof Map) {
+        preyToxinNLGrid = rawNL;
+    } else if (Array.isArray(rawNL)) {
+        preyToxinNLGrid = new Map(rawNL);
+    } else {
+        preyToxinNLGrid = new Map(Object.entries(rawNL || {}));
+    }
+
+    // Lytic Toxin Grid
+    const rawL = sourceForGrids.preyToxinLGrid;
+    if (rawL instanceof Map) {
+        preyToxinLGrid = rawL;
+    } else if (Array.isArray(rawL)) {
+        preyToxinLGrid = new Map(rawL);
+    } else {
+        preyToxinLGrid = new Map(Object.entries(rawL || {}));
+    }
 
     const attackerAiConc = attackerAiGrid.get(simpleKey) || 0;
     const preyAiConc = preyAiGrid.get(simpleKey) || 0;
+    const preyToxinNLConc = preyToxinNLGrid.get(simpleKey) || 0;
+    const preyToxinLConc = preyToxinLGrid.get(simpleKey) || 0;
 
     infoHtml += formatCellProperty("Attacker AI", attackerAiConc);
     infoHtml += formatCellProperty("Prey AI", preyAiConc);
+    infoHtml += formatCellProperty("Prey NL Toxin", preyToxinNLConc);
+    infoHtml += formatCellProperty("Prey L Toxin", preyToxinLConc);
 
     const cellsDataSource = rawStateSource.state ? rawStateSource.state.cells : rawStateSource.cells;
     let plainCellData = null;
@@ -5361,6 +6081,8 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
             infoHtml += formatCellProperty("Move CD", cell.movementCooldown);
             infoHtml += formatCellProperty("NL Toxins", cell.accumulatedNonLyticToxins);
             infoHtml += formatCellProperty("L Toxins", cell.accumulatedLyticToxins);
+            infoHtml += formatCellProperty("Prey NL Toxins", (cell.accumulatedPreyToxinNL || 0).toFixed(2));
+            infoHtml += formatCellProperty("Prey L Toxins", (cell.accumulatedPreyToxinL || 0).toFixed(2));
             
             // FIX: Use cellTypeStr in all following checks
             if (cellTypeStr === 'attacker' || cellTypeStr === 'defender') {
@@ -5412,6 +6134,26 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
                     }
                     if (Number.isNaN(p_synthesis_hover)) p_synthesis_hover = 0.0;
                     infoHtml += formatCellProperty("Capsule P(Derepression)", p_synthesis_hover.toFixed(3));
+                }
+                const toxinQSConfig = simState.config.prey.toxinQS;
+                if (toxinQSConfig && toxinQSConfig.isRegulated) {
+                    let p_toxin_hover = 0.0;
+                    const K_tox = toxinQSConfig.midpoint;
+                    const n_tox = toxinQSConfig.cooperativity;
+                    if (K_tox < 0) { p_toxin_hover = 1.0; }
+                    else if (K_tox === 0) { p_toxin_hover = (preyAiConc > 0) ? 1.0 : 0.0; }
+                    else {
+                        const K_pow_n_tox = Math.pow(K_tox, n_tox);
+                        const AI_pow_n_tox = Math.pow(preyAiConc, n_tox);
+                        if ((K_pow_n_tox + AI_pow_n_tox) > 0) { p_toxin_hover = AI_pow_n_tox / (K_pow_n_tox + AI_pow_n_tox); }
+                    }
+                    if (Number.isNaN(p_toxin_hover)) p_toxin_hover = 0.0;
+                    infoHtml += formatCellProperty("Toxin P(synthesis)", p_toxin_hover.toFixed(3));
+                }
+                infoHtml += formatCellProperty("Toxin Producer", cell.isPreyToxinProducer);
+                if (simState.config.prey.releaseOnLysis) {
+                    infoHtml += formatCellProperty("Internal NL Toxin", cell.internalPreyToxinNL || 0);
+                    infoHtml += formatCellProperty("Internal L Toxin", cell.internalPreyToxinL || 0);
                 }
             }
         }
@@ -5802,6 +6544,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	if (shareButton) {
 		shareButton.addEventListener('click', generateShareableLink);
 	}
+
+
 
     // --- Step 4: Final UI Polish ---
     switchCellParamsTab('attacker');
