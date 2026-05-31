@@ -4888,6 +4888,12 @@ async function runSimulationStep() {
 		settingsContent += `Attacker_Replication_Reward_Lyses_per_Reward\t${simState.config.attacker.replicationReward.lysesPerReward}\n`;
 		settingsContent += `Attacker_Replication_Reward_Mean_min\t${simState.config.attacker.replicationReward.mean}\n`;
 		settingsContent += `Attacker_Replication_Reward_Range_min\t${simState.config.attacker.replicationReward.range}\n`;
+		settingsContent += `Attacker_Resistance_vs_Prey_Toxin_NL_Percent\t${simState.config.attacker.sensitivity.preyToxinNLResistanceChance * 100}\n`;
+		settingsContent += `Attacker_Resistance_vs_Prey_Toxin_L_Percent\t${simState.config.attacker.sensitivity.preyToxinLResistanceChance * 100}\n`;
+		settingsContent += `Attacker_Prey_Toxin_NL_Threshold\t${simState.config.attacker.sensitivity.preyToxinNLThreshold}\n`;
+		settingsContent += `Attacker_Prey_Toxin_L_Threshold\t${simState.config.attacker.sensitivity.preyToxinLThreshold}\n`;
+		settingsContent += `Attacker_Prey_Toxin_NL_Absorption_Rate_Percent\t${simState.config.attacker.sensitivity.preyToxinNLAbsorptionRate * 100}\n`;
+		settingsContent += `Attacker_Prey_Toxin_L_Absorption_Rate_Percent\t${simState.config.attacker.sensitivity.preyToxinLAbsorptionRate * 100}\n`;
 
 		// Prey Settings
 		settingsContent += `Prey_Initial_Count\t${simState.config.prey.initialCount}\n`;
@@ -4925,6 +4931,12 @@ async function runSimulationStep() {
 		settingsContent += `Prey_Toxin_Start_Probability_Percent\t${simState.config.prey.startProbability * 100}\n`;
 		settingsContent += `Prey_Toxin_Initiation_Threshold\t${simState.config.prey.toxinInitiationThreshold}\n`;
 		settingsContent += `Prey_Toxin_Initiation_Chance_Percent\t${simState.config.prey.toxinInitiationChance * 100}\n`;
+		settingsContent += `Prey_Toxin_NL_Production_Rate_per_min\t${simState.config.prey.toxinNL.productionRate}\n`;
+		settingsContent += `Prey_Toxin_NL_Degradation_Rate_Percent_per_min\t${simState.config.prey.toxinNL.degradationRate * 100}\n`;
+		settingsContent += `Prey_Toxin_NL_Diffusion_Rate\t${simState.config.prey.toxinNL.diffusionRate}\n`;
+		settingsContent += `Prey_Toxin_L_Production_Rate_per_min\t${simState.config.prey.toxinL.productionRate}\n`;
+		settingsContent += `Prey_Toxin_L_Degradation_Rate_Percent_per_min\t${simState.config.prey.toxinL.degradationRate * 100}\n`;
+		settingsContent += `Prey_Toxin_L_Diffusion_Rate\t${simState.config.prey.toxinL.diffusionRate}\n`;
 
 		// Defender Settings
 		settingsContent += `Defender_Initial_Count\t${simState.config.defender.initialCount}\n`;
@@ -4951,6 +4963,12 @@ async function runSimulationStep() {
 		settingsContent += `Defender_Replication_Reward_Lyses_per_Reward\t${simState.config.defender.replicationReward.lysesPerReward}\n`;
 		settingsContent += `Defender_Replication_Reward_Mean_min\t${simState.config.defender.replicationReward.mean}\n`;
 		settingsContent += `Defender_Replication_Reward_Range_min\t${simState.config.defender.replicationReward.range}\n`;
+		settingsContent += `Defender_Resistance_vs_Prey_Toxin_NL_Percent\t${simState.config.defender.sensitivity.preyToxinNLResistanceChance * 100}\n`;
+		settingsContent += `Defender_Resistance_vs_Prey_Toxin_L_Percent\t${simState.config.defender.sensitivity.preyToxinLResistanceChance * 100}\n`;
+		settingsContent += `Defender_Prey_Toxin_NL_Threshold\t${simState.config.defender.sensitivity.preyToxinNLThreshold}\n`;
+		settingsContent += `Defender_Prey_Toxin_L_Threshold\t${simState.config.defender.sensitivity.preyToxinLThreshold}\n`;
+		settingsContent += `Defender_Prey_Toxin_NL_Absorption_Rate_Percent\t${simState.config.defender.sensitivity.preyToxinNLAbsorptionRate * 100}\n`;
+		settingsContent += `Defender_Prey_Toxin_L_Absorption_Rate_Percent\t${simState.config.defender.sensitivity.preyToxinLAbsorptionRate * 100}\n`;
 
 
 		// CPRG Reporter Settings
