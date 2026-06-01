@@ -29,7 +29,7 @@
 
 ## 1. Overview
 
-This simulation models the dynamic interactions between up to three distinct bacterial cell types—**Attackers**, **Prey**, and **Defenders**—within a shared environment. The primary mechanism of interaction is the Type VI Secretion System (T6SS), a sophisticated molecular weapon that bacteria use to inject toxins into neighboring cells upon direct contact.
+This simulation models the dynamic interactions between up to three distinct bacterial cell types—**Attackers**, **Prey**, and **Defenders**—within a shared environment. The primary mechanism of interaction is the Type VI Secretion System (T6SS), a sophisticated molecular weapon that bacteria use to inject toxins into neighboring cells upon direct contact. Additionally, Prey cells are not entirely defenseless; they can produce and release their own bacteriocin toxins into the environment, allowing them to kill or inhibit rival Attackers and Defenders.
 
 Cells inhabit a two-dimensional hexagonal grid and compete for space. The simulation progresses in discrete time steps, where each step typically represents one minute of real time. During each step, cells can undergo several actions:
 * **Replication:** Cells can divide to produce offspring if space is available and their internal replication cooldown has completed.
@@ -40,6 +40,7 @@ Cells inhabit a two-dimensional hexagonal grid and compete for space. The simula
 * **Cell Movement:** Cells can move to adjacent empty hexes based on configurable cooldowns, probabilities, and directional preferences.
 * **Attacker Chemotaxis:** Attacker cells can exhibit chemotactic behavior, preferentially moving towards higher concentrations of autoinducers released by Prey cells.
 * **Prey Capsule Formation:** Prey cells can develop protective capsule layers in response to their own local cell density (via Prey autoinducer signals), offering a chance to resist T6SS attacks.
+* **Prey Toxin Production & Release:** Prey cells can synthesize and release their own toxins (bacteriocins) to inhibit or lyse Attacker and Defender cells, either continuously or via a lysis-dependent release mechanism.
 * **Reporter System:** Lysis of Prey cells releases a reporter enzyme (LacZ), which converts a substrate (CPRG) in the environment. This conversion is visualized by a change in the arena's background color, providing a proxy for overall Prey lysis.
 
 The simulation allows users to configure a vast array of parameters, offering a flexible platform to explore complex ecological dynamics, the evolution of T6SS strategies, and the outcomes of bacterial warfare under different conditions. It is inspired by numerous experimental findings and theoretical models in microbial ecology and T6SS research.
@@ -101,11 +102,13 @@ The simulation provides real-time visual feedback:
     * **Dead Cells:** Appear as **dark gray** hexagons. They also feature a smaller, faint inner dot matching their original cell type color (e.g., a faint red dot for a dead attacker). Dead cells are metabolically inactive and cannot replicate or fire, but they continue to occupy space until they lyse.
     * **Lysing Cells:** Appear as **light gray** hexagons, also with a faint inner dot of their original color. These cells have accumulated enough lytic toxins to burst and are on a timer to be removed from the grid.
 	* **Prey Capsule Indication:** A Prey cell with a capsule is indicated by a **thicker, purple inner outline**. This inner border is drawn just inside the cell's main outline. The thickness and darkness of this inner outline correspond to the number of capsule layers, providing a visual cue of its increased protection.
+	* **Prey Toxin Accumulation Indication (Lysis Mode):** Prey cells actively producing and accumulating internal toxins feature a **green inner circle** that darkens as the cell approaches its self-induced lysis threshold.
 * **T6SS Firing Events:**
     * A **bright green sector** emanating from an attacking cell indicates a "precise hit" that can deliver toxins.
     * A **darker, semi-transparent green sector** (Attacker cells only) indicates a "missed" T6SS firing attempt that resets the cooldown but delivers no toxins.
 * **CPRG Reporter (Arena Background Color):** The background color changes from white towards **magenta** as the amount of converted CPRG (released from lysed Prey) increases.
 * **Prey AI Field:** A faint, transparent blue overlay on empty hexes visualizes the concentration of the Prey autoinducer signal. The overlay becomes more opaque as the concentration crosses key thresholds: Attacker's attraction limit and a fraction of the theoretical maximum AI level. This helps visualize areas attractive to Attackers.
+* **Prey Toxin Field:** A transparent green overlay on empty hexes visualizes the concentration of the Prey-derived toxins (bacteriocins NL and L) in the environment. The overlay becomes more opaque as the local toxin concentration increases, helping visualize the chemical defensive barrier created by Prey cells.
 * **Empty Spaces:** Unoccupied hexes are rendered with a light gray outline.
 * **Hex Inspector:** This panel provides detailed, real-time data for the hex under the mouse cursor, including coordinates, local AI concentrations, cell ID and type, cooldowns, toxin levels, and special states like `QS P(active)` (for Attackers) or `Capsule Layers` (for Prey).
 
@@ -168,8 +171,8 @@ This section of the control panel is tabbed for **Attacker**, **Prey**, and **De
 * **Initial Count:** The number of cells to place when using `Place Cells Randomly`.
 * **Replication (min):** The mean and range for the cell's standard division time. Set the mean to -1 to disable normal replication.
 * **Movement Behavior:** Controls for movement cooldown, probability, and directional strategy, including Attacker chemotaxis towards Prey autoinducer.
-* **T6SS / Defense:** Parameters governing T6SS firing behavior (Attacker), retaliation and random firing (Defender), or capsule synthesis (Prey).
-* **Sensitivity & Resistance:** Thresholds for toxin-induced death/lysis and chances to resist attacks from other cell types.
+* **T6SS / Defense / Toxin Production:** Parameters governing T6SS firing behavior (Attacker), retaliation and random firing (Defender), or capsule synthesis and toxin production/release parameters (Prey).
+* **Sensitivity & Resistance:** Thresholds for toxin-induced death/lysis (including sensitivity thresholds and absorption rates for environmental Prey toxins) and chances to resist attacks from other cell types.
 * **Replication Reward (Attacker & Defender Only):**
     * **`Lyses per Reward`**: The number of successful lyses a cell must cause to earn a replication reward. Set to `0` to disable this feature.
     * **`Reward Repl. CD (min)`**: The cooldown value (or reduction) applied as a reward. A mean of `-1` makes the rewarded replication immediate.
@@ -199,15 +202,18 @@ Each cell in the simulation is an object with properties tracking its state and 
     * If the `Reward Repl. CD (min)` mean value is set to **-1**, the reward is immediate, setting the `replicationCooldown` to 0.
     * _Example:_ A Attacker has its normal replication disabled (`Mean = -1`). Its reward settings are `Lyses per Reward = 2` and `Reward Repl. CD = 10 ± 2 min`. The Attacker lyses its first target; its `lyses` count is now 1. Later, it lyses a second target, bringing its count to 2. This meets the threshold and triggers a reward. Since its `replicationCooldown` was `Infinity`, a new cycle is initiated with a cooldown between 8 and 12 minutes.
 * **Toxin Accumulation & Cell Fate:**
-    * Cells maintain counters for `accumulatedNonLyticToxins` and `accumulatedLyticToxins` from each attacker type (Attacker or Defender).
-    * When a cell is hit by toxins:
+    * Cells accumulate damage from two distinct sources: direct Type VI Secretion System (T6SS) contact attacks (from Attackers or Defenders) and environmental toxin absorption (from Prey-derived bacteriocins in the grid).
+    * **T6SS Contact Attacks (Attacker & Defender T6SS):**
         1.  **Prey Capsule Resistance (Prey Only):** If the capsule system is enabled and the target is a Prey cell with active capsule layers, there's a chance the attack is rendered harmless. The maximum possible protection (e.g., 100%, 80%, etc.) is user-definable via the **'Max Protection (%)'** setting. Each of the 5 possible layers provides 1/5th of this user-defined maximum. If the attack is negated by the capsule, subsequent resistance and toxin accumulation steps are skipped for that hit.
         2.  **Innate Resistance Check (Prey & Defenders):** If the attack was not negated by a capsule, Prey and Defenders then have a chance to resist NL and L toxins independently (based on `% Resistance` settings against the specific attacker type). If resisted, no toxins of that type are added from that hit component. Attackers do not have a configurable `% Resistance` setting against Defender attacks in the current model; they rely solely on their fixed sensitivity thresholds to determine the effects of accumulated toxins.
         3.  **Toxin Accumulation:** If not resisted by a capsule or innate resistance, the delivered toxin units are added to the cell's accumulators.
-        4.  **State Update (`updateStateBasedOnToxins`):**
-            * **Non-Lytic Death:** If `accumulatedNonLyticToxins` ≥ `NL Die Thresh.`, the cell becomes `isDead = true`. It stops replicating and firing but remains on the grid.
-            * **Lytic Lysis:** If `accumulatedLyticToxins` ≥ `L Lyse Thresh.`, the cell becomes `isDead = true` and `isLysing = true`. A `lysisTimer` is initiated. The duration of this timer is calculated as `ceil(baseLysisDelay / effectiveLyticUnits)`, where `effectiveLyticUnits` is the actual accumulated lytic toxin (ensuring more toxin leads to faster lysis).
-            * When `lysisTimer` reaches 0, or if lysis is immediate (e.g., delay calculates to 0), the cell becomes `isEffectivelyGone`. At this point, if it's a Prey cell, it releases its `lacZPerPrey` units. `isEffectivelyGone` cells are removed from active simulation and counts in the next step's cleanup phase.
+    * **Environmental Toxin Absorption (Prey Bacteriocins):**
+        * Live Attacker and Defender cells absorb a percentage of Prey-derived toxins (NL and L) from their local grid cell at each step (defined by `% Absorption` settings).
+        * They check their specific `% Resistance` against these absorbed toxins. If not resisted, the toxins accumulate in the cell.
+    * **State Update (`updateStateBasedOnToxins`):**
+        * **Non-Lytic Death:** If accumulated NL toxins (from either contact hits or environmental absorption) $\ge$ `NL Die Thresh.`, the cell becomes `isDead = true`. It stops replicating and firing but remains on the grid.
+        * **Lytic Lysis:** If accumulated L toxins $\ge$ `L Lyse Thresh.`, the cell becomes `isDead = true` and `isLysing = true`. A `lysisTimer` is initiated. The duration of this timer is calculated as `ceil(baseLysisDelay / effectiveLyticUnits)`, where `effectiveLyticUnits` is the actual accumulated lytic toxin (ensuring more toxin leads to faster lysis).
+        * When `lysisTimer` reaches 0, or if lysis is immediate (e.g., delay calculates to 0), the cell becomes `isEffectivelyGone`. At this point, if it's a Prey cell, it releases its `lacZPerPrey` units. `isEffectivelyGone` cells are removed from active simulation and counts in the next step's cleanup phase.
     * _Example:_ A Prey cell (L Lyse Thresh: 5, Base Lysis Delay: 20min) is hit by a Attacker delivering 3 Lytic units. Prey accumulates 3 L units. Later, another hit delivers 3 L units. Total L units = 6. Since 6 ≥ 5, Prey becomes `isLysing`. `lysisTimer` starts, e.g., `ceil(20 / 6) = 4` minutes. After 4 steps, it becomes `isEffectivelyGone`.
 
 #### Cell Movement
@@ -286,7 +292,7 @@ A cell's initial random state (e.g., its starting `replicationCooldown`) is set 
     * `NL Die Thresh.` and `L Lyse Thresh.`: The cumulative Prey toxin units (absorbed from the grid) required to kill (growth arrest) or lyse the Attacker cell.
 
 ### 6.3. Prey Cells
-* **Role:** Primary targets for Attackers and Defenders. Can replicate.
+* **Role:** Primary targets for Attackers and Defenders. They can replicate, protect themselves via a capsule system, and actively synthesize/release their own bacteriocin toxins to damage or compete against rival cell types.
 * **Sensitivity & Resistance:** Have distinct sets of parameters for damage from Attackers and damage from Defenders:
     * `NL Die Thresh.`, `L Lyse Thresh.`, `Base Lysis Delay`.
     * `NL Resist. %`, `L Resist. %`: Chance to completely negate incoming NL or L toxins from a specific hit.
@@ -421,9 +427,15 @@ Each simulation step (representing one minute) executes the following sequence o
         * For each pending move, if the target hex is still empty (not taken by another cell in this step's movement phase), the cell is moved.
         * Cells cannot move into hexes occupied by other cells (including barriers) or hexes that become occupied by another moving cell in the same step.
     * Update cell positions in the main simulation state (`simState.cells`).
-8.  **Quorum Sensing Update Phase:**
-    * **Production:** Live Attackers add autoinducer (AI) to their current hex's concentration in the `aiGrid`.
-    * **Diffusion & Degradation:** A new `aiGrid` is calculated for the next step. For each hex, AI diffuses to/from its neighbors based on concentration gradients and the `AI Diffusion Rate`. The total AI in each hex is then reduced by the `AI Degradation Rate %`.
+8.  **Quorum Sensing & Prey Toxin Update Phase:**
+    * **Production:**
+        * Live Attacker cells add autoinducer (AI) to the `attackerAiGrid`.
+        * Live Prey cells add autoinducer (AI) to the `preyAiGrid`.
+        * For Prey cells in *Continuous Release* mode, toxins are added to `preyToxinNLGrid` and `preyToxinLGrid` at each step. (For *Lysis-Dependent Release*, toxins are stored internally and dumped onto the grids upon cell lysis).
+    * **Diffusion & Degradation:**
+        * New grids (`attackerAiGrid`, `preyAiGrid`, `preyToxinNLGrid`, and `preyToxinLGrid`) are calculated for the next step.
+        * For each grid, the respective signal/toxin diffuses to/from neighboring hexes based on concentration gradients and the configured `Diffusion Rate`.
+        * The concentrations are then reduced by the respective `Degradation Rate %`.
 9.  **Update Statistics & Reporter:**
     * Update cumulative counters for firings, kills, and lyses using the per-step values.
     * **CPRG Conversion:**
