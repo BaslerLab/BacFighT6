@@ -33,7 +33,7 @@
                 </a>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 8.0 - 31.05.2026). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 8.1 - 1.6.2026). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 - 3.5.<br>
             </p>
         </header>
@@ -533,10 +533,14 @@
                         </div>
                         <div class="grid grid-cols-2 gap-x-3 gap-y-2 items-end mb-2">
                             <div>
-                                <label for="preyToxinLysisThresholdInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Threshold:
-                                    <span class="tooltip-content">Total internal toxin units (NL + L) required to cause lysis in the producing cell. Default is 1000.</span>
+                                <label class="block text-sm font-medium text-gray-700 tooltip-trigger">Lysis Threshold:
+                                    <span class="tooltip-content">Total internal toxin units (NL + L) required to cause lysis in the producing cell. A random threshold is chosen for each cell within this range. Defaults: 200 - 1000.</span>
                                 </label>
-                                <input type="number" id="preyToxinLysisThresholdInput" value="1000" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <div class="flex items-center space-x-1 mt-1">
+                                    <input type="number" id="preyToxinLysisThresholdMinInput" value="200" min="1" class="block w-full rounded-md border-gray-300 shadow-sm">
+                                    <span class="text-gray-500 font-medium">-</span>
+                                    <input type="number" id="preyToxinLysisThresholdMaxInput" value="1000" min="1" class="block w-full rounded-md border-gray-300 shadow-sm">
+                                </div>
                             </div>
                             <div>
                                 <label for="preyToxinStartProbabilityInput" class="block text-sm font-medium text-gray-700 tooltip-trigger">Stochastic Start Prob. (%/min):
@@ -918,7 +922,7 @@
 
 
 				<div id="inspectorContainer" class="bg-white p-4 rounded-xl shadow-lg w-full">
-					<div id="hoverInfoPanel" class="text-xs space-y-1 min-h-[100px] max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar pr-1">
+					<div id="hoverInfoPanel" class="text-xs min-h-[100px] max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar pr-1">
 						Mouse over the arena ...
 					</div>
 				</div>
@@ -1082,7 +1086,7 @@
                     <p class="text-sm">
                         Prey are the primary targets but can have their own defense mechanisms:
                         <br> &bull; <strong>Capsule Synthesis:</strong> If enabled, Prey can produce up to 5 protective capsule layers, reducing damage from T6SS attacks. Synthesis can be constitutive (always on) or dependent on their own AI concentration.
-                        <br> &bull; <strong>Toxin Production & Release:</strong> Prey can synthesize their own Bacteriocin NL and L toxins. They can release them in <em>Continuous Mode</em> (secreted directly into the hex grid) or in <em>Lysis-Dependent Mode</em> (accumulated internally until a threshold is reached, causing the cell to lyse and release the toxins; while producing, division is arrested, and upon replication, internal toxins are split 50/50 and rounded down). Firing can be standard/constitutive, QS-regulated (reversible if AI drops), or Attacker NL toxin-induced (requires attacker hits above a threshold).
+                        <br> &bull; <strong>Toxin Production & Release:</strong> Prey can synthesize their own Bacteriocin NL and L toxins. They can release them in <em>Continuous Mode</em> (secreted directly into the hex grid) or in <em>Lysis-Dependent Mode</em> (accumulated internally until a threshold is reached, causing the cell to lyse and release the toxins; this threshold is a random value within a configured range chosen exactly once upon first activation. While producing, division is arrested, and upon replication, internal toxins are split 50/50 and rounded down). Firing can be standard/constitutive, QS-regulated (reversible if AI drops), or Attacker NL toxin-induced (requires attacker hits above a threshold).
                         <br> &bull; <strong>Resistance:</strong> Prey have separate resistance percentages and toxin sensitivity thresholds against attacks from Attackers and Defenders.
                         <br> &bull; <strong>Reporter Release:</strong> Upon lysis, Prey release a set amount of LacZ enzyme, driving the CPRG color change.
                     </p>

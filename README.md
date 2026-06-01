@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 8.0 (31.05.2026)
+**Version:** 8.1 (1.6.2026)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 - 3.5.
 
@@ -305,7 +305,7 @@ A cell's initial random state (e.g., its starting `replicationCooldown`) is set 
 * **Toxin Production & Release:** Prey cells can synthesize their own bacteriocin toxins (Bacteriocin NL and L) to damage or compete against rival cell types.
     * **Release Modes:**
         * *Continuous (Standard) Release:* Toxins are secreted directly and continuously into the local grids (`preyToxinNLGrid` and `preyToxinLGrid`) at each step.
-        * *Lysis-Dependent Release:* Toxins are accumulated internally (`internalPreyToxinNL` and `internalPreyToxinL`). Once the sum of accumulated internal toxins reaches the **Lysis Threshold**, the cell lyses (dies and bursts), dumping its accumulated internal toxins onto the hex grid. Toxin-producing cells halt cell division while producing. If a cell divides (if production is inactive), any accumulated internal toxins are split equally (halved and rounded down to the nearest integer) between the parent and daughter cells. If a cell is lysed by attackers' T6SS before hitting its own threshold, its accumulated internal toxins are still successfully released.
+        * *Lysis-Dependent Release:* Toxins are accumulated internally (`internalPreyToxinNL` and `internalPreyToxinL`). Once the sum of accumulated internal toxins reaches the cell's individual **Lysis Threshold** (a random value chosen within a configured range exactly once when the cell is first activated as a producer), the cell lyses (dies and bursts), dumping its accumulated internal toxins onto the hex grid. Toxin-producing cells halt cell division while producing. If a cell divides (if production is inactive), any accumulated internal toxins are split equally (halved and rounded down to the nearest integer) between the parent and daughter cells. If a cell is lysed by attackers' T6SS before hitting its own threshold, its accumulated internal toxins are still successfully released.
         * *Lysis Visualization:* Prey cells with accumulated internal toxins are drawn with a green inner circle that darkens as they approach the lysis threshold.
     * **Activation Mechanisms (Trigger Modes):**
         * *Standard / Constitutive:* Production is constitutively active (or governed stochastically by the **Stochastic Start Prob.** if lysis mode is active).
