@@ -4294,7 +4294,12 @@ async function runSimulationStep() {
 				if (parentCell) {
 					parentCell.resetReplicationCooldown();
 					if (parentCell.type === 'prey') {
-						daughter.isPreyToxinProducer = parentCell.isPreyToxinProducer;
+						if (simState.config.prey.toxinAttackerTriggered) {
+							// If activated by attacker NL toxins, the daughter starts as a non-producer since it inherits 0 attacker toxins
+							daughter.isPreyToxinProducer = false;
+						} else {
+							daughter.isPreyToxinProducer = parentCell.isPreyToxinProducer;
+						}
 						if (daughter.isPreyToxinProducer && simState.config.prey.releaseOnLysis) {
 							if (daughter.preyToxinLysisThreshold === null) {
 								const minThresh = simState.config.prey.lysisThresholdMin || 200;
