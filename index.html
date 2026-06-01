@@ -982,7 +982,7 @@
         <div class="modal-body">
 
             <h4>Summary</h4>
-            <p>This tool simulates dynamic, T6SS-mediated interactions between up to three bacterial populations: <strong>Attackers</strong> (red), <strong>Prey</strong> (blue), and <strong>Defenders</strong> (yellow-orange). Cells exist on a hexagonal grid where they can move, replicate, and compete for space based on a wide range of user-configurable parameters. The simulation proceeds in discrete one-minute time steps.</p>
+            <p>This tool simulates dynamic, T6SS-mediated interactions between up to three bacterial populations: <strong>Attackers</strong> (red), <strong>Prey</strong> (blue), and <strong>Defenders</strong> (yellow-orange). Cells exist on a hexagonal grid where they can move, replicate, and compete for space based on a wide range of user-configurable parameters. While Attackers and Defenders utilize a contact-dependent Type VI Secretion System (T6SS) to deliver toxins, Prey cells can defend themselves by producing and releasing diffusible bacteriocin toxins into the environment. The simulation proceeds in discrete one-minute time steps.</p>
 
             <hr class="my-3">
 
@@ -1011,6 +1011,7 @@
                 <li><strong>CPRG Reporter:</strong> The arena's background color shifts from white towards magenta as lysed Prey cells release LacZ enzyme, which converts the CPRG substrate.</li>
 			    <li><strong>Prey AI Field:</strong> A blue overlay on empty hexes visualizes the concentration of the Prey autoinducer signal. The overlay becomes more opaque as the concentration crosses key thresholds (the Attacker's attraction limit and a fraction of the theoretical maximum AI level).
 				</li>
+				<li><strong>Prey Toxin Field:</strong> A transparent green overlay on empty hexes visualizes the concentration of the Prey-derived toxins (bacteriocins NL and L) in the environment. The overlay becomes more opaque as the local toxin concentration increases, helping visualize the chemical defensive barrier created by Prey cells.</li>
             </ul>
 
 		</ul>
