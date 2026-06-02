@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 6.4 (26.11.2025)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 8.2 (2.6.2026)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -54,12 +54,12 @@ const AppConfig = {
 		"Attacker_Sensitivity_NL_Units_to_Die": 5,
 		"Attacker_Sensitivity_L_Units_to_Lyse": 5,
 		"Attacker_Sensitivity_Base_Lysis_Delay_min": 20,
-		"Attacker_Resistance_vs_Prey_Toxin_NL_Percent": 50,
-		"Attacker_Resistance_vs_Prey_Toxin_L_Percent": 50,
+		"Attacker_Resistance_vs_Prey_Toxin_NL_Percent": 25,
+		"Attacker_Resistance_vs_Prey_Toxin_L_Percent": 25,
 		"Attacker_Prey_Toxin_NL_Threshold": 5,
 		"Attacker_Prey_Toxin_L_Threshold": 5,
-		"Attacker_Prey_Toxin_NL_Absorption_Rate_Percent": 10,
-		"Attacker_Prey_Toxin_L_Absorption_Rate_Percent": 10,
+		"Attacker_Prey_Toxin_NL_Absorption_Rate_Percent": 20,
+		"Attacker_Prey_Toxin_L_Absorption_Rate_Percent": 20,
 		"Attacker_Movement_Cooldown_Min_min": 5,
 		"Attacker_Movement_Cooldown_Max_min": 10,
 		"Attacker_Movement_Probability_Percent": 0,
@@ -96,10 +96,10 @@ const AppConfig = {
 		"Prey_QS_Production_Rate_per_min": 0,
 		"Prey_QS_Degradation_Rate_Percent_per_min": 2,
 		"Prey_QS_Diffusion_Rate": 0.05,
-		"Prey_Toxin_NL_Production_Rate_per_min": 0,
+		"Prey_Toxin_NL_Production_Rate_per_min": 10,
 		"Prey_Toxin_NL_Degradation_Rate_Percent_per_min": 2,
 		"Prey_Toxin_NL_Diffusion_Rate": 0.01,
-		"Prey_Toxin_L_Production_Rate_per_min": 0,
+		"Prey_Toxin_L_Production_Rate_per_min": 10,
 		"Prey_Toxin_L_Degradation_Rate_Percent_per_min": 2,
 		"Prey_Toxin_L_Diffusion_Rate": 0.01,
 		"Prey_Toxin_Trigger_Mode": "standard",
@@ -108,9 +108,8 @@ const AppConfig = {
 		"Prey_Toxin_Release_On_Lysis": false,
 		"Prey_Toxin_Lysis_Threshold_Min": 200,
 		"Prey_Toxin_Lysis_Threshold_Max": 1000,
-		"Prey_Toxin_Start_Probability_Percent": 0.1,
+		"Prey_Toxin_Start_Probability_Percent": 0,
 		"Prey_Toxin_Initiation_Threshold": 2,
-		"Prey_Toxin_Initiation_Chance_Percent": 10.0,
 		"Prey_Capsule_System_Enabled": false,
 		"Prey_Capsule_Max_Protection_Percent": 100,
 		"Prey_Capsule_Derepression_Midpoint_K": -1,
@@ -138,10 +137,10 @@ const AppConfig = {
 		"Defender_Sensitivity_vs_Att_Base_Lysis_Delay_min": 40,
 		"Defender_Resistance_vs_Att_NL_Percent": 50,
 		"Defender_Resistance_vs_Att_L_Percent": 50,
-		"Defender_Resistance_vs_Prey_Toxin_NL_Percent": 50,
-		"Defender_Resistance_vs_Prey_Toxin_L_Percent": 50,
-		"Defender_Prey_Toxin_NL_Threshold": 10,
-		"Defender_Prey_Toxin_L_Threshold": 10,
+		"Defender_Resistance_vs_Prey_Toxin_NL_Percent": 90,
+		"Defender_Resistance_vs_Prey_Toxin_L_Percent": 90,
+		"Defender_Prey_Toxin_NL_Threshold": 20,
+		"Defender_Prey_Toxin_L_Threshold": 20,
 		"Defender_Prey_Toxin_NL_Absorption_Rate_Percent": 10,
 		"Defender_Prey_Toxin_L_Absorption_Rate_Percent": 10,
 		"Defender_Movement_Cooldown_Min_min": 5,
@@ -240,6 +239,9 @@ const AppConfig = {
 			"Defender_Resistance_vs_Att_NL_Percent": 80,
 			"Defender_Resistance_vs_Att_L_Percent": 80,
 			"CPRG_LacZ_kcat_Units_per_min_per_LacZ": 0,
+		},
+		'preytoxin': {
+			"Defender_Initial_Count": 0
 		}
     },
     
@@ -292,9 +294,19 @@ const AppConfig = {
         brPreyMovement: false,
         brPreyAi: true,
         brPreyCapsule: true,
+        brPreyToxin: true,
+        brPreyToxinStartProb: 0.03,
         brDefMovement: true,
         brDefSelectivity: 2,
         brDefPredation: true,
+        preyToxinArenaRadius: 30,
+        preyToxinFillPercent: 10,
+        preyToxinAttPreyRatioIndex: 4,
+        preyToxinLysis: 'yes',
+        preyToxinStartProb: 0.1,
+        preyToxinNLProd: 10,
+        preyToxinLProd: 10,
+        preyToxinTriggerMode: 'standard',
     },
 
     // --- UI Preset Mappings ---
@@ -384,13 +396,13 @@ const AppConfig = {
                 'off': { "Attacker_Replication_Reward_Lyses_per_Reward": 0 }
             },
             handler: (config) => {
+                updateInputElement('arenaGridRadiusInput', config.movementArenaRadius);
                 const ratio = AppConfig.ui.RATIO_VALUES[config.movementAttPreyRatioIndex];
                 calculateAndSetCellCounts(config.movementFillPercent, ratio, false);
                 let dynamicSettings = AppConfig.presetLogic.movement.predation[config.movementPredation] || {};
                 dynamicSettings["Prey_QS_Production_Rate_per_min"] = config.movementPreyAiProd;
                 dynamicSettings["Attacker_Movement_Probability_Percent"] = config.movementAttMoveProb;
                 dynamicSettings["Attacker_Movement_Directionality_Percent"] = config.movementAttMoveDir;
-                dynamicSettings["Arena_Radius"] = config.movementArenaRadius;
                 return dynamicSettings;
             }
         },
@@ -405,6 +417,20 @@ const AppConfig = {
                     "Prey_QS_Production_Rate_per_min": config.preyQSProd,
                     "Prey_Capsule_Derepression_Midpoint_K": config.preyQSK,
                     "Prey_Capsule_Cooperativity_n": config.preyQSN
+                };
+            }
+        },
+        'preytoxin': {
+            handler: (config) => {
+                updateInputElement('arenaGridRadiusInput', config.preyToxinArenaRadius);
+                const ratio = AppConfig.ui.RATIO_VALUES[config.preyToxinAttPreyRatioIndex];
+                calculateAndSetCellCounts(config.preyToxinFillPercent, ratio, false);
+                return {
+                    "Prey_Toxin_Release_On_Lysis": config.preyToxinLysis === 'yes',
+                    "Prey_Toxin_Start_Probability_Percent": config.preyToxinStartProb,
+                    "Prey_Toxin_NL_Production_Rate_per_min": config.preyToxinNLProd,
+                    "Prey_Toxin_L_Production_Rate_per_min": config.preyToxinLProd,
+                    "Prey_Toxin_Trigger_Mode": config.preyToxinTriggerMode
                 };
             }
         },
@@ -448,6 +474,21 @@ const AppConfig = {
                 capsuleAiLink: { // This holds the linked logic
                     'true': { "Prey_Capsule_Derepression_Midpoint_K": 5000 }, // AI is ON
                     'false': { "Prey_Capsule_Derepression_Midpoint_K": -1 } // AI is OFF
+                },
+                toxin: {
+                    'true': {
+                        "Prey_Toxin_Release_On_Lysis": true,
+                        "Prey_Toxin_NL_Production_Rate_per_min": 20,
+                        "Prey_Toxin_L_Production_Rate_per_min": 20,
+                        "Prey_Toxin_Trigger_Mode": "standard"
+                    },
+                    'false': {
+                        "Prey_Toxin_Release_On_Lysis": true,
+                        "Prey_Toxin_Start_Probability_Percent": 0,
+                        "Prey_Toxin_NL_Production_Rate_per_min": 0,
+                        "Prey_Toxin_L_Production_Rate_per_min": 0,
+                        "Prey_Toxin_Trigger_Mode": "standard"
+                    }
                 }
             },
             defender: {
@@ -481,6 +522,11 @@ const AppConfig = {
                 Object.assign(settingsToApply, logic.prey.movement[config.brPreyMovement]);
                 Object.assign(settingsToApply, logic.prey.ai[config.brPreyAi]);
                 Object.assign(settingsToApply, logic.prey.capsule[config.brPreyCapsule]);
+                Object.assign(settingsToApply, logic.prey.toxin[config.brPreyToxin]);
+                
+                if (config.brPreyToxin) {
+                    settingsToApply["Prey_Toxin_Start_Probability_Percent"] = config.brPreyToxinStartProb;
+                }
                 
                 if (config.brPreyCapsule) {
                     const aiLinkLogic = logic.prey.capsuleAiLink[config.brPreyAi];

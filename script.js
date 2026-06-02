@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 8.11 (1.6.2026)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 8.2 (2.6.2026)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -151,7 +151,6 @@
 	const preyToxinLysisThresholdMaxInput = document.getElementById('preyToxinLysisThresholdMaxInput');
 	const preyToxinStartProbabilityInput = document.getElementById('preyToxinStartProbabilityInput');
 	const preyToxinInitiationThresholdInput = document.getElementById('preyToxinInitiationThresholdInput');
-	const preyToxinInitiationChanceInput = document.getElementById('preyToxinInitiationChanceInput');
 	// Prey movement
 	const preyMoveCooldownMinInput = document.getElementById('preyMoveCooldownMinInput');
 	const preyMoveCooldownMaxInput = document.getElementById('preyMoveCooldownMaxInput');
@@ -333,7 +332,21 @@
 	const attackerQSAttPreyRatioSlider = document.getElementById('attackerQSAttPreyRatioSlider');
 	const attackerQSRatioDisplay = document.getElementById('attackerQSRatioDisplay');
 
-	// Preset Group 9: Battle Royale
+	// Preset Group 9: Prey Toxin Production
+	const preyToxinArenaRadiusSlider = document.getElementById('preyToxinArenaRadiusSlider');
+	const preyToxinArenaRadiusDisplay = document.getElementById('preyToxinArenaRadiusDisplay');
+	const preyToxinFillSlider = document.getElementById('preyToxinFillSlider');
+	const preyToxinFillDisplay = document.getElementById('preyToxinFillDisplay');
+	const preyToxinAttPreyRatioSlider = document.getElementById('preyToxinAttPreyRatioSlider');
+	const preyToxinRatioDisplay = document.getElementById('preyToxinRatioDisplay');
+	const preyToxinStartProbabilitySlider = document.getElementById('preyToxinStartProbabilitySlider');
+	const preyToxinStartProbabilityDisplay = document.getElementById('preyToxinStartProbabilityDisplay');
+	const preyToxinNLProdSlider = document.getElementById('preyToxinNLProdSlider');
+	const preyToxinNLProdDisplay = document.getElementById('preyToxinNLProdDisplay');
+	const preyToxinLProdSlider = document.getElementById('preyToxinLProdSlider');
+	const preyToxinLProdDisplay = document.getElementById('preyToxinLProdDisplay');
+
+	// Preset Group 10: Battle Royale
 	const brArenaRadiusSlider = document.getElementById('brArenaRadiusSlider');
 	const brArenaRadiusDisplay = document.getElementById('brArenaRadiusDisplay');
 	const brFillSlider = document.getElementById('brFillSlider');
@@ -358,6 +371,9 @@
 	const brPreyMovementCheckbox = document.getElementById('brPreyMovementCheckbox');
 	const brPreyAiCheckbox = document.getElementById('brPreyAiCheckbox');
 	const brPreyCapsuleCheckbox = document.getElementById('brPreyCapsuleCheckbox');
+	const brPreyToxinCheckbox = document.getElementById('brPreyToxinCheckbox');
+	const brPreyToxinStartProbabilitySlider = document.getElementById('brPreyToxinStartProbabilitySlider');
+	const brPreyToxinStartProbabilityDisplay = document.getElementById('brPreyToxinStartProbabilityDisplay');
 	const brDefMovementCheckbox = document.getElementById('brDefMovementCheckbox');
 	const brDefPredationCheckbox = document.getElementById('brDefPredationCheckbox');
 	
@@ -472,7 +488,6 @@
 		"Prey_Toxin_Lysis_Threshold_Max": "preyToxinLysisThresholdMaxInput",
 		"Prey_Toxin_Start_Probability_Percent": "preyToxinStartProbabilityInput",
 		"Prey_Toxin_Initiation_Threshold": "preyToxinInitiationThresholdInput",
-		"Prey_Toxin_Initiation_Chance_Percent": "preyToxinInitiationChanceInput",
 		"Attacker_Resistance_vs_Prey_Toxin_NL_Percent": "attackerResistanceVsPreyToxinNLInput",
 		"Attacker_Resistance_vs_Prey_Toxin_L_Percent": "attackerResistanceVsPreyToxinLInput",
 		"Attacker_Prey_Toxin_NL_Threshold": "attackerThresholdVsPreyToxinNLInput",
@@ -519,7 +534,8 @@
 		'kills', 'lyses',
 		'claimedReplicationRewards',
 		'internalPreyToxinNL', 'internalPreyToxinL', 'isPreyToxinProducer',
-		'preyToxinLysisThreshold'
+		'preyToxinLysisThreshold',
+		'continuousToxinProduced'
 	];
 
 	let rng; // This will hold our PRNG instance
@@ -1096,12 +1112,7 @@
 			this.internalPreyToxinL = 0;
 			this.isPreyToxinProducer = false;
 			this.preyToxinLysisThreshold = null;
-			if (typeof simState !== 'undefined' && simState.config && simState.config.prey) {
-				const isQs = simState.config.prey.toxinQS && simState.config.prey.toxinQS.isRegulated;
-				const isToxinTriggered = simState.config.prey.toxinAttackerTriggered;
-				const isLysis = simState.config.prey.releaseOnLysis;
-				this.isPreyToxinProducer = (!isQs && !isToxinTriggered && !isLysis);
-			}
+			this.continuousToxinProduced = 0;
 
 			if (type === 'barrier') {
 				// Barrier-specific overrides. This part is simple and has no RNG.
@@ -1310,7 +1321,7 @@
 		    
 		    if (this.replicationCooldown === Infinity) return false;
 			if (this.isDead || this.isLysing || this.isEffectivelyGone) return false;
-			if (this.type === 'prey' && simState.config.prey.releaseOnLysis && this.isPreyToxinProducer) return false; // Stop dividing if producing toxin in lysis-dependent mode
+			if (this.type === 'prey' && this.isPreyToxinProducer) return false; // Stop dividing if producing toxin (both lysis and continuous release modes)
 			return this.replicationCooldown <= 0;
 		}
 		
@@ -1697,7 +1708,6 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		simState.config.prey.lysisThresholdMax = parseInt(preyToxinLysisThresholdMaxInput.value) || 1000;
 		simState.config.prey.startProbability = parseFloat(preyToxinStartProbabilityInput.value) / 100;
 		simState.config.prey.toxinInitiationThreshold = parseInt(preyToxinInitiationThresholdInput.value) || 2;
-		simState.config.prey.toxinInitiationChance = (parseFloat(preyToxinInitiationChanceInput.value) || 10.0) / 100;
 		simState.config.prey.capsule = {
 			isEnabled: preyCapsuleSystemEnabledCheckbox.checked,
 			maxProtection: parseInt(preyCapsuleMaxProtectionInput.value),
@@ -1769,12 +1779,11 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		if (simState.simulationStepCount === 0 && simState.cells) {
 			simState.cells.forEach(cell => {
 				if (cell.type === 'prey') {
-					const isQs = simState.config.prey.toxinQS && simState.config.prey.toxinQS.isRegulated;
-					const isToxinTriggered = simState.config.prey.toxinAttackerTriggered;
-					const isLysis = simState.config.prey.releaseOnLysis;
-					cell.isPreyToxinProducer = (!isQs && !isToxinTriggered && !isLysis);
+					cell.isPreyToxinProducer = false;
 					cell.internalPreyToxinNL = 0;
 					cell.internalPreyToxinL = 0;
+					cell.continuousToxinProduced = 0;
+					cell.preyToxinLysisThreshold = null;
 				}
 			});
 		}
@@ -2113,18 +2122,25 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 				if (cell.type !== 'barrier') {
 					targetCtx.fill();
 				}
-			} else if (cell.type === 'prey' && simState.config.prey.releaseOnLysis) {
-				const totalInternalToxin = (cell.internalPreyToxinNL || 0) + (cell.internalPreyToxinL || 0);
-				if (totalInternalToxin > 0) {
-					const thresh = cell.preyToxinLysisThreshold || 1000;
-					const progress = Math.min(1.0, totalInternalToxin / thresh);
-					const r = Math.round(187 + (21 - 187) * progress);
-					const g = Math.round(247 + (128 - 247) * progress);
-					const b = Math.round(208 + (61 - 208) * progress);
+			} else if (cell.type === 'prey') {
+				if (simState.config.prey.releaseOnLysis) {
+					const totalInternalToxin = (cell.internalPreyToxinNL || 0) + (cell.internalPreyToxinL || 0);
+					if (totalInternalToxin > 0) {
+						const thresh = cell.preyToxinLysisThreshold || 1000;
+						const progress = Math.min(1.0, totalInternalToxin / thresh);
+						const r = Math.round(187 + (21 - 187) * progress);
+						const g = Math.round(247 + (128 - 247) * progress);
+						const b = Math.round(208 + (61 - 208) * progress);
 
+						targetCtx.beginPath();
+						targetCtx.arc(x, y, visualHexRadius / 2.5, 0, 2 * Math.PI, false);
+						targetCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+						targetCtx.fill();
+					}
+				} else if (cell.isPreyToxinProducer) {
 					targetCtx.beginPath();
 					targetCtx.arc(x, y, visualHexRadius / 2.5, 0, 2 * Math.PI, false);
-					targetCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+					targetCtx.fillStyle = '#22c55e'; // Mid-green
 					targetCtx.fill();
 				}
 			}
@@ -2419,14 +2435,13 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
                 cell.resetRandomFireCooldown(true); // isInitial = true
             }
             if (cell.type === 'prey') {
-                const isQs = simState.config.prey.toxinQS && simState.config.prey.toxinQS.isRegulated;
-                const isToxinTriggered = simState.config.prey.toxinAttackerTriggered;
-                const isLysis = simState.config.prey.releaseOnLysis;
-                cell.isPreyToxinProducer = (!isQs && !isToxinTriggered && !isLysis);
+                cell.isPreyToxinProducer = false;
                 cell.internalPreyToxinNL = 0;
                 cell.internalPreyToxinL = 0;
+                cell.continuousToxinProduced = 0;
                 cell.accumulatedNonLyticToxins = 0;
                 cell.accumulatedLyticToxins = 0;
+                cell.preyToxinLysisThreshold = null;
             }
         });
 
@@ -3219,6 +3234,12 @@ stopButton.addEventListener('click', () => {
 		} else if (button.dataset.action === 'selectMovementPredation') {
 			simState.activePresetConfig.movementPredation = button.dataset.type;
 			setActiveSubtypeButton(button);
+		} else if (button.dataset.action === 'selectPreyToxinLysis') {
+			simState.activePresetConfig.preyToxinLysis = button.dataset.type;
+			setActiveSubtypeButton(button);
+		} else if (button.dataset.action === 'selectPreyToxinTriggerMode') {
+			simState.activePresetConfig.preyToxinTriggerMode = button.dataset.type;
+			setActiveSubtypeButton(button);
 		}
 	});
 
@@ -3327,6 +3348,29 @@ stopButton.addEventListener('click', () => {
 				}
 			}
 			
+			else if (group === 'preytoxin') {
+				const value = parseFloat(slider.value);
+				if (slider.id === 'preyToxinArenaRadiusSlider') {
+					simState.activePresetConfig.preyToxinArenaRadius = parseInt(value);
+					preyToxinArenaRadiusDisplay.textContent = value;
+				} else if (slider.id === 'preyToxinFillSlider') {
+					simState.activePresetConfig.preyToxinFillPercent = parseInt(value);
+					updateSliderDisplay(slider, preyToxinFillDisplay, null);
+				} else if (slider.id === 'preyToxinAttPreyRatioSlider') {
+					simState.activePresetConfig.preyToxinAttPreyRatioIndex = parseInt(value);
+					updateSliderDisplay(slider, preyToxinRatioDisplay, ratioMap);
+				} else if (slider.id === 'preyToxinStartProbabilitySlider') {
+					simState.activePresetConfig.preyToxinStartProb = value;
+					preyToxinStartProbabilityDisplay.textContent = `${value}%`;
+				} else if (slider.id === 'preyToxinNLProdSlider') {
+					simState.activePresetConfig.preyToxinNLProd = parseInt(value);
+					preyToxinNLProdDisplay.textContent = value;
+				} else if (slider.id === 'preyToxinLProdSlider') {
+					simState.activePresetConfig.preyToxinLProd = parseInt(value);
+					preyToxinLProdDisplay.textContent = value;
+				}
+			}
+			
 			else if (group === 'battleroyale') {
 				const value = slider.value;
 				const checked = slider.checked;
@@ -3353,6 +3397,10 @@ stopButton.addEventListener('click', () => {
 					const valInt = parseInt(value);
 					simState.activePresetConfig.brDefSelectivity = valInt;
 					brDefSelectivityDisplay.textContent = brDefSelectivityMap[valInt];
+				} else if (slider.id === 'brPreyToxinStartProbabilitySlider') {
+					const valFloat = parseFloat(value);
+					simState.activePresetConfig.brPreyToxinStartProb = valFloat;
+					brPreyToxinStartProbabilityDisplay.textContent = `${valFloat}%`;
 				}
 				// Checkboxes
 				else if (slider.id === 'brAttQsCheckbox') { simState.activePresetConfig.brAttQs = checked; }
@@ -3362,6 +3410,7 @@ stopButton.addEventListener('click', () => {
 				else if (slider.id === 'brPreyMovementCheckbox') { simState.activePresetConfig.brPreyMovement = checked; }
 				else if (slider.id === 'brPreyAiCheckbox') { simState.activePresetConfig.brPreyAi = checked; }
 				else if (slider.id === 'brPreyCapsuleCheckbox') { simState.activePresetConfig.brPreyCapsule = checked; }
+				else if (slider.id === 'brPreyToxinCheckbox') { simState.activePresetConfig.brPreyToxin = checked; }
 				else if (slider.id === 'brDefMovementCheckbox') { simState.activePresetConfig.brDefMovement = checked; }
 				else if (slider.id === 'brDefPredationCheckbox') { simState.activePresetConfig.brDefPredation = checked; }
 			}
@@ -3424,7 +3473,27 @@ stopButton.addEventListener('click', () => {
 		updateSliderDisplay(attackerQSArenaFillSlider, attackerQSArenaFillDisplay, null, simState.activePresetConfig.attackerQSFillPercent);
 		updateSliderDisplay(attackerQSAttPreyRatioSlider, attackerQSRatioDisplay, ratioMap, simState.activePresetConfig.attackerQSAttPreyRatioIndex);
 		
-		// Preset 9: Battle Royale
+		// Preset 9: Prey Toxin Production
+		preyToxinArenaRadiusSlider.value = simState.activePresetConfig.preyToxinArenaRadius;
+		preyToxinArenaRadiusDisplay.textContent = simState.activePresetConfig.preyToxinArenaRadius;
+		updateSliderDisplay(preyToxinFillSlider, preyToxinFillDisplay, null, simState.activePresetConfig.preyToxinFillPercent);
+		updateSliderDisplay(preyToxinAttPreyRatioSlider, preyToxinRatioDisplay, ratioMap, simState.activePresetConfig.preyToxinAttPreyRatioIndex);
+		
+		preyToxinStartProbabilitySlider.value = simState.activePresetConfig.preyToxinStartProb;
+		preyToxinStartProbabilityDisplay.textContent = `${simState.activePresetConfig.preyToxinStartProb}%`;
+		preyToxinNLProdSlider.value = simState.activePresetConfig.preyToxinNLProd;
+		preyToxinNLProdDisplay.textContent = simState.activePresetConfig.preyToxinNLProd;
+		preyToxinLProdSlider.value = simState.activePresetConfig.preyToxinLProd;
+		preyToxinLProdDisplay.textContent = simState.activePresetConfig.preyToxinLProd;
+
+		document.querySelectorAll('#presetGroupPreytoxin [data-action="selectPreyToxinLysis"]').forEach(btn => {
+			btn.classList.toggle('active-preset-subtype', btn.dataset.type === simState.activePresetConfig.preyToxinLysis);
+		});
+		document.querySelectorAll('#presetGroupPreytoxin [data-action="selectPreyToxinTriggerMode"]').forEach(btn => {
+			btn.classList.toggle('active-preset-subtype', btn.dataset.type === simState.activePresetConfig.preyToxinTriggerMode);
+		});
+
+		// Preset 10: Battle Royale
 		brArenaRadiusSlider.value = simState.activePresetConfig.brArenaRadius;
 		brArenaRadiusDisplay.textContent = simState.activePresetConfig.brArenaRadius;
 		brFillSlider.value = simState.activePresetConfig.brFillPercent;
@@ -3450,6 +3519,12 @@ stopButton.addEventListener('click', () => {
 		brPreyMovementCheckbox.checked = simState.activePresetConfig.brPreyMovement;
 		brPreyAiCheckbox.checked = simState.activePresetConfig.brPreyAi;
 		brPreyCapsuleCheckbox.checked = simState.activePresetConfig.brPreyCapsule;
+		brPreyToxinCheckbox.checked = simState.activePresetConfig.brPreyToxin;
+		
+		const brToxinStartProbVal = simState.activePresetConfig.brPreyToxinStartProb !== undefined ? simState.activePresetConfig.brPreyToxinStartProb : 0.1;
+		brPreyToxinStartProbabilitySlider.value = brToxinStartProbVal;
+		brPreyToxinStartProbabilityDisplay.textContent = `${brToxinStartProbVal}%`;
+
 		brDefMovementCheckbox.checked = simState.activePresetConfig.brDefMovement;
 		brDefPredationCheckbox.checked = simState.activePresetConfig.brDefPredation;
 		
@@ -3465,6 +3540,7 @@ stopButton.addEventListener('click', () => {
 			else if (action === 'brPreyMovement') isActive = simState.activePresetConfig.brPreyMovement === type;
 			else if (action === 'brPreyAi') isActive = simState.activePresetConfig.brPreyAi === type;
 			else if (action === 'brPreyCapsule') isActive = simState.activePresetConfig.brPreyCapsule === type;
+			else if (action === 'brPreyToxin') isActive = simState.activePresetConfig.brPreyToxin === type;
 			else if (action === 'brDefMovement') isActive = simState.activePresetConfig.brDefMovement === type;
 			else if (action === 'brDefSelectivity') isActive = simState.activePresetConfig.brDefSelectivity === type;
 			else if (action === 'brDefPredation') isActive = simState.activePresetConfig.brDefPredation === type;
@@ -4502,79 +4578,62 @@ async function runSimulationStep() {
 						const triggerMode = simState.config.prey.triggerMode;
 						const releaseOnLysis = simState.config.prey.releaseOnLysis;
 
-						if (triggerMode === 'qs') {
-							// QS activation evaluated dynamically at each step (reversible)
-							const qsConfig = simState.config.prey.toxinQS;
-							const preyAiConcentration = simState.preyAiGrid.get(key) || 0;
-							const K = qsConfig.midpoint;
-							const n = qsConfig.cooperativity;
-							let p_synthesis = 0.0;
-							
-							if (K < 0) {
-								p_synthesis = 1.0;
-							} else if (K === 0) {
-								p_synthesis = (preyAiConcentration > 0) ? 1.0 : 0.0;
-							} else {
-								const K_pow_n = Math.pow(K, n);
-								const AI_pow_n = Math.pow(preyAiConcentration, n);
-								if ((K_pow_n + AI_pow_n) > 0) {
-									p_synthesis = AI_pow_n / (K_pow_n + AI_pow_n);
-								}
-							}
-							if (Number.isNaN(p_synthesis)) p_synthesis = 0.0;
-
-							const probability = releaseOnLysis ? (p_synthesis * (simState.config.prey.startProbability || 0.0)) : p_synthesis;
-							const wasProducer = cell.isPreyToxinProducer;
-							cell.isPreyToxinProducer = (probability > 0 && rng() < probability);
-							if (cell.isPreyToxinProducer && !wasProducer && releaseOnLysis) {
-								if (cell.preyToxinLysisThreshold === null) {
-									const minThresh = simState.config.prey.lysisThresholdMin || 200;
-									const maxThresh = simState.config.prey.lysisThresholdMax || 1000;
-									cell.preyToxinLysisThreshold = getRandomIntInRange(minThresh, maxThresh);
-								}
-							}
-						} else {
-							// For Attacker and Standard mode, check transition if not already producing (permanent transition)
+						if (releaseOnLysis) {
+							// Lysis Release Mode (permanent transition once activated)
 							if (!cell.isPreyToxinProducer) {
-								if (triggerMode === 'attacker') {
+								let startProduction = false;
+								if (triggerMode === 'qs') {
+									const qsConfig = simState.config.prey.toxinQS;
+									const preyAiConcentration = simState.preyAiGrid.get(key) || 0;
+									const K = qsConfig.midpoint;
+									const n = qsConfig.cooperativity;
+									let p_synthesis = 0.0;
+									
+									if (K < 0) {
+										p_synthesis = 1.0;
+									} else if (K === 0) {
+										p_synthesis = (preyAiConcentration > 0) ? 1.0 : 0.0;
+									} else {
+										const K_pow_n = Math.pow(K, n);
+										const AI_pow_n = Math.pow(preyAiConcentration, n);
+										if ((K_pow_n + AI_pow_n) > 0) {
+											p_synthesis = AI_pow_n / (K_pow_n + AI_pow_n);
+										}
+									}
+									if (Number.isNaN(p_synthesis)) p_synthesis = 0.0;
+
+									const probability = p_synthesis * (simState.config.prey.startProbability || 0.0);
+									if (probability > 0 && rng() < probability) {
+										startProduction = true;
+									}
+								} else if (triggerMode === 'attacker') {
 									const initThreshold = simState.config.prey.toxinInitiationThreshold !== undefined ? simState.config.prey.toxinInitiationThreshold : 2;
-									const initChance = simState.config.prey.toxinInitiationChance !== undefined ? simState.config.prey.toxinInitiationChance : 0.1;
 									if ((cell.accumulatedNonLyticToxins || 0) >= initThreshold) {
-										const probability = releaseOnLysis ? (initChance * (simState.config.prey.startProbability || 0.0)) : initChance;
+										const probability = simState.config.prey.startProbability || 0.0;
 										if (probability > 0 && rng() < probability) {
-											cell.isPreyToxinProducer = true;
-											if (releaseOnLysis) {
-												if (cell.preyToxinLysisThreshold === null) {
-													const minThresh = simState.config.prey.lysisThresholdMin || 200;
-													const maxThresh = simState.config.prey.lysisThresholdMax || 1000;
-													cell.preyToxinLysisThreshold = getRandomIntInRange(minThresh, maxThresh);
-												}
-											}
+											startProduction = true;
 										}
 									}
 								} else {
 									// Standard mode
-									if (releaseOnLysis) {
-										const startProb = simState.config.prey.startProbability || 0.0;
-										if (startProb > 0 && rng() < startProb) {
-											cell.isPreyToxinProducer = true;
-											if (cell.preyToxinLysisThreshold === null) {
-												const minThresh = simState.config.prey.lysisThresholdMin || 200;
-												const maxThresh = simState.config.prey.lysisThresholdMax || 1000;
-												cell.preyToxinLysisThreshold = getRandomIntInRange(minThresh, maxThresh);
-											}
-										}
-									} else {
-										// Continuous standard mode cells start as producers
-										cell.isPreyToxinProducer = true;
+									const startProb = simState.config.prey.startProbability || 0.0;
+									if (startProb > 0 && rng() < startProb) {
+										startProduction = true;
+									}
+								}
+
+								if (startProduction) {
+									cell.isPreyToxinProducer = true;
+									if (cell.preyToxinLysisThreshold === null) {
+										const minThresh = simState.config.prey.lysisThresholdMin || 200;
+										const maxThresh = simState.config.prey.lysisThresholdMax || 1000;
+										cell.preyToxinLysisThreshold = getRandomIntInRange(minThresh, maxThresh);
 									}
 								}
 							}
-						}
 
-						// 2. Production execution
-						if (cell.isPreyToxinProducer) {
-							if (releaseOnLysis) {
+							// Lysis mode production execution
+							if (cell.isPreyToxinProducer) {
 								const prodNL = simState.config.prey.toxinNL.productionRate || 0;
 								const prodL = simState.config.prey.toxinL.productionRate || 0;
 								cell.internalPreyToxinNL += prodNL;
@@ -4588,15 +4647,82 @@ async function runSimulationStep() {
 									cell.lysisTimer = 10;
 									simState.killedThisStep.prey++;
 								}
-							} else {
-								// Constant standard production
-								const currentPreyNL = simState.preyToxinNLGrid.get(key) || 0;
+							}
+						} else {
+							// Normal Secretion Mode (continuous release with stochastic activation & max production range limit)
+							if (!cell.isPreyToxinProducer) {
+								let startProduction = false;
+								if (triggerMode === 'qs') {
+									const qsConfig = simState.config.prey.toxinQS;
+									const preyAiConcentration = simState.preyAiGrid.get(key) || 0;
+									const K = qsConfig.midpoint;
+									const n = qsConfig.cooperativity;
+									let p_synthesis = 0.0;
+									
+									if (K < 0) {
+										p_synthesis = 1.0;
+									} else if (K === 0) {
+										p_synthesis = (preyAiConcentration > 0) ? 1.0 : 0.0;
+									} else {
+										const K_pow_n = Math.pow(K, n);
+										const AI_pow_n = Math.pow(preyAiConcentration, n);
+										if ((K_pow_n + AI_pow_n) > 0) {
+											p_synthesis = AI_pow_n / (K_pow_n + AI_pow_n);
+										}
+									}
+									if (Number.isNaN(p_synthesis)) p_synthesis = 0.0;
+
+									const probability = p_synthesis * (simState.config.prey.startProbability || 0.0);
+									if (probability > 0 && rng() < probability) {
+										startProduction = true;
+									}
+								} else if (triggerMode === 'attacker') {
+									const initThreshold = simState.config.prey.toxinInitiationThreshold !== undefined ? simState.config.prey.toxinInitiationThreshold : 2;
+									if ((cell.accumulatedNonLyticToxins || 0) >= initThreshold) {
+										const probability = simState.config.prey.startProbability || 0.0;
+										if (probability > 0 && rng() < probability) {
+											startProduction = true;
+										}
+									}
+								} else {
+									// Standard mode
+									const startProb = simState.config.prey.startProbability || 0.0;
+									if (startProb > 0 && rng() < startProb) {
+										startProduction = true;
+									}
+								}
+
+								if (startProduction) {
+									cell.isPreyToxinProducer = true;
+									cell.continuousToxinProduced = 0;
+									const minThresh = simState.config.prey.lysisThresholdMin || 200;
+									const maxThresh = simState.config.prey.lysisThresholdMax || 1000;
+									cell.preyToxinLysisThreshold = getRandomIntInRange(minThresh, maxThresh);
+								}
+							}
+
+							// Normal secretion mode production execution
+							if (cell.isPreyToxinProducer) {
 								const prodNL = simState.config.prey.toxinNL.productionRate || 0;
+								const prodL = simState.config.prey.toxinL.productionRate || 0;
+
+								// Release continuously
+								const currentPreyNL = simState.preyToxinNLGrid.get(key) || 0;
 								simState.preyToxinNLGrid.set(key, currentPreyNL + prodNL);
 
 								const currentPreyL = simState.preyToxinLGrid.get(key) || 0;
-								const prodL = simState.config.prey.toxinL.productionRate || 0;
 								simState.preyToxinLGrid.set(key, currentPreyL + prodL);
+
+								// Accumulate to track continuous production progress
+								cell.continuousToxinProduced = (cell.continuousToxinProduced || 0) + (prodNL + prodL);
+
+								const thresh = cell.preyToxinLysisThreshold || 1000;
+								if (cell.continuousToxinProduced >= thresh) {
+									// Reach max production limit: stop producing and go back to normal growth
+									cell.isPreyToxinProducer = false;
+									cell.preyToxinLysisThreshold = null;
+									cell.continuousToxinProduced = 0;
+								}
 							}
 						}
 					}
@@ -4991,7 +5117,6 @@ async function runSimulationStep() {
 		settingsContent += `Prey_Toxin_Lysis_Threshold_Max\t${simState.config.prey.lysisThresholdMax}\n`;
 		settingsContent += `Prey_Toxin_Start_Probability_Percent\t${simState.config.prey.startProbability * 100}\n`;
 		settingsContent += `Prey_Toxin_Initiation_Threshold\t${simState.config.prey.toxinInitiationThreshold}\n`;
-		settingsContent += `Prey_Toxin_Initiation_Chance_Percent\t${simState.config.prey.toxinInitiationChance * 100}\n`;
 		settingsContent += `Prey_Toxin_NL_Production_Rate_per_min\t${simState.config.prey.toxinNL.productionRate}\n`;
 		settingsContent += `Prey_Toxin_NL_Degradation_Rate_Percent_per_min\t${simState.config.prey.toxinNL.degradationRate * 100}\n`;
 		settingsContent += `Prey_Toxin_NL_Diffusion_Rate\t${simState.config.prey.toxinNL.diffusionRate}\n`;
@@ -6230,10 +6355,15 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
                     infoHtml += formatCellProperty("Toxin P(synthesis)", p_toxin_hover.toFixed(3));
                 }
                 infoHtml += formatCellProperty("Toxin Producer", cell.isPreyToxinProducer);
-                if (simState.config.prey.releaseOnLysis) {
-                    infoHtml += formatCellProperty("Internal NL Toxin", cell.internalPreyToxinNL || 0);
-                    infoHtml += formatCellProperty("Internal L Toxin", cell.internalPreyToxinL || 0);
-                    infoHtml += formatCellProperty("Lysis Threshold", cell.preyToxinLysisThreshold || 1000);
+                if (cell.isPreyToxinProducer) {
+                    if (simState.config.prey.releaseOnLysis) {
+                        infoHtml += formatCellProperty("Internal NL Toxin", cell.internalPreyToxinNL || 0);
+                        infoHtml += formatCellProperty("Internal L Toxin", cell.internalPreyToxinL || 0);
+                        infoHtml += formatCellProperty("Lysis Threshold", cell.preyToxinLysisThreshold || 1000);
+                    } else {
+                        infoHtml += formatCellProperty("Toxin Produced", Math.round(cell.continuousToxinProduced || 0));
+                        infoHtml += formatCellProperty("Max Production", cell.preyToxinLysisThreshold || 1000);
+                    }
                 }
             }
         }

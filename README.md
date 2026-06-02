@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 8.1 (1.6.2026)
+**Version:** 8.2 (2.6.2026)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 - 3.5.
 
@@ -310,13 +310,13 @@ A cell's initial random state (e.g., its starting `replicationCooldown`) is set 
     * **Protection Effect:** When an attack hits a prey with a capsule, there is a chance the attack is rendered harmless. The maximum protection offered by a full 5-layer capsule is set by the user via the **"Max Protection (%)"** setting. Each layer provides 1/5th of this total protection (e.g., if Max Protection is 80%, each layer gives a 16% chance to block an attack).
 * **Toxin Production & Release:** Prey cells can synthesize their own bacteriocin toxins (Bacteriocin NL and L) to damage or compete against rival cell types.
     * **Release Modes:**
-        * *Continuous (Standard) Release:* Toxins are secreted directly and continuously into the local grids (`preyToxinNLGrid` and `preyToxinLGrid`) at each step.
+        * *Continuous (Standard) Release:* Toxins are secreted directly and continuously into the local grids (`preyToxinNLGrid` and `preyToxinLGrid`) at each step. Cells only start toxin production stochastically based on the **Stochastic Start Prob.** (which defaults to 0). Upon starting production, each cell chooses a target limit (max production) randomly from the configured range (200-1000). While producing, cell division is arrested, and the cell is visually marked with a **small mid-green center dot**. Once the cumulative toxin produced reaches its target limit, production is disabled and the cell returns to normal growth and division.
         * *Lysis-Dependent Release:* Toxins are accumulated internally (`internalPreyToxinNL` and `internalPreyToxinL`). Once the sum of accumulated internal toxins reaches the cell's individual **Lysis Threshold** (a random value chosen within a configured range exactly once when the cell is first activated as a producer), the cell lyses (dies and bursts), dumping its accumulated internal toxins onto the hex grid. Toxin-producing cells halt cell division while producing. If a cell divides (if production is inactive), any accumulated internal toxins are split equally (halved and rounded down to the nearest integer) between the parent and daughter cells. If a cell is lysed by attackers' T6SS before hitting its own threshold, its accumulated internal toxins are still successfully released.
-        * *Lysis Visualization:* Prey cells with accumulated internal toxins are drawn with a green inner circle that darkens as they approach the lysis threshold.
+        * *Lysis Visualization:* Prey cells with accumulated internal toxins (in lysis-dependent mode) are drawn with a green inner circle that darkens as they approach the lysis threshold. Continuous producers are drawn with a small, static mid-green center dot.
     * **Activation Mechanisms (Trigger Modes):**
-        * *Standard / Constitutive:* Production is constitutively active (or governed stochastically by the **Stochastic Start Prob.** if lysis mode is active).
-        * *QS Triggered:* Activated based on local Prey AI concentration, modeled by a Hill equation with midpoint $K$ and cooperativity $n$. If lysis mode is active, the chance is gated by the **Stochastic Start Prob.**. This mode is dynamic and reversible: if AI concentration drops, the cell ceases production and can divide again.
-        * *Attacker NL Toxin Triggered:* Activated once the cell has been hit by attacker non-lytic toxins such that the accumulated units are $\ge$ **NL Init. Threshold**, with a chance defined by **Init. Chance** (scaled by **Stochastic Start Prob.** if lysis mode is active). This is a permanent one-way transition once activated.
+        * *Standard / Constitutive:* Governed stochastically by the **Stochastic Start Prob. (%/min)** at each simulation step to start toxin synthesis.
+        * *QS Triggered:* Activated based on local Prey AI concentration, modeled by a Hill equation with midpoint $K$ and cooperativity $n$. The QS-induced chance is scaled by the **Stochastic Start Prob. (%/min)**. Once activated, the transition is permanent until completion (lysis or reaching the production target).
+        * *Attacker NL Toxin Triggered:* Activated once the cell has been hit by attacker non-lytic toxins such that the accumulated units are $\ge$ **NL Init. Threshold**. Once the threshold is crossed, the activation chance per step is governed by the **Stochastic Start Prob. (%/min)**. This is a permanent one-way transition once activated.
 * **Reporter System:** Upon lysis, each Prey cell releases `lacZPerPrey` units of LacZ enzyme.
 
 ### 6.4. Defender Cells
@@ -473,20 +473,21 @@ The CPRG reporter system simulates a common laboratory assay.
 ## 9. Preset Scenarios
 
 The "Load Preset Scenario" button provides access to pre-configured parameter sets designed to explore specific phenomena. **To select a preset, simply click anywhere on its title or in the background of its box. The box will become highlighted.**
-* **1. Role of Initial Density (Att & Prey):** Focuses on how varying initial cell densities and ratios between Attackers and Prey affect outcomes. Defenders are typically disabled.
-* **2. Prey Sensitivity / Effector Type (Att & Prey):** Explores how different Prey sensitivities (to lytic vs. non-lytic toxins, or both) influence interactions. Defenders are typically disabled.
-* **3. Contact Sensing & Kin Exclusion (Att & Prey):** Investigates the impact of Attacker T6SS firing strategies like biased targeting of adjacent cells and avoiding self-attack. Defenders are typically disabled.
-* **4. Tit-for-Tat Dynamics (Att, Prey, Def):** Sets up scenarios with all three cell types to explore retaliatory strategies, where Defenders respond to Attacker attacks, and Prey might have differential susceptibility. Parameters often include varying Defender retaliation accuracy vs. random firing.
-* **5. Role of capsule in protection (Att & Prey):** Disables defenders and sets the prey capsule to be constitutively active, allowing exploration of capsule protection levels and synthesis time.
-* **6. Predation by T6SS activity (Att & Prey):** Disables defenders and normal attacker replication, forcing attackers to rely on the "Replication Reward" system for proliferation, linking killing to fitness.
-* **7. Role of movement in killing (Att & Prey):** Disables defenders and provides sliders to configure prey AI production and attacker movement (probability, directionality), allowing exploration of chemotaxis and mobility in predation.
-* **8. Quorum Sensing Dynamics (Att & Prey):** Disables defenders and enables the Prey capsule system. This preset provides a two-column layout to configure two separate QS systems: Attacker T6SS activation (via Attacker AI) and Prey capsule synthesis (via Prey AI). Sliders are available for AI production, activation/derepression midpoint (K), and cooperativity (n) for both systems, in addition to shared controls for cell density and ratio.
-* **9. Battle Royale (Att, Prey, Def):** A comprehensive "sandbox" preset to quickly configure complex three-population scenarios. It provides high-level strategy switches instead of granular parameter inputs:
+* **1. Role of Initial Density:** Focuses on how varying initial cell densities and ratios between Attackers and Prey affect outcomes. Defenders are typically disabled.
+* **2. Prey Sensitivity / Effector Type:** Explores how different Prey sensitivities (to lytic vs. non-lytic toxins, or both) influence interactions. Defenders are typically disabled.
+* **3. Contact Sensing & Kin Exclusion:** Investigates the impact of Attacker T6SS firing strategies like biased targeting of adjacent cells and avoiding self-attack. Defenders are typically disabled.
+* **4. Tit-for-Tat Dynamics:** Sets up scenarios with all three cell types to explore retaliatory strategies, where Defenders respond to Attacker attacks, and Prey might have differential susceptibility. Parameters often include varying Defender retaliation accuracy vs. random firing.
+* **5. Role of Capsule in Protection:** Disables defenders and sets the prey capsule to be constitutively active, allowing exploration of capsule protection levels and synthesis time.
+* **6. Predation by T6SS Activity:** Disables defenders and normal attacker replication, forcing attackers to rely on the "Replication Reward" system for proliferation, linking killing to fitness.
+* **7. Role of Movement in Killing:** Disables defenders and provides sliders to configure prey AI production and attacker movement (probability, directionality), allowing exploration of chemotaxis and mobility in predation.
+* **8. Quorum Sensing Dynamics:** Disables defenders and enables the Prey capsule system. This preset provides a two-column layout to configure two separate QS systems: Attacker T6SS activation (via Attacker AI) and Prey capsule synthesis (via Prey AI). Sliders are available for AI production, activation/derepression midpoint (K), and cooperativity (n) for both systems, in addition to shared controls for cell density and ratio.
+* **9. Prey Toxin Production:** Focuses on Prey-derived diffusible toxins. It provides options for Arena Radius, Total Fill %, Attacker:Prey ratio, Stochastic Start Probability, and NL/L Toxin Production rates, plus buttons to toggle lysis-dependent release (Lysis Yes/No) and trigger activation modes (Standard, QS, Attacker NL).
+* **10. Battle Royale:** A comprehensive "sandbox" preset to quickly configure complex three-population scenarios. It provides high-level strategy switches instead of granular parameter inputs:
     * **General:** Sliders for **Arena Radius** and **Total Fill %**.
     * **Population Mix:** Two linked sliders control the **Attacker %** and **Defender %**, with the remaining population automatically assigned as **Prey**.
     * **Strategy Switches:**
         * **Attacker:** Sliders/checkboxes for **Movement** (No/Yes/AI), **QS Regulated T6SS**, **Kin Exclusion**, **Contact Sensing**, and **Predation**.
-        * **Prey:** Checkboxes for **Movement**, **AI Production**, and **Capsule** (capsule logic is linked to AI production).
+        * **Prey:** Checkboxes for **Movement**, **AI Production**, **Capsule** (capsule logic is linked to AI production), and **Toxin Production**.
         * **Defender:** Checkboxes/sliders for **Movement**, **Selectivity** (Low/Med/High), and **Predation**.
 
 Applying a preset will **only override the specific settings** relevant to that scenario, leaving all other parameters (like Arena Radius or any settings you have manually changed) untouched. You can use the "Reset Settings to Defaults" button if you wish to return to a baseline state before applying a preset. You can further tweak any settings after applying a preset.
@@ -549,7 +550,7 @@ You can pre-configure many aspects of the "BacFighT6" simulation by adding param
 2.  **Loading a Preset Scenario (Baseline Configuration):**
     * **Parameter:** `preset`
     * **Value:** The ID of the preset scenario.
-    * **Valid Values:** `density`, `sensitivity`, `contactkin`, `titfortat`, `capsule`, `predation`, `movement`, `qs`, `battleroyale`.
+    * **Valid Values:** `density`, `sensitivity`, `contactkin`, `titfortat`, `capsule`, `predation`, `movement`, `qs`, `preytoxin`, `battleroyale`.
     * **Behavior:** Loads the default configuration for the chosen scenario (e.g., enabling specific rules, setting specific ratios). This is applied **before** other individual parameter overrides, making it the perfect "base" for custom links.
     * **Example:** `...?preset=battleroyale`
 
