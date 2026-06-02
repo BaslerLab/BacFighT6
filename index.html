@@ -33,7 +33,7 @@
                 </a>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 8.2 - 2.6.2026). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 9.03 - 3.6.2026). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 - 3.5.<br>
             </p>
         </header>
@@ -154,6 +154,11 @@
 						</div>
 						<button id="resumeFromStateButton" title="Discards future history and resumes the simulation from the currently viewed point in time." class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed" disabled>Resume Simulation from this State</button>
 						<button id="loadSessionButton" title="Load a full .bft6 session file, including history and settings." class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Import Session (.bft6)</button>
+						<button id="cancelImportSessionButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded-lg shadow-md text-xs mt-2 w-full hidden">Stop &amp; Save History Loaded</button>
+						<div id="importSessionProgressContainer" class="w-full bg-gray-200 rounded-full h-2 mt-2 hidden">
+							<div id="importSessionProgressBar" class="bg-orange-600 h-2 rounded-full" style="width: 0%"></div>
+						</div>
+						<div id="importSessionStatusMessage" class="text-xs text-center mt-1 text-orange-600 font-semibold hidden"></div>
 						
 						<div class="grid grid-cols-2 gap-2 mt-2">
 							<button id="importStepStateButton" title="Load a complete simulation state, including all settings, from a previously exported JSON file." class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md text-sm">Import Step</button>
@@ -234,6 +239,25 @@
 								<span class="tooltip-content">Automatically pause and prompt for download when buffered images exceed this size. Set to 0 to disable automatic batching.</span>
 							</label>
 						</div>
+					</div>
+
+					<div class="mt-2">
+						<button id="renderFromHistoryButton" title="Generate and save images for all steps in the current history." class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1.5 px-3 rounded-lg shadow-md text-xs disabled:opacity-50 disabled:cursor-not-allowed w-full">Render from History</button>
+						<div id="renderHistoryRangeContainer" class="flex items-center justify-between mt-2 text-xs">
+							<div class="flex items-center">
+								<label for="renderFromStepInput" class="text-gray-700 mr-1.5">From:</label>
+								<input type="number" id="renderFromStepInput" value="1" min="1" class="block w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-0.5 px-1 text-center">
+							</div>
+							<div class="flex items-center">
+								<label for="renderToStepInput" class="text-gray-700 mr-1.5">To:</label>
+								<input type="number" id="renderToStepInput" value="1" min="1" class="block w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-0.5 px-1 text-center">
+							</div>
+						</div>
+						<button id="cancelRenderButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded-lg shadow-md text-xs mt-2 w-full hidden">Stop &amp; Save Rendered</button>
+						<div id="renderHistoryProgressContainer" class="w-full bg-gray-200 rounded-full h-2 mt-2 hidden">
+							<div id="renderHistoryProgressBar" class="bg-indigo-600 h-2 rounded-full" style="width: 0%"></div>
+						</div>
+						<div id="renderHistoryStatusMessage" class="text-xs text-center mt-1 text-indigo-600 font-semibold hidden"></div>
 					</div>
 
 				</div>
@@ -950,6 +974,9 @@
 
 					<div id="saveStatusMessage" class="mt-2 text-center text-sm font-semibold text-blue-600">
 					</div>
+					<div id="saveProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden">
+						<div id="saveProgressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+					</div>
 				</div>
 					
                 <div id="loadStateGroup" class="w-full pt-4 flex justify-center hidden">
@@ -1111,28 +1138,25 @@
                 <li><strong>Arena (TSV):</strong> The 'Import/Export Arena' buttons save or load the specific spatial layout of cells you have placed manually.</li>
                 <li><strong>Simulation Data (TSV):</strong> From the final report, download a time-series table of cell counts and cumulative events, ideal for plotting.</li>
 				<li><strong>Arena Images (ZIP):</strong> Enables downloading a ZIP file containing a PNG image of the arena for every time step. This feature must be enabled by checking the 'Arena Images' box in the 'Exports' panel before starting the simulation.</li>
-                <li><strong>Full Session (.bft6):</strong> If 'Full State History' is enabled, you can save the entire simulation—settings and complete step-by-step history—into a single, compact binary file. This is the best way to archive an exact experiment for later re-loading and analysis.</li>
+                <li><strong>Full Session (.bft6):</strong> If 'Full State History' is enabled, you can save the entire simulation—settings and complete step-by-step history—into a single, compact binary file. This is the best way to archive an exact experiment for later re-loading and analysis. During import, you can click <strong>'Stop &amp; Save History Loaded'</strong> to immediately cancel reading further steps, preserving the history loaded up to that point.</li>
 				<li><strong>Export Step (JSON):</strong> From the 'Time-Travel Control' panel, you can export the complete state of the currently viewed step—including all cell properties, AI grids, and settings—to a single JSON file. This is ideal for restoring simulations from a certain step.</li>
 				<li><strong>Import Step (JSON):</strong> From the 'Time-Travel Control' panel, you can import a previously exported Step state JSON file. This will perfectly replicate the conditions of that step, including all settings and the precise RNG state, allowing you to replicate previous simulation or start a new simulation from that exact point with a new set of random numbers.</li>
             </ul>
 			
 			<div class="mt-4">
-				<h5 class="font-semibold">Memory Management & Buffering Limits</h5>
+				<h5 class="font-semibold">Memory Management &amp; Database Offloading</h5>
 				<p class="text-sm text-gray-700">
-					Saving per-step data (like images, arena states, and full history) can consume a large amount of browser memory. To prevent crashes during long runs, you can set buffer limits in the <strong>"Exports"</strong> panel.
+					Saving per-step data (like images, arena states, and full history) can consume a large amount of browser memory. To prevent crashes during long runs, you can set buffer limits in the <strong>"Exports &amp; Buffers"</strong> panel.
 				</p>
 				<ul class="list-disc ml-5 mt-2 space-y-1 text-sm">
 					<li>
-						When any data buffer exceeds its defined limit, the simulation will automatically pause.
+						<strong>Silent Database Offloading:</strong> When any data buffer exceeds its defined limit in memory (RAM), the simulation automatically offloads the heavy data (e.g., detailed frame objects, captured base64 images, or arena TSV layouts) to the browser's local database (IndexedDB).
 					</li>
 					<li>
-						A prompt will appear asking you to save the current data batch (e.g., a ZIP of images or a `.bft6` history file).
+						<strong>RAM Protection:</strong> The offloaded data is cleared from RAM, leaving only lightweight references in memory. This happens silently in the background, allowing the simulation to run uninterrupted without needing user interaction or intermediate file downloads.
 					</li>
 					<li>
-						You must click the <strong>[Save & Continue]</strong> button in the prompt to initiate the download.
-					</li>
-					<li>
-						Once the download begins, the buffer is cleared from memory, and the simulation will resume automatically.
+						<strong>On-Demand Retrieval:</strong> When you download or save files (such as downloading ZIPs of images/arena layouts, or saving the full `.bft6` session), the application automatically retrieves the offloaded frames and files from the database to build the download archive.
 					</li>
 				</ul>
 			</div>

@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 8.2 (2.6.2026)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 9.03 (3.6.2026)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -76,6 +76,11 @@
 	const saveImagesCheckbox = document.getElementById('saveImagesCheckbox');
 	const saveArenaStatesCheckbox = document.getElementById('saveArenaStatesCheckbox'); // New
 	const imageExportWidthInput = document.getElementById('imageExportWidthInput');
+	const renderFromHistoryButton = document.getElementById('renderFromHistoryButton');
+	const renderFromStepInput = document.getElementById('renderFromStepInput');
+	const renderToStepInput = document.getElementById('renderToStepInput');
+	const cancelRenderButton = document.getElementById('cancelRenderButton');
+	const cancelImportSessionButton = document.getElementById('cancelImportSessionButton');
 	// Attacker params
 	const initialAttackersInput = document.getElementById('initialAttackersInput');
 	const attackerReplicationMeanInput = document.getElementById('attackerReplicationMeanInput');
@@ -587,6 +592,10 @@
         rngDrawCount: 0,      // Tracks how many times the RNG has been used since last seed
 		history: [],
 		isScrubbing: false, // To know when the user is using the time-travel slider
+		isRenderingFromHistory: false,
+		renderCancelled: false,
+		isImportingSession: false,
+		importSessionCancelled: false,
         capturedImagesTotalSize: 0,
         isWaitingForBatchDownload: false,
 		optimizedHistoryFrames: new Map(),
@@ -603,6 +612,359 @@
 	let mainEmptyGridCanvas = null;
 	let exportEmptyGridCanvas = null;
 	let exportEmptyGridCanvasKey = "";
+
+	class SimulationDB {
+		constructor() {
+			this.dbName = "BacFighT6_DB";
+			this.dbVersion = 1;
+			this.db = null;
+		}
+
+		init() {
+			return new Promise((resolve, reject) => {
+				const request = indexedDB.open(this.dbName, this.dbVersion);
+				request.onupgradeneeded = (event) => {
+					const db = event.target.result;
+					if (!db.objectStoreNames.contains("history")) {
+						db.createObjectStore("history", { keyPath: "step" });
+					}
+					if (!db.objectStoreNames.contains("images")) {
+						db.createObjectStore("images", { keyPath: "step" });
+					}
+					if (!db.objectStoreNames.contains("arena_states")) {
+						db.createObjectStore("arena_states", { keyPath: "step" });
+					}
+				};
+				request.onsuccess = (event) => {
+					this.db = event.target.result;
+					resolve(this.db);
+				};
+				request.onerror = (event) => {
+					console.error("IndexedDB initialization error:", event.target.error);
+					reject(event.target.error);
+				};
+			});
+		}
+
+		clearAll() {
+			return new Promise((resolve, reject) => {
+				if (!this.db) { resolve(); return; }
+				const transaction = this.db.transaction(["history", "images", "arena_states"], "readwrite");
+				transaction.objectStore("history").clear();
+				transaction.objectStore("images").clear();
+				transaction.objectStore("arena_states").clear();
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		// History methods
+		putHistory(step, data) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("history", "readwrite");
+				transaction.objectStore("history").put({ step, data });
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		getHistory(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("history", "readonly");
+				const request = transaction.objectStore("history").get(step);
+				request.onsuccess = () => resolve(request.result ? request.result.data : null);
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		getAllHistory() {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("history", "readonly");
+				const request = transaction.objectStore("history").getAll();
+				request.onsuccess = () => resolve(request.result.map(item => item.data));
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		clearHistory() {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("history", "readwrite");
+				transaction.objectStore("history").clear();
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		deleteHistoryGreaterThan(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("history", "readwrite");
+				const store = transaction.objectStore("history");
+				const range = IDBKeyRange.lowerBound(step, true);
+				const request = store.openCursor(range);
+				request.onsuccess = (event) => {
+					const cursor = event.target.result;
+					if (cursor) {
+						store.delete(cursor.key);
+						cursor.continue();
+					} else { resolve(); }
+				};
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		// Images methods
+		putImage(step, dataURL) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("images", "readwrite");
+				transaction.objectStore("images").put({ step, dataURL });
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		getAllImages() {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("images", "readonly");
+				const request = transaction.objectStore("images").getAll();
+				request.onsuccess = () => resolve(request.result.map(item => ({ step: item.step, dataURL: item.dataURL })));
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		deleteImage(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("images", "readwrite");
+				transaction.objectStore("images").delete(step);
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		deleteImagesGreaterThan(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("images", "readwrite");
+				const store = transaction.objectStore("images");
+				const range = IDBKeyRange.lowerBound(step, true);
+				const request = store.openCursor(range);
+				request.onsuccess = (event) => {
+					const cursor = event.target.result;
+					if (cursor) {
+						store.delete(cursor.key);
+						cursor.continue();
+					} else { resolve(); }
+				};
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		clearImages() {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("images", "readwrite");
+				transaction.objectStore("images").clear();
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		// Arena states methods
+		putArenaState(step, tsvData) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("arena_states", "readwrite");
+				transaction.objectStore("arena_states").put({ step, tsvData });
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		getArenaState(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("arena_states", "readonly");
+				const request = transaction.objectStore("arena_states").get(step);
+				request.onsuccess = () => resolve(request.result ? request.result.tsvData : null);
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		getAllArenaStates() {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("arena_states", "readonly");
+				const request = transaction.objectStore("arena_states").getAll();
+				request.onsuccess = () => resolve(request.result.map(item => ({ step: item.step, tsvData: item.tsvData })));
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		deleteArenaState(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("arena_states", "readwrite");
+				transaction.objectStore("arena_states").delete(step);
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		deleteArenaStatesGreaterThan(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("arena_states", "readwrite");
+				const store = transaction.objectStore("arena_states");
+				const range = IDBKeyRange.lowerBound(step, true);
+				const request = store.openCursor(range);
+				request.onsuccess = (event) => {
+					const cursor = event.target.result;
+					if (cursor) {
+						store.delete(cursor.key);
+						cursor.continue();
+					} else { resolve(); }
+				};
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		clearArenaStates() {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("arena_states", "readwrite");
+				transaction.objectStore("arena_states").clear();
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = (e) => reject(e.target.error);
+			});
+		}
+	}
+
+	let dbPromise = null;
+	function getDB() {
+		if (!dbPromise) {
+			const simDB = new SimulationDB();
+			dbPromise = simDB.init().then(() => simDB);
+		}
+		return dbPromise;
+	}
+
+	function updateSaveProgress(percentage, textStatus = null) {
+		const container = document.getElementById('saveProgressContainer');
+		const bar = document.getElementById('saveProgressBar');
+		const statusDiv = document.getElementById('saveStatusMessage');
+		
+		if (container && bar) {
+			if (percentage === null) {
+				container.classList.add('hidden');
+			} else {
+				container.classList.remove('hidden');
+				bar.style.width = `${Math.min(100, Math.max(0, percentage))}%`;
+			}
+		}
+		if (statusDiv && textStatus !== null) {
+			statusDiv.textContent = textStatus;
+		}
+	}
+
+	async function offloadHistoryToDB() {
+		const db = await getDB();
+		const transaction = db.db.transaction("history", "readwrite");
+		const store = transaction.objectStore("history");
+		
+		for (const [step, frame] of simState.optimizedHistoryFrames.entries()) {
+			if (!frame.isOffloaded) {
+				store.put({ step: step, data: frame });
+				frame.isOffloaded = true;
+				frame.cells = [];
+				frame.attackerAiGrid = [];
+				frame.preyAiGrid = [];
+				frame.preyToxinNLGrid = [];
+				frame.preyToxinLGrid = [];
+			}
+		}
+		
+		return new Promise((resolve, reject) => {
+			transaction.oncomplete = () => {
+				simState.capturedHistoryTotalSize = 0;
+				console.log("History buffer offloaded to IndexedDB successfully.");
+				resolve();
+			};
+			transaction.onerror = (e) => reject(e.target.error);
+		});
+	}
+
+	async function offloadImagesToDB() {
+		const db = await getDB();
+		const transaction = db.db.transaction("images", "readwrite");
+		const store = transaction.objectStore("images");
+		
+		for (const img of simState.capturedImagesDataURLs) {
+			if (!img.isOffloaded) {
+				store.put({ step: img.step, dataURL: img.dataURL });
+				img.isOffloaded = true;
+				img.dataURL = null; // free memory
+			}
+		}
+		
+		return new Promise((resolve, reject) => {
+			transaction.oncomplete = () => {
+				simState.capturedImagesTotalSize = 0;
+				console.log("Images buffer offloaded to IndexedDB successfully.");
+				resolve();
+			};
+			transaction.onerror = (e) => reject(e.target.error);
+		});
+	}
+
+	async function offloadArenaStatesToDB() {
+		const db = await getDB();
+		const transaction = db.db.transaction("arena_states", "readwrite");
+		const store = transaction.objectStore("arena_states");
+		
+		for (const state of simState.capturedArenaStatesTSV) {
+			if (!state.isOffloaded) {
+				store.put({ step: state.step, tsvData: state.tsvData });
+				state.isOffloaded = true;
+				state.tsvData = null; // free memory
+			}
+		}
+		
+		return new Promise((resolve, reject) => {
+			transaction.oncomplete = () => {
+				simState.capturedArenaStatesTSVTotalSize = 0;
+				console.log("Arena states buffer offloaded to IndexedDB successfully.");
+				resolve();
+			};
+			transaction.onerror = (e) => reject(e.target.error);
+		});
+	}
+
+	async function truncateFutureHistory(stepIndex) {
+		// Truncate memory Maps/Arrays
+		for (const key of simState.optimizedHistoryFrames.keys()) {
+			if (key > stepIndex) {
+				simState.optimizedHistoryFrames.delete(key);
+			}
+		}
+		simState.capturedArenaStatesTSV = simState.capturedArenaStatesTSV.filter(s => s.step <= stepIndex);
+		simState.capturedImagesDataURLs = simState.capturedImagesDataURLs.filter(img => img.step <= stepIndex);
+		simState.historicalData = simState.historicalData.filter(d => d.time <= stepIndex);
+
+		// Truncate database stores
+		const db = await getDB();
+		await db.deleteHistoryGreaterThan(stepIndex);
+		await db.deleteArenaStatesGreaterThan(stepIndex);
+		await db.deleteImagesGreaterThan(stepIndex);
+	}
+
+	async function getHistoryFrame(stepIndex) {
+		const ramFrame = simState.optimizedHistoryFrames.get(stepIndex);
+		if (ramFrame && !ramFrame.isOffloaded) {
+			return ramFrame;
+		}
+		const db = await getDB();
+		return await db.getHistory(stepIndex);
+	}
+
+	async function getArenaStateFrame(stepNumber) {
+		const ramState = simState.capturedArenaStatesTSV.find(s => s.step === stepNumber);
+		if (ramState && !ramState.isOffloaded) {
+			return ramState.tsvData;
+		}
+		const db = await getDB();
+		return await db.getArenaState(stepNumber);
+	}
 
 	function rebuildNeighborCache(radius) {
 		neighborCache.clear();
@@ -1839,7 +2201,7 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		return { q, r };
 	}
 
-	function resetSimulationState() {
+	async function resetSimulationState() {
 		// 1. Stop any running simulation
 		if (simState.isRunning || simState.isStepping) {
 			simState.isRunning = false;
@@ -1852,6 +2214,9 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 	    console.log(`Calling initializeSeededRNG. Seed value from UI is: "${currentSeed}"`);
 		initializeSeededRNG(currentSeed);
 
+		// Clear IndexedDB stores
+		const db = await getDB();
+		await db.clearAll();
 
 		// 3. Clear all simulation data (you can copy this block from your existing initializeBlankSlate)
 		simState.cells.clear();
@@ -1895,10 +2260,10 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 		updateTimeTravelSlider();
 	}
 
-	function initializeBlankSlate() {
+	async function initializeBlankSlate() {
 		const newSeed = generateNewSeed();
 		simulationSeedInput.value = newSeed;
-		resetSimulationState();
+		await resetSimulationState();
 	}
 
 	function populateCellsRandomly() {
@@ -2197,6 +2562,7 @@ function drawFilledHexagon(targetCtx, x, y, visualHexRadius, fillColor) {
 
 function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, currentFirings, preyAiGrid, preyToxinNLGrid, preyToxinLGrid, logicalGridRadius, visualHexRadius, offsetX, offsetY, cprgBgColor) {
     const isMainCanvas = (
+        targetCtx === ctx &&
         logicalGridRadius === simState.config.hexGridActualRadius &&
         visualHexRadius === simState.config.hexRadius &&
         offsetX === simState.offsetX &&
@@ -2470,7 +2836,9 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 
 	function updateButtonStatesAndUI() {
 		const isRun = simState.isRunning;
-		const controlsDisabled = isRun;
+		const isRendering = simState.isRenderingFromHistory;
+		const isImporting = simState.isImportingSession;
+		const controlsDisabled = isRun || isRendering || isImporting;
 
 		// --- Setup Arena Panel ---
 		// The panel is always visible, but its contents are disabled while running.
@@ -2515,6 +2883,11 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		stopButton.disabled = !isRun && simState.simulationStepCount === 0;
 		if (resetSimulationButton) resetSimulationButton.disabled = isRun || simState.isStepping;
 
+		const loadSessionBtn = document.getElementById('loadSessionButton');
+		if (loadSessionBtn) {
+			loadSessionBtn.disabled = controlsDisabled;
+		}
+
 		const resumeButton = document.getElementById('resumeFromStateButton');
 		if (resumeButton) {
 			// The resume button should only be clickable if we are in "scrubbing" mode.
@@ -2544,6 +2917,21 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		saveArenaStatesCheckbox.disabled = controlsDisabled;
 		document.getElementById('saveFullHistoryCheckbox').disabled = controlsDisabled;
 		imageExportWidthInput.disabled = controlsDisabled;
+		if (renderFromStepInput && renderToStepInput) {
+			renderFromStepInput.disabled = controlsDisabled || simState.optimizedHistoryFrames.size === 0;
+			renderToStepInput.disabled = controlsDisabled || simState.optimizedHistoryFrames.size === 0;
+		}
+		if (cancelRenderButton) {
+			cancelRenderButton.classList.toggle('hidden', !simState.isRenderingFromHistory);
+		}
+		if (cancelImportSessionButton) {
+			cancelImportSessionButton.classList.toggle('hidden', !simState.isImportingSession);
+		}
+		updateRenderRangeInputs();
+
+		if (renderFromHistoryButton) {
+			renderFromHistoryButton.disabled = controlsDisabled || simState.optimizedHistoryFrames.size === 0;
+		}
 		document.querySelectorAll('#attackerParamsSection input, #attackerParamsSection select, #preyParamsSection input, #preyParamsSection select, #defenderParamsSection input, #defenderParamsSection select, #cellTypeSelectionButtons button').forEach(el => {
 			el.disabled = controlsDisabled;
 		});
@@ -2661,33 +3049,51 @@ function updateTimeTravelSlider() {
     }
 }
 
-function handleTimeTravelScrub(event) {
+async function handleTimeTravelScrub(event) {
     if (!simState.config.historyEnabled) return;
 
     const slider = event.target;
     const resumeButton = document.getElementById('resumeFromStateButton');
     const display = document.getElementById('timeTravelDisplay');
-    const stepIndex = parseInt(slider.value);
+    let stepIndex = parseInt(slider.value);
 
-    // Get the frame from the Map by its key (the step number)
-    const optimizedState = simState.optimizedHistoryFrames.get(stepIndex);
+    // Get the frame from RAM or IndexedDB
+    let optimizedState = await getHistoryFrame(stepIndex);
+    if (!optimizedState) {
+        // Find closest available step key
+        const allKeys = [...simState.optimizedHistoryFrames.keys()].sort((a, b) => a - b);
+        if (allKeys.length > 0) {
+            let closestKey = allKeys[0];
+            let minDiff = Math.abs(closestKey - stepIndex);
+            for (const key of allKeys) {
+                const diff = Math.abs(key - stepIndex);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestKey = key;
+                }
+            }
+            stepIndex = closestKey;
+            slider.value = stepIndex;
+            optimizedState = await getHistoryFrame(stepIndex);
+        }
+    }
     
     if (optimizedState) {
         const rehydratedState = rehydrateOptimizedStep(optimizedState);
         updateUiFromState(rehydratedState);
         display.textContent = `Viewing Step: ${rehydratedState.simulationStepCount}`;
-    }
-
-    if (simState.lastHoveredHexKey && optimizedState) {
-        try {
-            const [q_str, r_str] = simState.lastHoveredHexKey.split(',');
-            const q = parseInt(q_str, 10);
-            const r = parseInt(r_str, 10);
-            // Pass the raw optimizedState directly to the inspector update function
-            updateHoverInfoPanel(q, r, optimizedState);
-        } catch (e) {
-            console.error("Error auto-updating hover panel during scrub:", e);
-            simState.lastHoveredHexKey = null; // Reset on error
+        
+        if (simState.lastHoveredHexKey) {
+            try {
+                const [q_str, r_str] = simState.lastHoveredHexKey.split(',');
+                const q = parseInt(q_str, 10);
+                const r = parseInt(r_str, 10);
+                // Pass the raw optimizedState directly to the inspector update function
+                updateHoverInfoPanel(q, r, optimizedState);
+            } catch (e) {
+                console.error("Error auto-updating hover panel during scrub:", e);
+                simState.lastHoveredHexKey = null; // Reset on error
+            }
         }
     }
    
@@ -2784,13 +3190,14 @@ function restoreSimStateFromHistoryObject(stateToRestore) {
     simState.totalActiveLacZReleased = stateToRestore.totalActiveLacZReleased;
 }
 
-function restoreStateForResume() {
+async function restoreStateForResume() {
     if (!simState.config.historyEnabled || !simState.isScrubbing) return;
 
     const slider = document.getElementById('timeTravelSlider');
     const stepIndex = parseInt(slider.value);
     
-    const stateToRestore = simState.optimizedHistoryFrames.get(stepIndex);
+    // Fetch the full state from RAM or IndexedDB
+    const stateToRestore = await getHistoryFrame(stepIndex);
 
     if (!stateToRestore) {
         console.error("Could not find state to restore at index", stepIndex);
@@ -2808,13 +3215,7 @@ function restoreStateForResume() {
     initializeSeededRNG(simulationSeedInput.value);
     
     // 3. Truncate the future history of the old timeline
-    for (const key of simState.optimizedHistoryFrames.keys()) {
-        if (key > stepIndex) {
-            simState.optimizedHistoryFrames.delete(key);
-        }
-    }
-    
-    simState.historicalData = simState.historicalData.filter(d => d.time <= stepIndex);
+    await truncateFutureHistory(stepIndex);
 
     // 4. Update UI and start the new simulation branch
     simState.isScrubbing = false;
@@ -2845,7 +3246,7 @@ function restoreStateForResume() {
 	selectBarrierButton.addEventListener('click', () => { if (simState.manualSetupActive) { simState.selectedManualCellType = 'barrier'; updateButtonStatesAndUI(); }});
 	selectRemoveButton.addEventListener('click', () => { if (simState.manualSetupActive) { simState.selectedManualCellType = 'remove'; updateButtonStatesAndUI(); }});
 
-	manualRandomPlacementButton.addEventListener('click', () => {
+	manualRandomPlacementButton.addEventListener('click', async () => {
 		if (simState.isRunning) return;
 
 		if (simState.isScrubbing) {
@@ -2853,12 +3254,7 @@ function restoreStateForResume() {
 			const stepIndex = parseInt(slider.value, 10);
 			
 			// Truncate future history
-			for (const key of simState.optimizedHistoryFrames.keys()) {
-				if (key > stepIndex) {
-					simState.optimizedHistoryFrames.delete(key);
-				}
-			}
-			simState.historicalData = simState.historicalData.filter(d => d.time <= stepIndex);
+			await truncateFutureHistory(stepIndex);
 
 			// Exit scrubbing mode
 			simState.isScrubbing = false;
@@ -2883,12 +3279,7 @@ function restoreStateForResume() {
 				const stepIndex = parseInt(slider.value, 10);
 				
 				// Truncate future history
-				for (const key of simState.optimizedHistoryFrames.keys()) {
-					if (key > stepIndex) {
-						simState.optimizedHistoryFrames.delete(key);
-					}
-				}
-				simState.historicalData = simState.historicalData.filter(d => d.time <= stepIndex);
+				await truncateFutureHistory(stepIndex);
 
 				// Exit scrubbing mode
 				simState.isScrubbing = false;
@@ -2947,13 +3338,13 @@ function restoreStateForResume() {
 	}
 
 	// MOUSE DOWN: Start the drawing/removing action
-	canvas.addEventListener('mousedown', (event) => {
+	canvas.addEventListener('mousedown', async (event) => {
 		if (simState.isRunning) return; // Only allow editing if the simulation is NOT running
 
 		if (simState.isScrubbing) {
 			const slider = document.getElementById('timeTravelSlider');
 			const stepIndex = parseInt(slider.value, 10);
-			const stateToEdit = simState.optimizedHistoryFrames.get(stepIndex);
+			const stateToEdit = await getHistoryFrame(stepIndex);
 
 			if (stateToEdit) {
 				// Restore the live state to this historical point
@@ -2961,12 +3352,7 @@ function restoreStateForResume() {
 				restoreSimStateFromHistoryObject(rehydratedState);
 
 				// Erase all future history
-				for (const key of simState.optimizedHistoryFrames.keys()) {
-					if (key > stepIndex) {
-						simState.optimizedHistoryFrames.delete(key);
-					}
-				}
-				simState.historicalData = simState.historicalData.filter(d => d.time <= stepIndex);
+				await truncateFutureHistory(stepIndex);
 
 				// Exit scrubbing mode, as we are now editing a new timeline
 				simState.isScrubbing = false;
@@ -3064,11 +3450,23 @@ startButton.addEventListener('click', () => {
     runSimulationStep();
 });
 
-	pauseButton.addEventListener('click', () => {
+	pauseButton.addEventListener('click', async () => {
 		if (!simState.isInitialized || !simState.isRunning) return;
 		simState.isRunning = false; simState.isStepping = false;
 		simState.isScrubbing = true;
-		clearTimeout(simState.timeoutId); updateButtonStatesAndUI();
+		clearTimeout(simState.timeoutId); 
+		updateButtonStatesAndUI();
+		
+		// Offload remaining RAM buffers to database on pause
+		if (simState.config.historyEnabled) {
+			await offloadHistoryToDB();
+		}
+		if (simState.saveImagesEnabled) {
+			await offloadImagesToDB();
+		}
+		if (simState.saveArenaStatesEnabled) {
+			await offloadArenaStatesToDB();
+		}
 	});
 
 
@@ -3098,7 +3496,7 @@ stopButton.addEventListener('click', () => {
     updateButtonStatesAndUI();
 });
 
-	arenaGridRadiusInput.addEventListener('input', () => {
+	arenaGridRadiusInput.addEventListener('input', async () => {
 		// Only allow resizing when the simulation is paused.
 		if (simState.isRunning) return;
 
@@ -3119,9 +3517,10 @@ stopButton.addEventListener('click', () => {
 			// The updateUiFromState function already knows how to do this correctly.
 			const slider = document.getElementById('timeTravelSlider');
 			const stepIndex = parseInt(slider.value, 10);
-			const historicalState = simState.history[stepIndex];
+			const historicalState = await getHistoryFrame(stepIndex);
 			if (historicalState) {
-				updateUiFromState(historicalState);
+				const rehydrated = rehydrateOptimizedStep(historicalState);
+				updateUiFromState(rehydrated);
 			}
 		} else {
 			// Otherwise, just redraw the current live state as normal.
@@ -3555,7 +3954,7 @@ stopButton.addEventListener('click', () => {
 	presetsModalOverlay.addEventListener('click', (event) => { if (event.target === presetsModalOverlay) presetsModalOverlay.classList.add('hidden'); });
 
 
-	applyActivePresetButton.addEventListener('click', () => {
+	applyActivePresetButton.addEventListener('click', async () => {
 		const group = simState.activePresetConfig.group;
 		const config = simState.activePresetConfig; // User's UI choices
 
@@ -3580,7 +3979,7 @@ stopButton.addEventListener('click', () => {
 		}
 
 		// 5. Finalize the application
-		finalizePresetApplication();
+		await finalizePresetApplication();
 	});
 
 
@@ -3619,9 +4018,9 @@ stopButton.addEventListener('click', () => {
 		updateInputElement('initialDefendersInput', Math.max(0, defCount));
 	}
 
-	function finalizePresetApplication() {
+	async function finalizePresetApplication() {
 		updateConfigFromUI(true); 
-		resetSimulationState(); 
+		await resetSimulationState(); 
 
 		const hasAttackers = simState.config.attacker.initialCount > 0;
 		const hasPrey = simState.config.prey.initialCount > 0;
@@ -3683,14 +4082,15 @@ function captureFullState() {
                 }
             }
             return valueArray;
-        })
+        }),
+        isOffloaded: false
     };
 
     // 2. NOW, measure the size of the ACTUAL object we are about to store.
     const stepSizeInBytes = JSON.stringify(optimizedStep).length;
     simState.capturedHistoryTotalSize += stepSizeInBytes;
 
-    // 3. Finally, store the optimized object.
+    // 3. Store the optimized object in RAM Map.
 	simState.optimizedHistoryFrames.set(simState.simulationStepCount, optimizedStep);
 }
 
@@ -3952,7 +4352,7 @@ async function runSimulationStep() {
 				if (simState.saveImagesEnabled) { captureArenaImage(); }
 				if (simState.saveArenaStatesEnabled) {
 					const tsvString = captureCurrentArenaStateTSV(simState.cells);
-					simState.capturedArenaStatesTSV.push({ step: simState.simulationStepCount, tsvData: tsvString });
+					simState.capturedArenaStatesTSV.push({ step: simState.simulationStepCount, tsvData: tsvString, isOffloaded: false });
 				    simState.capturedArenaStatesTSVTotalSize += tsvString.length;
 				}
 
@@ -4005,9 +4405,8 @@ async function runSimulationStep() {
 		}
 		if (simState.saveArenaStatesEnabled) {
 			const tsvString = captureCurrentArenaStateTSV(simState.cells);
-			simState.capturedArenaStatesTSV.push({ step: simState.simulationStepCount, tsvData: tsvString });
+			simState.capturedArenaStatesTSV.push({ step: simState.simulationStepCount, tsvData: tsvString, isOffloaded: false });
 		    simState.capturedArenaStatesTSVTotalSize += tsvString.length;
-
 		}
 
         const renderRate = simState.config.simulationControl.renderRate;
@@ -4759,60 +5158,20 @@ async function runSimulationStep() {
 		// --- Advance Time for Next Iteration ---
 		simState.simulationStepCount++;
 
-				// --- Check for Mid-Simulation Data Batching ---
+		// --- Check for Mid-Simulation Data Batching (Offload to IndexedDB silently) ---
 		const historyLimitBytes = (simState.config.history.sizeLimitMB || 0) * 1024 * 1024;
 		if (simState.config.historyEnabled && historyLimitBytes > 0 && simState.capturedHistoryTotalSize >= historyLimitBytes) {
-			// ALWAYS pause the simulation when a buffer is full
-			simState.isRunning = false;
-			clearTimeout(simState.timeoutId);
-			updateButtonStatesAndUI();
-
-			// Check if we already have a directory handle
-			if (simState.directoryHandle) {
-				// If yes, save silently in the background without a prompt.
-				// The download function will resume the simulation when complete.
-				await saveFullSimulationToFile(true);
-			} else {
-				// If no, we need to ask the user for a folder.
-				promptForBatchSave('History');
-			}
-			return; // Exit this step; resumption is handled by the functions above.
+			await offloadHistoryToDB();
 		}
 
 		const imageLimitBytes = (simState.config.exports.sizeThresholdForZip || 0) * 1024 * 1024;
 		if (simState.saveImagesEnabled && imageLimitBytes > 0 && simState.capturedImagesTotalSize >= imageLimitBytes) {
-			// ALWAYS pause the simulation when a buffer is full
-			simState.isRunning = false;
-			clearTimeout(simState.timeoutId);
-			updateButtonStatesAndUI();
-
-			// Check if we already have a directory handle
-			if (simState.directoryHandle) {
-				// If yes, save silently in the background without a prompt.
-				await downloadImagesAsZIP(true);
-			} else {
-				// If no, we need to ask the user for a folder.
-				promptForBatchSave('Images');
-			}
-			return; // Exit this step; resumption is handled by the functions above.
+			await offloadImagesToDB();
 		}
 
 		const arenaStateLimitBytes = (simState.config.arenaStateBuffer.sizeLimitMB || 0) * 1024 * 1024;
 		if (simState.saveArenaStatesEnabled && arenaStateLimitBytes > 0 && simState.capturedArenaStatesTSVTotalSize >= arenaStateLimitBytes) {
-			// ALWAYS pause the simulation when a buffer is full
-			simState.isRunning = false;
-			clearTimeout(simState.timeoutId);
-			updateButtonStatesAndUI();
-
-			// Check if we already have a directory handle
-			if (simState.directoryHandle) {
-				// If yes, save silently in the background without a prompt.
-				await downloadArenaStatesAsZIP(true);
-			} else {
-				// If no, we need to ask the user for a folder.
-				promptForBatchSave('ArenaStates');
-			}
-			return; // Exit this step; resumption is handled by the functions above.
+			await offloadArenaStatesToDB();
 		}
 		
 		// --- Schedule Next Step ---
@@ -4837,16 +5196,282 @@ async function runSimulationStep() {
 	}
 }
 
+	function updateImportSessionProgress(percentage, textStatus = null) {
+		const container = document.getElementById('importSessionProgressContainer');
+		const bar = document.getElementById('importSessionProgressBar');
+		const statusDiv = document.getElementById('importSessionStatusMessage');
+		
+		if (container && bar) {
+			if (percentage === null) {
+				container.classList.add('hidden');
+			} else {
+				container.classList.remove('hidden');
+				bar.style.width = `${percentage}%`;
+			}
+		}
+		if (statusDiv) {
+			if (textStatus === null) {
+				statusDiv.classList.add('hidden');
+				statusDiv.textContent = '';
+			} else {
+				statusDiv.classList.remove('hidden');
+				statusDiv.textContent = textStatus;
+			}
+		}
+	}
 
-	function captureArenaImage() {
-		const offscreenCanvas = document.createElement('canvas');
+	function updateRenderHistoryProgress(percentage, textStatus = null) {
+		const container = document.getElementById('renderHistoryProgressContainer');
+		const bar = document.getElementById('renderHistoryProgressBar');
+		const statusDiv = document.getElementById('renderHistoryStatusMessage');
+		
+		if (container && bar) {
+			if (percentage === null) {
+				container.classList.add('hidden');
+			} else {
+				container.classList.remove('hidden');
+				bar.style.width = `${percentage}%`;
+			}
+		}
+		if (statusDiv) {
+			if (textStatus === null) {
+				statusDiv.classList.add('hidden');
+				statusDiv.textContent = '';
+			} else {
+				statusDiv.classList.remove('hidden');
+				statusDiv.textContent = textStatus;
+			}
+		}
+	}
+
+	function updateRenderRangeInputs(forceReset = false) {
+		const fromInput = document.getElementById('renderFromStepInput');
+		const toInput = document.getElementById('renderToStepInput');
+		if (!fromInput || !toInput) return;
+
+		if (simState.optimizedHistoryFrames.size === 0) {
+			fromInput.value = 1;
+			toInput.value = 1;
+			fromInput.min = 1;
+			toInput.min = 1;
+			fromInput.max = 1;
+			toInput.max = 1;
+			return;
+		}
+
+		const steps = [...simState.optimizedHistoryFrames.keys()].sort((a, b) => a - b);
+		const minStep = steps[0];
+		const maxStep = steps[steps.length - 1];
+
+		const oldMin = parseInt(fromInput.min, 10) || 1;
+		const oldMax = parseInt(fromInput.max, 10) || 1;
+
+		fromInput.min = minStep;
+		fromInput.max = maxStep;
+		toInput.min = minStep;
+		toInput.max = maxStep;
+
+		const currentFrom = parseInt(fromInput.value, 10);
+		const currentTo = parseInt(toInput.value, 10);
+
+		if (forceReset || isNaN(currentFrom) || currentFrom < minStep || currentFrom > maxStep || currentFrom === oldMin) {
+			fromInput.value = minStep;
+		}
+		if (forceReset || isNaN(currentTo) || currentTo < minStep || currentTo > maxStep || currentTo === oldMax) {
+			toInput.value = maxStep;
+		}
+	}
+
+	function captureArenaImageForState(stateObject, step) {
 		const exportWidth = simState.imageExportResolution.width;
 		const exportHeight = simState.imageExportResolution.height;
-		offscreenCanvas.width = exportWidth;
-		offscreenCanvas.height = exportHeight;
+		const sizing = setupCanvasAndHexSize(exportWidth, exportHeight, simState.config.hexGridActualRadius);
+
+		const offscreenCanvas = document.createElement('canvas');
+		offscreenCanvas.width = sizing.actualCanvasWidth;
+		offscreenCanvas.height = sizing.actualCanvasHeight;
 		const offscreenCtx = offscreenCanvas.getContext('2d');
 
+		const cprgBgColor = canvas.style.backgroundColor || DEFAULT_CANVAS_BG_COLOR;
+
+		drawArenaOnContext(offscreenCtx,
+			sizing.actualCanvasWidth, 
+			sizing.actualCanvasHeight, 
+			stateObject.cells,
+			stateObject.activeFiringsThisStep,
+			stateObject.preyAiGrid,
+			stateObject.preyToxinNLGrid,
+			stateObject.preyToxinLGrid,
+			simState.config.hexGridActualRadius,
+			sizing.visualHexRadius,
+			sizing.calculatedOffsetX,
+			sizing.calculatedOffsetY,
+			cprgBgColor
+		);
+		
+		const finalCanvas = document.createElement('canvas');
+		finalCanvas.width = exportWidth;
+		finalCanvas.height = exportHeight;
+		const finalCtx = finalCanvas.getContext('2d');
+		finalCtx.fillStyle = cprgBgColor; 
+		finalCtx.fillRect(0, 0, exportWidth, exportHeight);
+		
+		const scale = Math.min(exportWidth / sizing.actualCanvasWidth, exportHeight / sizing.actualCanvasHeight);
+		const drawWidth = sizing.actualCanvasWidth * scale;
+		const drawHeight = sizing.actualCanvasHeight * scale;
+		const drawX = (exportWidth - drawWidth) / 2;
+		const drawY = (exportHeight - drawHeight) / 2;
+
+		finalCtx.drawImage(offscreenCanvas, 0, 0, sizing.actualCanvasWidth, sizing.actualCanvasHeight, drawX, drawY, drawWidth, drawHeight);
+
+		const dataURL = finalCanvas.toDataURL('image/png');
+		simState.capturedImagesDataURLs.push({ step: step, dataURL, isOffloaded: false });
+		simState.capturedImagesTotalSize += dataURL.length;
+	}
+
+	async function renderImagesFromHistory() {
+		if (simState.optimizedHistoryFrames.size === 0) {
+			await showInfoAlert("No history available to render images from.", "No History");
+			return;
+		}
+
+		// Read inputs and validate range
+		let fromStep = 1;
+		let toStep = 1;
+		if (renderFromStepInput && renderToStepInput) {
+			fromStep = parseInt(renderFromStepInput.value, 10);
+			toStep = parseInt(renderToStepInput.value, 10);
+		}
+
+		const steps = [...simState.optimizedHistoryFrames.keys()].sort((a, b) => a - b);
+		const minStep = steps[0];
+		const maxStep = steps[steps.length - 1];
+
+		if (isNaN(fromStep) || fromStep < minStep) fromStep = minStep;
+		if (isNaN(toStep) || toStep > maxStep) toStep = maxStep;
+
+		if (fromStep > toStep) {
+			await showInfoAlert("From step cannot be greater than To step.", "Invalid Range");
+			return;
+		}
+
+		const filteredSteps = steps.filter(s => s >= fromStep && s <= toStep);
+		const totalSteps = filteredSteps.length;
+		if (totalSteps === 0) {
+			await showInfoAlert("No history frames found in the specified range.", "Invalid Range");
+			return;
+		}
+
+		// Try to get directory handle first to avoid losing user gesture
+		let handle = null;
+		if ('showDirectoryPicker' in window) {
+			handle = await getDirectoryHandle();
+			if (!handle) {
+				console.log("No directory handle selected, falling back to normal browser downloads.");
+			}
+		}
+
+		simState.isRenderingFromHistory = true;
+		simState.renderCancelled = false;
+
+		if (cancelRenderButton) {
+			cancelRenderButton.disabled = false;
+			cancelRenderButton.textContent = "Stop & Save Rendered";
+		}
+
+		updateButtonStatesAndUI();
+		updateConfigFromUI(true); // Read latest UI settings (size, limits)
+
+		try {
+			// Clear existing images to make room for new render
+			const db = await getDB();
+			await db.clearImages();
+			simState.capturedImagesDataURLs = [];
+			simState.capturedImagesTotalSize = 0;
+
+			updateRenderHistoryProgress(0, `Starting render of ${totalSteps} steps...`);
+
+			const imageLimitBytes = (simState.config.exports.sizeThresholdForZip || 0) * 1024 * 1024;
+
+			for (let i = 0; i < totalSteps; i++) {
+				if (simState.renderCancelled) {
+					console.log("Rendering cancelled by user.");
+					break;
+				}
+
+				const stepIndex = filteredSteps[i];
+				
+				// Get history frame (loads from IndexedDB if offloaded)
+				const optimizedState = await getHistoryFrame(stepIndex);
+				if (!optimizedState) continue;
+
+				// Rehydrate
+				const rehydratedState = rehydrateOptimizedStep(optimizedState);
+
+				// Capture image from rehydrated state
+				captureArenaImageForState(rehydratedState, stepIndex);
+
+				// Check buffer limit and offload if needed
+				if (imageLimitBytes > 0 && simState.capturedImagesTotalSize >= imageLimitBytes) {
+					updateRenderHistoryProgress(Math.round((i / totalSteps) * 100), `Offloading image batch to DB...`);
+					await offloadImagesToDB();
+				}
+
+				// Update progress
+				const percent = Math.round(((i + 1) / totalSteps) * 100);
+				updateRenderHistoryProgress(percent, `Rendering step ${stepIndex} (${i + 1}/${totalSteps})...`);
+
+				// Let browser render frame/progress bar
+				await new Promise(resolve => requestAnimationFrame(resolve));
+			}
+
+			// Offload any remaining images to DB
+			updateRenderHistoryProgress(100, simState.renderCancelled ? "Saving rendered steps..." : "Finalizing render...");
+			await offloadImagesToDB();
+
+			// Trigger ZIP packaging and save
+			if (simState.capturedImagesDataURLs.length > 0) {
+				updateRenderHistoryProgress(100, "Packaging images into ZIP...");
+				
+				// We can call downloadImagesAsZIP directly
+				await downloadImagesAsZIP(false, true);
+
+				updateRenderHistoryProgress(null, null);
+				if (simState.renderCancelled) {
+					await showInfoAlert("Rendering stopped. Rendered images saved successfully!", "Stopped");
+				} else {
+					await showInfoAlert("Images rendered and saved successfully!", "Success");
+				}
+			} else {
+				updateRenderHistoryProgress(null, null);
+				if (simState.renderCancelled) {
+					await showInfoAlert("Rendering stopped. No images were rendered.", "Stopped");
+				} else {
+					await showInfoAlert("No images were rendered to save.", "Info");
+				}
+			}
+
+		} catch (error) {
+			console.error("Error rendering from history:", error);
+			updateRenderHistoryProgress(null, null);
+			await showInfoAlert(`Rendering failed: ${error.message}`, "Error");
+		} finally {
+			simState.isRenderingFromHistory = false;
+			updateButtonStatesAndUI();
+		}
+	}
+
+
+	function captureArenaImage() {
+		const exportWidth = simState.imageExportResolution.width;
+		const exportHeight = simState.imageExportResolution.height;
 		const sizing = setupCanvasAndHexSize(exportWidth, exportHeight, simState.config.hexGridActualRadius);
+
+		const offscreenCanvas = document.createElement('canvas');
+		offscreenCanvas.width = sizing.actualCanvasWidth;
+		offscreenCanvas.height = sizing.actualCanvasHeight;
+		const offscreenCtx = offscreenCanvas.getContext('2d');
+
 		const cprgBgColor = canvas.style.backgroundColor || DEFAULT_CANVAS_BG_COLOR;
 
 		drawArenaOnContext(offscreenCtx,
@@ -4879,15 +5504,24 @@ async function runSimulationStep() {
 
 		finalCtx.drawImage(offscreenCanvas, 0, 0, sizing.actualCanvasWidth, sizing.actualCanvasHeight, drawX, drawY, drawWidth, drawHeight);
 
-
 		const dataURL = finalCanvas.toDataURL('image/png');
-		simState.capturedImagesDataURLs.push({ step: simState.simulationStepCount, dataURL: dataURL });
+		simState.capturedImagesDataURLs.push({ step: simState.simulationStepCount, dataURL, isOffloaded: false });
 		simState.capturedImagesTotalSize += dataURL.length;
-
 	}
 
 
 	async function showEndOfSimulationReport(outcomeReason) {
+		// Automatically offload all remaining RAM data to IndexedDB at the end of the simulation
+		if (simState.config.historyEnabled) {
+			await offloadHistoryToDB();
+		}
+		if (simState.saveImagesEnabled) {
+			await offloadImagesToDB();
+		}
+		if (simState.saveArenaStatesEnabled) {
+			await offloadArenaStatesToDB();
+		}
+
 		// Show the modal
 		reportModalOverlay.classList.remove('hidden');
 		
@@ -5347,26 +5981,67 @@ async function downloadImagesAsZIP(isMidSimBatch = false, andClearBuffer = false
     if (button && !isMidSimBatch) button.textContent = 'Packaging Images...';
     await new Promise(resolve => setTimeout(resolve, 0));
     
-    const zip = new JSZip();
-    const firstStep = simState.capturedImagesDataURLs[0].step;
-    const lastStep = simState.capturedImagesDataURLs[simState.capturedImagesDataURLs.length - 1].step;
-    const imagesToProcess = [...simState.capturedImagesDataURLs]; // Work on a copy
+    // Chunking parameters
+    const chunkLimitMB = simState.config.exports.sizeThresholdForZip || 100;
+    const chunkLimitBytes = chunkLimitMB * 1024 * 1024;
+
+    const db = await getDB();
+    const allImagesFromDB = await db.getAllImages();
+    const dbImagesMap = new Map(allImagesFromDB.map(img => [img.step, img.dataURL]));
+    
+    let currentZip = new JSZip();
+    let currentZipSize = 0;
+    let zipIndex = 1;
+    let firstStepInZip = null;
+    let lastStepInZip = null;
+    const processedSteps = [];
+
+    for (let i = 0; i < simState.capturedImagesDataURLs.length; i++) {
+        const imgRef = simState.capturedImagesDataURLs[i];
+        let dataURL = null;
+        if (!imgRef.isOffloaded) {
+            dataURL = imgRef.dataURL;
+        } else {
+            dataURL = dbImagesMap.get(imgRef.step);
+        }
+        if (!dataURL) continue;
+
+        if (firstStepInZip === null) firstStepInZip = imgRef.step;
+        lastStepInZip = imgRef.step;
+        processedSteps.push(imgRef.step);
+
+        const base64Data = dataURL.substring(dataURL.indexOf(',') + 1);
+        currentZip.file(`image_${String(imgRef.step).padStart(5, '0')}.png`, base64Data, { base64: true });
+        currentZipSize += dataURL.length;
+
+        // Update progress bar
+        const percent = Math.round((i / simState.capturedImagesDataURLs.length) * 100);
+        updateSaveProgress(percent, `Packaging Images: ${percent}%`);
+
+        // If we reached the size limit, or it is the last image, write the ZIP
+        if (currentZipSize >= chunkLimitBytes || i === simState.capturedImagesDataURLs.length - 1) {
+            const content = await currentZip.generateAsync({ type: "blob", compression: "STORE" });
+            const fileName = `${simState.runTimestamp || generateTimestamp()}_images_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+            
+            await saveFile(content, fileName, { preApprovedHandle: handle });
+
+            // Reset ZIP parameters
+            currentZip = new JSZip();
+            currentZipSize = 0;
+            firstStepInZip = null;
+            zipIndex++;
+        }
+    }
+    updateSaveProgress(null, "Images saved successfully!");
 
     if (isMidSimBatch || andClearBuffer) {
         simState.capturedImagesDataURLs = [];
         simState.capturedImagesTotalSize = 0;
+        // Delete processed images from IndexedDB
+        for (const step of processedSteps) {
+            await db.deleteImage(step);
+        }
     }
-
-    for (const imgData of imagesToProcess) {
-        const base64Data = imgData.dataURL.substring(imgData.dataURL.indexOf(',') + 1);
-        zip.file(`image_${String(imgData.step).padStart(5, '0')}.png`, base64Data, { base64: true });
-    }
-    
-    const content = await zip.generateAsync({ type: "blob", compression: "STORE" });
-    const fileName = `${simState.runTimestamp || generateTimestamp()}_images_steps_${String(firstStep).padStart(5, '0')}_to_${String(lastStep).padStart(5, '0')}.zip`;
-
-    // 3. Save the file, passing in the handle we already have.
-    await saveFile(content, fileName, { preApprovedHandle: handle });
 
     if (isMidSimBatch) {
         startButton.click();
@@ -5397,29 +6072,68 @@ async function downloadArenaStatesAsZIP(isMidSimBatch = false, andClearBuffer = 
         if (confirmBtn) confirmBtn.textContent = 'Packaging States... Please Wait';
     }
 
-	
     if (button && !isMidSimBatch) button.textContent = 'Packaging States...';
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    const zip = new JSZip();
-    const firstStep = simState.capturedArenaStatesTSV[0].step;
-    const lastStep = simState.capturedArenaStatesTSV[simState.capturedArenaStatesTSV.length - 1].step;
-    const statesToProcess = [...simState.capturedArenaStatesTSV];
+    // Chunking parameters
+    const chunkLimitMB = simState.config.arenaStateBuffer.sizeLimitMB || 50;
+    const chunkLimitBytes = chunkLimitMB * 1024 * 1024;
+
+    const db = await getDB();
+    const allStatesFromDB = await db.getAllArenaStates();
+    const dbStatesMap = new Map(allStatesFromDB.map(s => [s.step, s.tsvData]));
+    
+    let currentZip = new JSZip();
+    let currentZipSize = 0;
+    let zipIndex = 1;
+    let firstStepInZip = null;
+    let lastStepInZip = null;
+    const processedSteps = [];
+
+    for (let i = 0; i < simState.capturedArenaStatesTSV.length; i++) {
+        const stateRef = simState.capturedArenaStatesTSV[i];
+        let tsvData = null;
+        if (!stateRef.isOffloaded) {
+            tsvData = stateRef.tsvData;
+        } else {
+            tsvData = dbStatesMap.get(stateRef.step);
+        }
+        if (!tsvData) continue;
+
+        if (firstStepInZip === null) firstStepInZip = stateRef.step;
+        lastStepInZip = stateRef.step;
+        processedSteps.push(stateRef.step);
+
+        currentZip.file(`arena_${String(stateRef.step).padStart(5, '0')}.tsv`, tsvData);
+        currentZipSize += tsvData.length;
+
+        // Update progress bar
+        const percent = Math.round((i / simState.capturedArenaStatesTSV.length) * 100);
+        updateSaveProgress(percent, `Packaging States: ${percent}%`);
+
+        // Write chunk if limit reached or last state
+        if (currentZipSize >= chunkLimitBytes || i === simState.capturedArenaStatesTSV.length - 1) {
+            const content = await currentZip.generateAsync({ type: "blob", compression: "STORE" });
+            const fileName = `${simState.runTimestamp || generateTimestamp()}_arenas_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+            
+            await saveFile(content, fileName, { preApprovedHandle: handle });
+
+            currentZip = new JSZip();
+            currentZipSize = 0;
+            firstStepInZip = null;
+            zipIndex++;
+        }
+    }
+    updateSaveProgress(null, "Arena states saved successfully!");
 
     if (isMidSimBatch || andClearBuffer) {
         simState.capturedArenaStatesTSV = [];
         simState.capturedArenaStatesTSVTotalSize = 0;
+        // Delete processed arena states from IndexedDB
+        for (const step of processedSteps) {
+            await db.deleteArenaState(step);
+        }
     }
-
-    for (const stateData of statesToProcess) {
-        zip.file(`arena_${String(stateData.step).padStart(5, '0')}.tsv`, stateData.tsvData);
-    }
-
-    const content = await zip.generateAsync({ type: "blob", compression: "STORE" });
-    const fileName = `${simState.runTimestamp || generateTimestamp()}_arenas_steps_${String(firstStep).padStart(5, '0')}_to_${String(lastStep).padStart(5, '0')}.zip`;
-    
-    await saveFile(content, fileName, { preApprovedHandle: handle });
-    // --- END NEW LOGIC ---
 
     if (isMidSimBatch) {
         startButton.click();
@@ -5436,7 +6150,8 @@ async function saveFullSimulationToFile(isBatch = false) {
         button.disabled = true;
     }
 
-    if (!simState.config.historyEnabled || simState.optimizedHistoryFrames.length === 0) {
+    const allKeys = [...simState.optimizedHistoryFrames.keys()].sort((a, b) => a - b);
+    if (!simState.config.historyEnabled || allKeys.length === 0) {
         if (!isBatch) await showInfoAlert("Full history saving is not enabled or no history has been recorded.", "Cannot Save Session");
         if (button && !isBatch) {
             button.disabled = false;
@@ -5444,19 +6159,7 @@ async function saveFullSimulationToFile(isBatch = false) {
         return;
     }
 
-    // --- FIX: All operations now use a local copy ("framesToProcess") ---
-
-    // 1. Make a local copy of the buffer IMMEDIATELY after the initial check.
-	const framesToProcess = Array.from(simState.optimizedHistoryFrames.values()).sort((a, b) => a.simulationStepCount - b.simulationStepCount);
-
-    // 2. Clear the main buffer right away if this is a batch save.
-    if (isBatch) {
-        simState.history = [];
-        simState.optimizedHistoryFrames = new Map();
-        simState.capturedHistoryTotalSize = 0;
-    }
-    
-    // 3. Get the handle and provide user feedback.
+    // Get the handle and provide user feedback.
     const handle = await getDirectoryHandle();
     if (isBatch) {
         const confirmBtn = document.getElementById('confirmBatchSaveButton');
@@ -5465,26 +6168,119 @@ async function saveFullSimulationToFile(isBatch = false) {
     if (button && !isBatch) button.textContent = 'Packaging History...';
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    // 4. All subsequent operations use the safe local copy.
-    const firstStep = framesToProcess[0].simulationStepCount;
-    const lastStep = framesToProcess[framesToProcess.length - 1].simulationStepCount;
+    const firstStep = allKeys[0];
+    const lastStep = allKeys[allKeys.length - 1];
     const fileName = `${simState.runTimestamp || generateTimestamp()}_history_steps_${String(firstStep).padStart(5, '0')}_to_${String(lastStep).padStart(5, '0')}.bft6`;
 
-    const sessionData = {
-        settingsTSV: generateSettingsTSV(),
-        history: framesToProcess, // Use the safe copy
-        schema_version: 3,
-        cell_schema: CELL_SCHEMA
-    };
+    // Stream the history file sequentially to keep a tiny memory footprint.
+    let writableStream = null;
+    const blobChunks = [];
 
-    const encodedData = msgpack.encode(sessionData);
-    const blob = new Blob([encodedData], {
-        type: 'application/octet-stream'
-    });
+    if (handle) {
+        try {
+            const fileHandle = await handle.getFileHandle(fileName, { create: true });
+            writableStream = await fileHandle.createWritable();
+        } catch (err) {
+            console.error("Could not create writable stream, falling back to Blob chunks:", err);
+            writableStream = null;
+        }
+    }
 
-    await saveFile(blob, fileName, {
-        preApprovedHandle: handle
-    });
+    let hasStreamError = false;
+    async function writeChunk(data) {
+        if (writableStream && !hasStreamError) {
+            try {
+                await writableStream.write(data);
+                return;
+            } catch (err) {
+                console.error("Writable stream write error, falling back to Blob chunks:", err);
+                hasStreamError = true;
+                simState.directoryHandle = null; // force fresh handle next time
+                try {
+                    await writableStream.abort();
+                } catch(e) {}
+                writableStream = null;
+            }
+        }
+        blobChunks.push(data);
+    }
+
+    const db = await getDB();
+    
+    // Outer MsgPack map has 4 keys: "schema_version", "cell_schema", "settingsTSV", "history"
+    await writeChunk(new Uint8Array([0x84])); // 0x84 represents a fixmap with 4 entries
+
+    // 1. schema_version -> 3
+    await writeChunk(msgpack.encode("schema_version"));
+    await writeChunk(msgpack.encode(3));
+
+    // 2. cell_schema -> CELL_SCHEMA
+    await writeChunk(msgpack.encode("cell_schema"));
+    await writeChunk(msgpack.encode(CELL_SCHEMA));
+
+    // 3. settingsTSV -> generateSettingsTSV()
+    await writeChunk(msgpack.encode("settingsTSV"));
+    await writeChunk(msgpack.encode(generateSettingsTSV()));
+
+    // 4. history -> Array of N frames
+    await writeChunk(msgpack.encode("history"));
+
+    const N = allKeys.length;
+    if (N < 16) {
+        await writeChunk(new Uint8Array([0x90 | N]));
+    } else if (N < 65536) {
+        await writeChunk(new Uint8Array([0xdc, (N >> 8) & 0xff, N & 0xff]));
+    } else {
+        await writeChunk(new Uint8Array([0xdd, (N >> 24) & 0xff, (N >> 16) & 0xff, (N >> 8) & 0xff, N & 0xff]));
+    }
+
+    // Write frames sequentially
+    for (let i = 0; i < N; i++) {
+        const frame = await getHistoryFrame(allKeys[i]);
+        if (frame) {
+            await writeChunk(msgpack.encode(frame));
+        }
+        const percent = Math.round((i / N) * 100);
+        updateSaveProgress(percent, `Saving History: ${percent}%`);
+    }
+
+    // Complete saving process
+    if (writableStream && !hasStreamError) {
+        try {
+            await writableStream.close();
+            console.log(`Successfully stream-saved single history file: ${fileName}`);
+        } catch (err) {
+            console.error("Writable stream close error, falling back to Blob chunks:", err);
+            simState.directoryHandle = null;
+            const singleFileBlob = new Blob(blobChunks, { type: 'application/octet-stream' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(singleFileBlob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+    } else {
+        const singleFileBlob = new Blob(blobChunks, { type: 'application/octet-stream' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(singleFileBlob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        console.log(`Successfully downloaded single history file via Blob fallback: ${fileName}`);
+    }
+    updateSaveProgress(null, "History saved successfully!");
+
+    // Clear the main buffer right away if this is a batch save.
+    if (isBatch) {
+        simState.history = [];
+        simState.optimizedHistoryFrames = new Map();
+        simState.capturedHistoryTotalSize = 0;
+        await db.clearHistory();
+    }
 
     if (isBatch) {
         startButton.click();
@@ -5673,116 +6469,482 @@ async function handleSaveAllData() {
     button.textContent = 'Saving...';
     
     try {
-        statusDiv.textContent = 'Preparing saves...';
+        updateSaveProgress(0, 'Preparing saves...');
 
         if (simState.historicalData.length > 0) {
-            statusDiv.textContent = 'Saving simulation data...';
+            updateSaveProgress(0, 'Saving simulation data...');
             // This function saves the file but does NOT clear the data from memory.
             await downloadDataAsTSV();
         }
  
         if (simState.capturedImagesDataURLs.length > 0) {
-            statusDiv.textContent = 'Saving images...';
-            // The call to saveFile() inside this function will now handle the prompt.
             await downloadImagesAsZIP(false, true); 
         }
 
         if (simState.capturedArenaStatesTSV.length > 0) {
-            statusDiv.textContent = 'Saving arena states...';
             await downloadArenaStatesAsZIP(false, false); 
         }
 
         if (simState.optimizedHistoryFrames.size > 0) {
-            statusDiv.textContent = 'Saving history session...';
             await saveFullSimulationToFile(false);
         }
 
-        // The separate downloadDataAsTSV button will handle its own save.
-
-        statusDiv.textContent = 'All archives saved successfully!';
+        updateSaveProgress(null, 'All archives saved successfully!');
 
     } catch (err) {
         console.error("An error occurred during 'Save All' sequence:", err);
-        statusDiv.textContent = `An error occurred: ${err.message}`;
+        updateSaveProgress(null, `An error occurred: ${err.message}`);
     } finally {
         button.disabled = false;
         button.textContent = 'Save All Data';
     }
 }
 
-async function loadFullSimulationFromFile(fileContent) { // fileContent is an ArrayBuffer
+async function loadFullSimulationFromFile(fileInputData) { // can be File, Blob or ArrayBuffer
     try {
-        console.log("Decoding session file...");
-        const decodedSession = msgpack.decode(new Uint8Array(fileContent));
+        simState.importSessionCancelled = false;
+        simState.isImportingSession = true;
+        updateButtonStatesAndUI();
 
-        if (!decodedSession.settingsTSV || !decodedSession.history || !decodedSession.schema_version || decodedSession.schema_version < 3) {
-            throw new Error("Invalid or outdated session file format.");
+        if (cancelImportSessionButton) {
+            cancelImportSessionButton.disabled = false;
+            cancelImportSessionButton.textContent = "Stop & Save History Loaded";
+        }
+        updateImportSessionProgress(0, "Initializing session import...");
+
+        let blob = fileInputData;
+        if (fileInputData instanceof ArrayBuffer) {
+            blob = new Blob([fileInputData]);
         }
 
-        // Helper to parse specific values from the settings TSV without applying them
-        const parseSetting = (key) => {
-            const line = decodedSession.settingsTSV.split('\n').find(l => l.startsWith(key));
-            return line ? line.split('\t')[1].trim() : null;
-        };
+        console.log("Starting low-memory stream-decoding of session file...");
 
-        const newFileSeed = parseSetting("Simulation_Seed");
-        const newFileRadius = parseSetting("Arena_Radius");
+        // 1. Recursive MsgPack decoder supporting core schema structures
+        function decodeMsgPackPart(bytes, offset) {
+            let pos = offset;
+            if (pos >= bytes.length) {
+                throw new RangeError("Out of bounds");
+            }
+            const type = bytes[pos];
+            if (type === undefined) {
+                throw new RangeError("Out of bounds");
+            }
+            
+            if (type <= 0x7f) return { value: type, bytesRead: 1 };
+            if (type >= 0xe0) return { value: type - 0x100, bytesRead: 1 };
+            
+            if (type >= 0x80 && type <= 0x8f) {
+                const size = type & 0x0f;
+                pos += 1;
+                const map = {};
+                for (let i = 0; i < size; i++) {
+                    const keyRes = decodeMsgPackPart(bytes, pos);
+                    pos += keyRes.bytesRead;
+                    const valRes = decodeMsgPackPart(bytes, pos);
+                    pos += valRes.bytesRead;
+                    map[keyRes.value] = valRes.value;
+                }
+                return { value: map, bytesRead: pos - offset };
+            }
+            if (type >= 0x90 && type <= 0x9f) {
+                const size = type & 0x0f;
+                pos += 1;
+                const arr = [];
+                for (let i = 0; i < size; i++) {
+                    const res = decodeMsgPackPart(bytes, pos);
+                    pos += res.bytesRead;
+                    arr.push(res.value);
+                }
+                return { value: arr, bytesRead: pos - offset };
+            }
+            if (type >= 0xa0 && type <= 0xbf) {
+                const length = type & 0x1f;
+                if (pos + 1 + length > bytes.length) throw new RangeError("Out of bounds");
+                pos += 1;
+                const strBytes = bytes.subarray(pos, pos + length);
+                const str = new TextDecoder("utf-8").decode(strBytes);
+                return { value: str, bytesRead: 1 + length };
+            }
+            if (type === 0xc0) return { value: null, bytesRead: 1 };
+            if (type === 0xc2) return { value: false, bytesRead: 1 };
+            if (type === 0xc3) return { value: true, bytesRead: 1 };
+            
+            if (type === 0xcb) {
+                if (pos + 9 > bytes.length) throw new RangeError("Out of bounds");
+                const view = new DataView(bytes.buffer, bytes.byteOffset + pos + 1, 8);
+                const val = view.getFloat64(0, false);
+                return { value: val, bytesRead: 9 };
+            }
+            if (type === 0xcc) {
+                if (pos + 2 > bytes.length) throw new RangeError("Out of bounds");
+                return { value: bytes[pos + 1], bytesRead: 2 };
+            }
+            if (type === 0xcd) {
+                if (pos + 3 > bytes.length) throw new RangeError("Out of bounds");
+                return { value: (bytes[pos + 1] << 8) | bytes[pos + 2], bytesRead: 3 };
+            }
+            if (type === 0xce) {
+                if (pos + 5 > bytes.length) throw new RangeError("Out of bounds");
+                const val = ((bytes[pos + 1] << 24) | (bytes[pos + 2] << 16) | (bytes[pos + 3] << 8) | bytes[pos + 4]) >>> 0;
+                return { value: val, bytesRead: 5 };
+            }
+            if (type === 0xd0) {
+                if (pos + 2 > bytes.length) throw new RangeError("Out of bounds");
+                return { value: new Int8Array([bytes[pos + 1]])[0], bytesRead: 2 };
+            }
+            if (type === 0xd1) {
+                if (pos + 3 > bytes.length) throw new RangeError("Out of bounds");
+                return { value: new Int16Array([(bytes[pos + 1] << 8) | bytes[pos + 2]])[0], bytesRead: 3 };
+            }
+            if (type === 0xd2) {
+                if (pos + 5 > bytes.length) throw new RangeError("Out of bounds");
+                return { value: new Int32Array([(bytes[pos + 1] << 24) | (bytes[pos + 2] << 16) | (bytes[pos + 3] << 8) | bytes[pos + 4]])[0], bytesRead: 5 };
+            }
+            if (type === 0xd9) {
+                if (pos + 2 > bytes.length) throw new RangeError("Out of bounds");
+                const length = bytes[pos + 1];
+                if (pos + 2 + length > bytes.length) throw new RangeError("Out of bounds");
+                pos += 2;
+                const strBytes = bytes.subarray(pos, pos + length);
+                const str = new TextDecoder("utf-8").decode(strBytes);
+                return { value: str, bytesRead: 2 + length };
+            }
+            if (type === 0xda) {
+                if (pos + 3 > bytes.length) throw new RangeError("Out of bounds");
+                const length = (bytes[pos + 1] << 8) | bytes[pos + 2];
+                if (pos + 3 + length > bytes.length) throw new RangeError("Out of bounds");
+                pos += 3;
+                const strBytes = bytes.subarray(pos, pos + length);
+                const str = new TextDecoder("utf-8").decode(strBytes);
+                return { value: str, bytesRead: 3 + length };
+            }
+            if (type === 0xdb) {
+                if (pos + 5 > bytes.length) throw new RangeError("Out of bounds");
+                const length = ((bytes[pos + 1] << 24) | (bytes[pos + 2] << 16) | (bytes[pos + 3] << 8) | bytes[pos + 4]) >>> 0;
+                if (pos + 5 + length > bytes.length) throw new RangeError("Out of bounds");
+                pos += 5;
+                const strBytes = bytes.subarray(pos, pos + length);
+                const str = new TextDecoder("utf-8").decode(strBytes);
+                return { value: str, bytesRead: 5 + length };
+            }
+            if (type === 0xdc) {
+                if (pos + 3 > bytes.length) throw new RangeError("Out of bounds");
+                const size = (bytes[pos + 1] << 8) | bytes[pos + 2];
+                pos += 3;
+                const arr = [];
+                for (let i = 0; i < size; i++) {
+                    const res = decodeMsgPackPart(bytes, pos);
+                    pos += res.bytesRead;
+                    arr.push(res.value);
+                }
+                return { value: arr, bytesRead: pos - offset };
+            }
+            if (type === 0xdd) {
+                if (pos + 5 > bytes.length) throw new RangeError("Out of bounds");
+                const size = ((bytes[pos + 1] << 24) | (bytes[pos + 2] << 16) | (bytes[pos + 3] << 8) | bytes[pos + 4]) >>> 0;
+                pos += 5;
+                const arr = [];
+                for (let i = 0; i < size; i++) {
+                    const res = decodeMsgPackPart(bytes, pos);
+                    pos += res.bytesRead;
+                    arr.push(res.value);
+                }
+                return { value: arr, bytesRead: pos - offset };
+            }
+            if (type === 0xde) {
+                if (pos + 3 > bytes.length) throw new RangeError("Out of bounds");
+                const size = (bytes[pos + 1] << 8) | bytes[pos + 2];
+                pos += 3;
+                const map = {};
+                for (let i = 0; i < size; i++) {
+                    const keyRes = decodeMsgPackPart(bytes, pos);
+                    pos += keyRes.bytesRead;
+                    const valRes = decodeMsgPackPart(bytes, pos);
+                    pos += valRes.bytesRead;
+                    map[keyRes.value] = valRes.value;
+                }
+                return { value: map, bytesRead: pos - offset };
+            }
+            if (type === 0xdf) {
+                if (pos + 5 > bytes.length) throw new RangeError("Out of bounds");
+                const size = ((bytes[pos + 1] << 24) | (bytes[pos + 2] << 16) | (bytes[pos + 3] << 8) | bytes[pos + 4]) >>> 0;
+                pos += 5;
+                const map = {};
+                for (let i = 0; i < size; i++) {
+                    const keyRes = decodeMsgPackPart(bytes, pos);
+                    pos += keyRes.bytesRead;
+                    const valRes = decodeMsgPackPart(bytes, pos);
+                    pos += valRes.bytesRead;
+                    map[keyRes.value] = valRes.value;
+                }
+                return { value: map, bytesRead: pos - offset };
+            }
+            
+            throw new Error(`Unsupported MsgPack type byte: 0x${type.toString(16)}`);
+        }
 
-        // Check if we are merging into existing history or starting fresh
-        if (simState.optimizedHistoryFrames.size === 0) {
-            // This is the FIRST file being loaded. Reset everything.
-            console.log("Loading initial history file.");
-            initializeBlankSlate();
-            importSettingsFromTSV(decodedSession.settingsTSV);
-            updateConfigFromUI(true);
-            simState.runTimestamp = newFileSeed; // Use seed as a persistent run ID for consistent filenames
+        // 2. Sliding window helper to slice and read the file sequentially
+        let filePos = 0;
+        const fileSize = blob.size;
+        const defaultBlockSize = 10 * 1024 * 1024; // 10MB read block size
+        let currentBuffer = new Uint8Array(0);
+        let currentBufferOffset = 0;
 
+        async function ensureBytes(requiredBytes) {
+            const remainingBuffered = currentBuffer.length - currentBufferOffset;
+            if (remainingBuffered >= requiredBytes) {
+                return;
+            }
+            const readSize = Math.max(defaultBlockSize, requiredBytes);
+            const slice = blob.slice(filePos, filePos + readSize);
+            const buffer = await slice.arrayBuffer();
+            
+            const newBuffer = new Uint8Array(remainingBuffered + buffer.byteLength);
+            newBuffer.set(currentBuffer.subarray(currentBufferOffset));
+            newBuffer.set(new Uint8Array(buffer), remainingBuffered);
+            
+            filePos += buffer.byteLength;
+            currentBuffer = newBuffer;
+            currentBufferOffset = 0;
+        }
+
+        let lastSuccessfulFrameSize = 10000;
+
+        async function readMsgPackPart() {
+            await ensureBytes(9);
+            const type = currentBuffer[currentBufferOffset];
+            
+            let estimatedSize = 1;
+            if (type >= 0xa0 && type <= 0xbf) estimatedSize = 1 + (type & 0x1f);
+            else if (type === 0xcb) estimatedSize = 9;
+            else if (type === 0xcc) estimatedSize = 2;
+            else if (type === 0xcd) estimatedSize = 3;
+            else if (type === 0xce) estimatedSize = 5;
+            else if (type === 0xd0) estimatedSize = 2;
+            else if (type === 0xd1) estimatedSize = 3;
+            else if (type === 0xd2) estimatedSize = 5;
+            else if (type === 0xd9) {
+                await ensureBytes(2);
+                estimatedSize = 2 + currentBuffer[currentBufferOffset + 1];
+            } else if (type === 0xda) {
+                await ensureBytes(3);
+                estimatedSize = 3 + ((currentBuffer[currentBufferOffset + 1] << 8) | currentBuffer[currentBufferOffset + 2]);
+            } else if (type === 0xdb) {
+                await ensureBytes(5);
+                estimatedSize = 5 + (((currentBuffer[currentBufferOffset + 1] << 24) | (currentBuffer[currentBufferOffset + 2] << 16) | (currentBuffer[currentBufferOffset + 3] << 8) | currentBuffer[currentBufferOffset + 4]) >>> 0);
+            } else {
+                // Large objects like maps/arrays: start estimate with the size of the last successfully parsed object
+                estimatedSize = Math.max(10000, lastSuccessfulFrameSize);
+            }
+
+            await ensureBytes(estimatedSize);
+            
+            while (true) {
+                try {
+                    const result = decodeMsgPackPart(currentBuffer, currentBufferOffset);
+                    const bytesRead = result.bytesRead;
+                    currentBufferOffset += bytesRead;
+                    if (bytesRead > 100) {
+                        lastSuccessfulFrameSize = bytesRead;
+                    }
+                    return result.value;
+                } catch (err) {
+                    if (err.message.includes("out of bounds") || err instanceof RangeError) {
+                        // Protect RAM: if the entire remainder of the file has already been loaded,
+                        // doubling estimatedSize and retrying will result in an infinite loop/OOM crash.
+                        const remainingFileBytes = fileSize - filePos;
+                        if (remainingFileBytes <= 0) {
+                            throw new RangeError("Out of bounds: Truncated or corrupted session file");
+                        }
+
+                        estimatedSize *= 2;
+                        if (estimatedSize > fileSize) {
+                            throw err;
+                        }
+                        await ensureBytes(estimatedSize);
+                    } else {
+                        throw err;
+                    }
+                }
+            }
+        }
+
+        // 3. Decode the Outer Map Header
+        await ensureBytes(9);
+        const mapType = currentBuffer[currentBufferOffset];
+        let mapSize = 0;
+        if (mapType >= 0x80 && mapType <= 0x8f) {
+            mapSize = mapType & 0x0f;
+            currentBufferOffset += 1;
+        } else if (mapType === 0xde) {
+            mapSize = (currentBuffer[currentBufferOffset + 1] << 8) | currentBuffer[currentBufferOffset + 2];
+            currentBufferOffset += 3;
+        } else if (mapType === 0xdf) {
+            mapSize = ((currentBuffer[currentBufferOffset + 1] << 24) | (currentBuffer[currentBufferOffset + 2] << 16) | (currentBuffer[currentBufferOffset + 3] << 8) | currentBuffer[currentBufferOffset + 4]) >>> 0;
+            currentBufferOffset += 5;
         } else {
-            // This is a SUBSEQUENT file. Perform validation checks before merging.
-            console.log("Merging into existing history. Validating file...");
-            const currentSeed = simulationSeedInput.value;
-            const currentRadius = arenaGridRadiusInput.value;
+            throw new Error("Invalid session file: outer object is not a Map.");
+        }
 
-            if (currentSeed !== newFileSeed) {
-                throw new Error(`Seed mismatch! Current simulation seed is "${currentSeed}", but file's seed is "${newFileSeed}".`);
-            }
-            if (currentRadius !== newFileRadius) {
-                throw new Error(`Arena Radius mismatch! Current radius is "${currentRadius}", but file's radius is "${newFileRadius}".`);
+        let settingsTSV = null;
+        let cellSchema = CELL_SCHEMA;
+        let numFrames = 0;
+
+        // 4. Extract TSV Settings first to initialize the board
+        for (let entry = 0; entry < mapSize; entry++) {
+            if (simState.importSessionCancelled) break;
+            const key = await readMsgPackPart();
+            if (key === "schema_version") {
+                const version = await readMsgPackPart();
+                if (version < 3) throw new Error("Outdated session file version.");
+            } else if (key === "cell_schema") {
+                cellSchema = await readMsgPackPart();
+            } else if (key === "settingsTSV") {
+                settingsTSV = await readMsgPackPart();
+                
+                if (simState.optimizedHistoryFrames.size === 0) {
+                    console.log("Loading settings from stream...");
+                    await initializeBlankSlate();
+                    importSettingsFromTSV(settingsTSV);
+                    updateConfigFromUI(true);
+                    
+                    const newFileSeed = settingsTSV.split('\n').find(l => l.startsWith("Simulation_Seed"))?.split('\t')[1]?.trim();
+                    simState.runTimestamp = newFileSeed || generateTimestamp();
+                } else {
+                    // Additive loading: Validate that Seed and Arena Radius match
+                    const lines = settingsTSV.split('\n');
+                    const fileSeed = lines.find(l => l.startsWith("Simulation_Seed"))?.split('\t')[1]?.trim();
+                    const radiusLine = lines.find(l => l.startsWith("Arena_Radius"));
+                    const fileRadius = radiusLine ? parseInt(radiusLine.split('\t')[1]?.trim(), 10) : null;
+                    
+                    const currentSeed = simulationSeedInput.value;
+                    const currentRadius = simState.config.hexGridActualRadius;
+                    
+                    if (fileSeed !== currentSeed || (fileRadius !== null && fileRadius !== currentRadius)) {
+                        throw new Error(`Session mismatch. The file's Seed (${fileSeed}) or Arena Radius (${fileRadius}) does not match the current Seed (${currentSeed}) or Arena Radius (${currentRadius}).`);
+                    }
+                }
+            } else if (key === "history") {
+                await ensureBytes(9);
+                const arrayType = currentBuffer[currentBufferOffset];
+                if (arrayType >= 0x90 && arrayType <= 0x9f) {
+                    numFrames = arrayType & 0x0f;
+                    currentBufferOffset += 1;
+                } else if (arrayType === 0xdc) {
+                    numFrames = (currentBuffer[currentBufferOffset + 1] << 8) | currentBuffer[currentBufferOffset + 2];
+                    currentBufferOffset += 3;
+                } else if (arrayType === 0xdd) {
+                    numFrames = ((currentBuffer[currentBufferOffset + 1] << 24) | (currentBuffer[currentBufferOffset + 2] << 16) | (currentBuffer[currentBufferOffset + 3] << 8) | currentBuffer[currentBufferOffset + 4]) >>> 0;
+                    currentBufferOffset += 5;
+                } else {
+                    throw new Error("Invalid session file: 'history' field is not an Array.");
+                }
+
+                console.log(`Stream-decoding ${numFrames} history frames directly to database...`);
+                const db = await getDB();
+                
+                let batch = [];
+                const batchSize = 100;
+
+                for (let frameIndex = 0; frameIndex < numFrames; frameIndex++) {
+                    if (simState.importSessionCancelled) {
+                        // Write any pending batch to IndexedDB before stopping
+                        if (batch.length > 0) {
+                            const transaction = db.db.transaction("history", "readwrite");
+                            const store = transaction.objectStore("history");
+                            
+                            for (const stepObj of batch) {
+                                store.put({ step: stepObj.simulationStepCount, data: stepObj });
+                            }
+
+                            await new Promise((resolve, reject) => {
+                                transaction.oncomplete = () => resolve();
+                                transaction.onerror = (e) => reject(e.target.error);
+                            });
+
+                            batch = [];
+                        }
+                        break;
+                    }
+
+                    const optimizedStep = await readMsgPackPart();
+                    batch.push(optimizedStep);
+                    
+                    const lightweightStep = { ...optimizedStep };
+                    lightweightStep.isOffloaded = true;
+                    lightweightStep.cells = [];
+                    lightweightStep.attackerAiGrid = [];
+                    lightweightStep.preyAiGrid = [];
+                    lightweightStep.preyToxinNLGrid = [];
+                    lightweightStep.preyToxinLGrid = [];
+                    simState.optimizedHistoryFrames.set(optimizedStep.simulationStepCount, lightweightStep);
+
+                    // If batch is full, or it is the last frame, write to IndexedDB in a single transaction
+                    if (batch.length >= batchSize || frameIndex === numFrames - 1) {
+                        const transaction = db.db.transaction("history", "readwrite");
+                        const store = transaction.objectStore("history");
+                        
+                        for (const stepObj of batch) {
+                            store.put({ step: stepObj.simulationStepCount, data: stepObj });
+                        }
+
+                        await new Promise((resolve, reject) => {
+                            transaction.oncomplete = () => resolve();
+                            transaction.onerror = (e) => reject(e.target.error);
+                        });
+
+                        batch = []; // Clear batch to free memory
+
+                        // Update progress & yield control to prevent memory exhaustion and freeze
+                        const percent = Math.round(((frameIndex + 1) / numFrames) * 100);
+                        updateImportSessionProgress(percent, `Imported ${frameIndex + 1}/${numFrames} frames (${percent}%)`);
+                        await new Promise(resolve => setTimeout(resolve, 0)); // Allows garbage collection & UI repaint
+                    }
+                }
+            } else {
+                await readMsgPackPart(); // Skip unknown key values
             }
         }
 
-        // Add (or overwrite) the frames from the file into our history Map
-        for (const optimizedStep of decodedSession.history) {
-            simState.optimizedHistoryFrames.set(optimizedStep.simulationStepCount, optimizedStep);
-        }
-        console.log(`Successfully loaded/merged ${decodedSession.history.length} frames. Total frames in memory: ${simState.optimizedHistoryFrames.size}`);
+        console.log(`Successfully stream-loaded ${numFrames} frames directly into IndexedDB.`);
 
-        // Update the UI to reflect the newly loaded and merged history
+        // 5. Update UI to reflect loaded state
         simState.isInitialized = true;
         updateButtonStatesAndUI();
+        updateRenderRangeInputs(true);
         updateTimeTravelSlider();
         
         // Find the very last step in our newly merged history to display
         const allKeys = [...simState.optimizedHistoryFrames.keys()];
         const lastStepKey = Math.max(...allKeys);
-        const lastOptimizedState = simState.optimizedHistoryFrames.get(lastStepKey);
+        const lastOptimizedState = await getHistoryFrame(lastStepKey);
 
         if (lastOptimizedState) {
             const lastRehydratedState = rehydrateOptimizedStep(lastOptimizedState);
             restoreSimStateFromHistoryObject(lastRehydratedState);
             updateUiFromState(lastRehydratedState);
             const targetRngCount = lastOptimizedState.rngDrawCountAtStep || 0;
+            initializeSeededRNG(simulationSeedInput.value);
             synchronizeRNG(targetRngCount);
         } else {
             drawGrid();
             updateStats();
         }
 
-        await showInfoAlert("Full simulation session loaded/merged successfully.", "Session Loaded");
+        updateImportSessionProgress(null, null); // Hide progress indicator
+        if (simState.importSessionCancelled) {
+            await showInfoAlert("Import stopped. Loaded steps saved successfully!", "Stopped");
+        } else {
+            await showInfoAlert("Full simulation session loaded directly to DB successfully.", "Session Loaded");
+        }
 
     } catch (e) {
         console.error("Failed to load session file:", e);
-        await showInfoAlert(`Error loading session file: ${e.message}`, "Load Error");
+        updateImportSessionProgress(null, null);
+        await showInfoAlert(`Error loading session: ${e.message}`, "Load Error");
+    } finally {
+        simState.isImportingSession = false;
+        updateButtonStatesAndUI();
     }
 }
 
@@ -5804,7 +6966,8 @@ async function loadFullSimulationFromFile(fileContent) { // fileContent is an Ar
 			return;
 		}
 
-		const foundState = simState.capturedArenaStatesTSV.find(s => s.step === stepNumber);
+		const tsvData = await getArenaStateFrame(stepNumber);
+		const foundState = tsvData ? { step: stepNumber, tsvData: tsvData } : null;
 
 		if (!foundState || !foundState.tsvData) {
 			// This condition should ideally not be met if stepNumber is validated against min/max 
@@ -5814,7 +6977,7 @@ async function loadFullSimulationFromFile(fileContent) { // fileContent is an Ar
 		}
 
 		// 1. Reset simulation to a blank slate. This also calls updateConfigFromUI(true).
-		initializeBlankSlate();
+		await initializeBlankSlate();
 
 		// 2. Explicitly activate manual setup mode
 		simState.manualSetupActive = true;
@@ -6134,6 +7297,17 @@ async function loadFullSimulationFromFile(fileContent) { // fileContent is an Ar
 		exportSettingsButtonMain.addEventListener('click', downloadSettingsAsTSV);
 	}
 
+	if (renderFromHistoryButton) {
+		renderFromHistoryButton.addEventListener('click', renderImagesFromHistory);
+	}
+	if (cancelRenderButton) {
+		cancelRenderButton.addEventListener('click', () => {
+			simState.renderCancelled = true;
+			cancelRenderButton.disabled = true;
+			cancelRenderButton.textContent = "Stopping...";
+		});
+	}
+
 	resetSimulationButton.addEventListener('click', async () => {
 		try {
 			await showConfirmationModal("Are you sure you want to reset the simulation? This will generate a new random seed and clear the arena.", "Reset Simulation?", "Reset");
@@ -6142,7 +7316,7 @@ async function loadFullSimulationFromFile(fileContent) { // fileContent is an Ar
 			simulationSeedInput.value = newSeed;
 			
 			simState.areCellsInSync = true; // A full reset always results in a synced state
-			resetSimulationState(); // This will call initializeSeedenRNG and update buttons
+			await resetSimulationState(); // This will call initializeSeedenRNG and update buttons
 
 		} catch (e) {
 			console.log("Arena reset cancelled by user.");
@@ -6373,7 +7547,7 @@ function updateHoverInfoPanel(q_coord, r_coord, rawStateSource) {
     hoverInfoPanel.innerHTML = infoHtml;
 }
 
-function handleCanvasHover(event) {
+async function handleCanvasHover(event) {
     if ((!simState.isInitialized && !simState.manualSetupActive) || !hoverInfoPanel) {
         if (hoverInfoPanel) hoverInfoPanel.innerHTML = 'Initialize simulation first ...';
         simState.lastHoveredHexKey = null;
@@ -6395,11 +7569,11 @@ function handleCanvasHover(event) {
     if (simState.isScrubbing) {
         const slider = document.getElementById('timeTravelSlider');
         const stepIndex = parseInt(slider.value);
-        stateSourceForInspector = simState.optimizedHistoryFrames.get(stepIndex);
+        stateSourceForInspector = await getHistoryFrame(stepIndex);
     } else if (simState.isRunning && simState.optimizedHistoryFrames.size > 0) {
         const allKeys = [...simState.optimizedHistoryFrames.keys()];
         const lastStepKey = Math.max(...allKeys);
-        stateSourceForInspector = simState.optimizedHistoryFrames.get(lastStepKey);
+        stateSourceForInspector = await getHistoryFrame(lastStepKey);
     }
     
     // Pass the raw (or live) state source directly to the inspector
@@ -6613,8 +7787,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	if(historyStepBackButton) historyStepBackButton.addEventListener('click', () => {
 		const currentValue = parseInt(timeTravelSlider.value, 10);
-		if (currentValue > 0) {
-			timeTravelSlider.value = currentValue - 1;
+		const allKeys = [...simState.optimizedHistoryFrames.keys()].sort((a, b) => a - b);
+		// Find the largest key that is less than currentValue
+		const prevKey = allKeys.reverse().find(k => k < currentValue);
+		if (prevKey !== undefined) {
+			timeTravelSlider.value = prevKey;
 			// Manually trigger the 'input' event to update everything
 			timeTravelSlider.dispatchEvent(new Event('input', { bubbles: true }));
 		}
@@ -6622,9 +7799,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	if(historyStepForwardButton) historyStepForwardButton.addEventListener('click', () => {
 		const currentValue = parseInt(timeTravelSlider.value, 10);
-		const maxValue = parseInt(timeTravelSlider.max, 10);
-		if (currentValue < maxValue) {
-			timeTravelSlider.value = currentValue + 1;
+		const allKeys = [...simState.optimizedHistoryFrames.keys()].sort((a, b) => a - b);
+		// Find the smallest key that is greater than currentValue
+		const nextKey = allKeys.find(k => k > currentValue);
+		if (nextKey !== undefined) {
+			timeTravelSlider.value = nextKey;
 			// Manually trigger the 'input' event to update everything
 			timeTravelSlider.dispatchEvent(new Event('input', { bubbles: true }));
 		}
@@ -6652,12 +7831,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 			fileInput.onchange = e => {
 				const file = e.target.files[0];
 				if(file) {
-					const reader = new FileReader();
-					reader.onload = (event) => loadFullSimulationFromFile(event.target.result);
-					reader.readAsArrayBuffer(file);
+					loadFullSimulationFromFile(file);
 				}
 			};
 			fileInput.click();
+		});
+	}
+	if (cancelImportSessionButton) {
+		cancelImportSessionButton.addEventListener('click', () => {
+			simState.importSessionCancelled = true;
+			cancelImportSessionButton.disabled = true;
+			cancelImportSessionButton.textContent = "Stopping...";
 		});
 	}
 

@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 8.2 (2.6.2026)
+**Version:** 9.03 (3.6.2026)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 - 3.5.
 
@@ -142,7 +142,7 @@ This panel features the main simulation parameters as well as advanced controls 
 ### 5.4. Time-Travel Control (Panel)
 * **Scrub Through History:** This slider becomes active if 'Full State History' is enabled. When the simulation is paused, you can drag the slider (or use Left/Right Arrow Keys) to view the state of the arena at any past time step.
 * **Resume Simulation from this State:** When scrubbing to a past point, this button becomes active. It is one of two ways to create a new timeline. Clicking it will discard all future history and immediately **start** the simulation from the selected point. Alternatively, you can simply start modifying the arena (e.g., placing a cell), which will also automatically branch the timeline, after which you can use the main "Start" or "One Step" buttons to proceed.
-* **Import Session (.bft6):** Loads a complete, previously saved simulation session, including all settings and the full step-by-step history.
+* **Import Session (.bft6):** Loads a complete, previously saved simulation session, including all settings and the full step-by-step history. During the import process, a **Stop & Save History Loaded** button is available. Clicking it terminates the file reading immediately, commits the loaded frames to the database, and sets the last successfully read step as the end of the history.
 * **Import Step (JSON):** Loads a complete simulation state from a previously exported JSON file. This overwrites all current settings and cell placements to perfectly replicate the conditions of the saved step. After importing, you can either resume the simulation to continue the original timeline, or click "New Seed" to branch off and run a new experiment from that exact starting point.
 * **Export Step (JSON):** Exports the complete state of the currently viewed time step (live or historical) into a single, human-readable JSON file. This file contains all settings, cell properties, AI grid concentrations, and the precise RNG state, making it ideal for debugging or for use with the "Import Step" feature.
 
@@ -452,9 +452,9 @@ Each simulation step (representing one minute) executes the following sequence o
     * Update the statistics display panel (`updateStats()`).
     * If `simState.isRunning` (not paused or just stepping), use `setTimeout(runSimulationStep, simState.config.simulationControl.simulationSpeedMs)` to schedule the next iteration.
     * If `simState.isStepping` was true, set it to false and update button states.
-12. **Termination & Batching Checks:**
+12. **Termination & Database Offloading Checks:**
     * The simulation checks if the time limit has been reached.
-    * It also checks if the **Image Buffer Limit** has been reached, pausing to trigger a batch download if necessary.
+    * It also checks if any of the buffer limits (history, images, or arena states) have been reached, silently offloading the buffered data to the browser's local database (IndexedDB) to protect system memory.
 
 ## 8. CPRG Reporter System Details
 
@@ -510,14 +510,11 @@ The simulation provides robust options for data management:
     * **If loading the first file:** This will load the entire saved session, including all settings and the full history.
     * **Additive Loading (Advanced):** If you already have a history loaded, you can import another `.bft6` file to **merge** its history with the existing one. The application will validate that the `Seed` and `Arena Radius` match before merging. This powerful feature allows you to piece together very long simulation runs that were saved in multiple segments. The import logic correctly handles overwriting steps if there is an overlap, and can manage non-contiguous data (e.g., loading steps 0-100 and then 500-600).
 	
-    ⚠️ **Memory Warning:** Enabling per-step state saving of the simulation and especially **saving large arena images** can heavily tax browser memory for long/large simulations.
-
-#### Advanced Memory Management
-Saving per-step data is memory-intensive. To prevent browser crashes during very long runs, the simulation includes buffer limits for images, arena states, and history, which can be configured in the **"Exports & Buffers"** panel. The workflow for all buffer types is the same:
-* When a data buffer exceeds its defined size limit, the simulation will automatically **pause**.
-* A prompt will appear asking you to select a folder for data saving or to save the current data batch (e.g., a ZIP of images or a `.bft6` history file).
-* You must click the **[Save & Continue]** button in the prompt. This action is required to initiate the download.
-* Once the download begins, the corresponding buffer is cleared from memory, and the simulation **resumes automatically**.
+    #### Advanced Memory Management (IndexedDB Database Offloading)
+Saving per-step data is memory-intensive. To prevent browser crashes during very long runs, the simulation includes buffer limits for images, arena states, and history, which can be configured in the **"Exports & Buffers"** panel.
+* **Silent Database Offloading:** When any data buffer exceeds its defined size limit in memory (RAM), the simulation automatically offloads the heavy data (e.g. detailed frame objects, captured base64 images, or arena TSV layouts) to the browser's local database (IndexedDB).
+* **RAM Protection:** The offloaded data is cleared from RAM, leaving only lightweight references in memory. This happens seamlessly in the background, allowing the simulation to run uninterrupted without needing user interaction, pausing, or intermediate file downloads.
+* **On-Demand Retrieval:** When you click the download or save options (such as downloading ZIPs of images/arena layouts, or saving the full `.bft6` session), the application automatically retrieves the offloaded frames and files from the database to build the download archive.
 
 ### 10.1 Configuring Simulation via URL Parameters (Advanced)
 
