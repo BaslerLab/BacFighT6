@@ -7772,7 +7772,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     simulationSeedInput.value = initialSeed;
     initializeSeededRNG(initialSeed);
 
-    initializeBlankSlate();
+    await initializeBlankSlate();
     simState.manualSetupActive = true;
     updateButtonStatesAndUI();
 
