@@ -6424,7 +6424,7 @@ async function importStepStateFromFile() {
                     }
                     importSettingsFromTSV(loadedObject.settingsTSV);
                     updateConfigFromUI(true);
-                    resetSimulationState(); // This resets rngDrawCount to 0
+                    await resetSimulationState(); // This resets rngDrawCount to 0
 
                     // --- Rehydration and State Restoration are correct ---
                     const rehydratedState = rehydrateOptimizedStep(loadedObject);
