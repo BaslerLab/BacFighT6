@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 9.03 (3.6.2026)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 9.06 (6.6.2026)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -604,6 +604,7 @@
 		lastMouseY: null,
 	    runTimestamp: null,
 	    lastRngCounts: [],
+		isHistoryPlaying: false,
 
 	};
 
@@ -2208,6 +2209,9 @@ function calculateAndSetCellCountsByPercentage(fillPercent, attPercent, defPerce
 			simState.isStepping = false;
 			clearTimeout(simState.timeoutId);
 		}
+		if (simState.isHistoryPlaying) {
+			stopHistory();
+		}
 
 		// 2. Re-initialize the RNG with the seed currently in the input field
 		const currentSeed = simulationSeedInput.value;
@@ -2838,7 +2842,8 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		const isRun = simState.isRunning;
 		const isRendering = simState.isRenderingFromHistory;
 		const isImporting = simState.isImportingSession;
-		const controlsDisabled = isRun || isRendering || isImporting;
+		const isHistPlay = simState.isHistoryPlaying;
+		const controlsDisabled = isRun || isRendering || isImporting || isHistPlay;
 
 		// --- Setup Arena Panel ---
 		// The panel is always visible, but its contents are disabled while running.
@@ -2876,12 +2881,12 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		}
 
 		// --- Main Simulation Controls ---
-		startButton.disabled = isRun;
+		startButton.disabled = isRun || isHistPlay;
 		pauseButton.disabled = !isRun;
-		stepButton.disabled = isRun;
+		stepButton.disabled = isRun || isHistPlay;
 		// The stop button should be disabled only if the simulation is paused at the very beginning.
-		stopButton.disabled = !isRun && simState.simulationStepCount === 0;
-		if (resetSimulationButton) resetSimulationButton.disabled = isRun || simState.isStepping;
+		stopButton.disabled = (!isRun && simState.simulationStepCount === 0) || isHistPlay;
+		if (resetSimulationButton) resetSimulationButton.disabled = isRun || simState.isStepping || isHistPlay;
 
 		const loadSessionBtn = document.getElementById('loadSessionButton');
 		if (loadSessionBtn) {
@@ -2893,7 +2898,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 			// The resume button should only be clickable if we are in "scrubbing" mode.
 			// After branching history by placing a cell, you are no longer scrubbing,
 			// so the button should be disabled, and "Start" becomes the main action.
-			resumeButton.disabled = !simState.isScrubbing;
+			resumeButton.disabled = !simState.isScrubbing || isHistPlay;
 		}
 
 		const exportStepButton = document.getElementById('exportCurrentStepStateButton');
@@ -2910,6 +2915,10 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		arenaGridRadiusInput.disabled = controlsDisabled;
 		totalSimulationMinutesInput.disabled = controlsDisabled;
 		simulationSpeedInput.disabled = controlsDisabled;
+		const renderRateInput = document.getElementById('renderRateInput');
+		if (renderRateInput) {
+			renderRateInput.disabled = controlsDisabled;
+		}
 		initialCPRGSubstrateInput.disabled = controlsDisabled;
 		lacZKcatInput.disabled = controlsDisabled;
 		lacZKmInput.disabled = controlsDisabled;
@@ -3016,12 +3025,18 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 function updateTimeTravelSlider() {
     const slider = document.getElementById('timeTravelSlider');
     const display = document.getElementById('timeTravelDisplay');
+    const playHistoryButton = document.getElementById('playHistoryButton');
+    const stopHistoryButton = document.getElementById('stopHistoryButton');
     if (!slider || !display) return;
 
-    if (simState.config.historyEnabled && simState.optimizedHistoryFrames.size > 0) {
-        slider.disabled = false;
-        historyStepBackButton.disabled = false;
-        historyStepForwardButton.disabled = false;
+    const hasHistory = simState.config.historyEnabled && simState.optimizedHistoryFrames.size > 0;
+    const isPlaying = simState.isHistoryPlaying;
+
+    if (hasHistory) {
+        slider.disabled = isPlaying;
+        
+        if (playHistoryButton) playHistoryButton.disabled = isPlaying;
+        if (stopHistoryButton) stopHistoryButton.disabled = !isPlaying;
 
         // Get the min and max step numbers from the Map keys
         const allKeys = [...simState.optimizedHistoryFrames.keys()];
@@ -3030,18 +3045,20 @@ function updateTimeTravelSlider() {
         slider.min = minStep;
         slider.max = maxStep;
         
-        if (!simState.isScrubbing) {
+        if (!simState.isScrubbing && !isPlaying) {
             slider.value = maxStep;
             display.textContent = `Current Step: ${simState.simulationStepCount}`;
         }
 
-        historyStepBackButton.disabled = (parseInt(slider.value, 10) <= parseInt(slider.min, 10));
-        historyStepForwardButton.disabled = (parseInt(slider.value, 10) >= parseInt(slider.max, 10));
+        historyStepBackButton.disabled = isPlaying || (parseInt(slider.value, 10) <= parseInt(slider.min, 10));
+        historyStepForwardButton.disabled = isPlaying || (parseInt(slider.value, 10) >= parseInt(slider.max, 10));
 
     } else {
         slider.disabled = true;
         historyStepBackButton.disabled = true;
         historyStepForwardButton.disabled = true;
+        if (playHistoryButton) playHistoryButton.disabled = true;
+        if (stopHistoryButton) stopHistoryButton.disabled = true;
         slider.value = 0;
         slider.min = 0;
         slider.max = 0;
@@ -3104,7 +3121,88 @@ async function handleTimeTravelScrub(event) {
     simState.isScrubbing = !isAtEnd;
     resumeButton.disabled = simState.isRunning || isAtEnd;
     historyStepBackButton.disabled = (parseInt(slider.value, 10) <= parseInt(slider.min, 10));
-    historyStepForwardButton.disabled = (parseInt(slider.value, 10) >= parseInt(slider.max, 10));
+}
+
+
+let historyPlayTimeoutId = null;
+
+function playHistory() {
+    updateConfigFromUI(false);
+    if (simState.isHistoryPlaying || !simState.config.historyEnabled || simState.optimizedHistoryFrames.size === 0) return;
+
+    simState.isHistoryPlaying = true;
+    updateButtonStatesAndUI();
+    updateTimeTravelSlider();
+
+    const slider = document.getElementById('timeTravelSlider');
+    if (slider) {
+        const currentValue = parseInt(slider.value, 10);
+        const allKeys = [...simState.optimizedHistoryFrames.keys()];
+        const maxStep = Math.max(...allKeys);
+        if (currentValue >= maxStep) {
+            slider.value = Math.min(...allKeys);
+            slider.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    advanceHistoryStep();
+}
+
+function stopHistory() {
+    if (!simState.isHistoryPlaying) return;
+
+    simState.isHistoryPlaying = false;
+    if (historyPlayTimeoutId) {
+        clearTimeout(historyPlayTimeoutId);
+        historyPlayTimeoutId = null;
+    }
+
+    updateButtonStatesAndUI();
+    updateTimeTravelSlider();
+}
+
+function advanceHistoryStep() {
+    if (!simState.isHistoryPlaying) return;
+
+    const slider = document.getElementById('timeTravelSlider');
+    if (!slider) {
+        stopHistory();
+        return;
+    }
+
+    const currentValue = parseInt(slider.value, 10);
+    const allKeys = [...simState.optimizedHistoryFrames.keys()].sort((a, b) => a - b);
+    if (allKeys.length === 0) {
+        stopHistory();
+        return;
+    }
+    
+    const maxKey = allKeys[allKeys.length - 1];
+    
+    if (currentValue < maxKey) {
+        // The render frequency (N steps) is from simulation settings
+        const renderRate = simState.config.simulationControl.renderRate || 1;
+        const targetValue = currentValue + renderRate;
+
+        // Find the next step key that is >= targetValue, clamp to maxKey if none found
+        let nextKey = allKeys.find(k => k >= targetValue);
+        if (nextKey === undefined) {
+            nextKey = maxKey;
+        }
+
+        slider.value = nextKey;
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        if (nextKey >= maxKey) {
+            stopHistory();
+        } else {
+            // Schedule the next step based on the step delay setting (Simulation_Step_Delay_ms)
+            const delay = simState.config.simulationControl.simulationSpeedMs || 50;
+            historyPlayTimeoutId = setTimeout(advanceHistoryStep, delay);
+        }
+    } else {
+        stopHistory();
+    }
 }
 
 
@@ -7843,6 +7941,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 			cancelImportSessionButton.disabled = true;
 			cancelImportSessionButton.textContent = "Stopping...";
 		});
+	}
+
+	const playHistoryButton = document.getElementById('playHistoryButton');
+	const stopHistoryButton = document.getElementById('stopHistoryButton');
+	if (playHistoryButton) {
+		playHistoryButton.addEventListener('click', playHistory);
+	}
+	if (stopHistoryButton) {
+		stopHistoryButton.addEventListener('click', stopHistory);
 	}
 
     // --- Step 3: URL Parameter Processing ---

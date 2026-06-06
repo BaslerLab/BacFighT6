@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 9.03 (3.6.2026)
+**Version:** 9.06 (6.6.2026)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 - 3.5.
 
@@ -74,7 +74,8 @@ The simulation interface consists of four main parts:
         * `Pause [P]`: Temporarily halts the simulation.
         * `One Step [O]`: Advances the simulation by a single time step (one minute).
         * `Stop & Report [R]`: Ends the simulation run and displays the results report.
-        * When paused, the **Left/Right Arrow Keys** can be used to scrub through the simulation's history.
+        * `Step Back [Left Arrow]` (when paused): Navigates back one step in the recorded history.
+        * `Step Forward [Right Arrow]` (when paused): Navigates forward one step in the recorded history.
 	Note: For better performance on large arenas and long runs, increase the **Render Rate** in the 'Simulation Control' panel to draw the arena less frequently.
 4.  **Analyze Results:**
     * Upon stopping, a **Report Modal** appears, summarizing the outcome and key statistics.
@@ -140,26 +141,31 @@ This panel features the main simulation parameters as well as advanced controls 
 * **Stop & Report [R]:** Terminates the current simulation run and displays the end-of-simulation report modal.
 
 ### 5.4. Time-Travel Control (Panel)
-* **Scrub Through History:** This slider becomes active if 'Full State History' is enabled. When the simulation is paused, you can drag the slider (or use Left/Right Arrow Keys) to view the state of the arena at any past time step.
+* **Scrub Through History Slider:** This slider becomes active if 'Full State History' is enabled. When the simulation is paused, you can drag the slider (or use the step buttons/arrow keys) to view the state of the arena at any past time step.
+* **Step Back (◀) & Step Forward (▶) Buttons:** When paused, click these to step backward or forward through the history one step at a time, based on the current Render Rate.
+* **Play & Stop Autoplay Buttons:** When paused, click `Play` to automatically replay the simulation history forward step-by-step. The playback speed is controlled by the `Step Delay (ms)` setting. Click `Stop` to halt the autoplay.
 * **Resume Simulation from this State:** When scrubbing to a past point, this button becomes active. It is one of two ways to create a new timeline. Clicking it will discard all future history and immediately **start** the simulation from the selected point. Alternatively, you can simply start modifying the arena (e.g., placing a cell), which will also automatically branch the timeline, after which you can use the main "Start" or "One Step" buttons to proceed.
 * **Import Session (.bft6):** Loads a complete, previously saved simulation session, including all settings and the full step-by-step history. During the import process, a **Stop & Save History Loaded** button is available. Clicking it terminates the file reading immediately, commits the loaded frames to the database, and sets the last successfully read step as the end of the history.
 * **Import Step (JSON):** Loads a complete simulation state from a previously exported JSON file. This overwrites all current settings and cell placements to perfectly replicate the conditions of the saved step. After importing, you can either resume the simulation to continue the original timeline, or click "New Seed" to branch off and run a new experiment from that exact starting point.
 * **Export Step (JSON):** Exports the complete state of the currently viewed time step (live or historical) into a single, human-readable JSON file. This file contains all settings, cell properties, AI grid concentrations, and the precise RNG state, making it ideal for debugging or for use with the "Import Step" feature.
 
 ### 5.5. General Settings (Panel)
-* **Load Preset Scenario:** Opens a modal allowing selection from various pre-defined parameter configurations.
+* **Load Preset Scenario:** Opens a modal allowing selection from various pre-defined parameter configurations. When you click a preset box to select it, you can adjust specific interactive sliders (e.g. fill percentage, cell ratios, AI levels) or selectors (e.g. selectivity, lysis/release mode, trigger mechanism) directly within that preset's panel *before* running it. Clicking **"Apply Selected Preset & Close"** will apply these customized overrides, reset the arena and RNG, and randomly populate the cells.
 * **Import/Export Settings (TSV):** Loads or saves a full set of simulation parameters from a TSV file.
 * **Copy Shareable Link 🔗:** Generates and copies a URL to your clipboard that reproduces your current simulation state.
     * **What it saves:** The current **RNG Seed** and every **Parameter** that differs from the default values.
     * **What it doesn't save:** Specific positions of manually placed cells. (It relies on the Seed + Initial Counts to reproduce random populations).
 * **Reset Settings to Defaults:** Resets all simulation parameters in the control panel to their original default values. This action does *not* clear the arena or change the current simulation seed.
 
-### 5.6. Exports (Panel)
+### 5.6. Exports & Buffers (Panel)
 * **Arena Layout:** Checkbox. If enabled, the `q,r,type` of all active cells is recorded at each step. This data can be downloaded as a ZIP of TSV files. This also enables the "Load Step to Arena" feature in the report modal.
 * **Full State History:** Checkbox. If enabled, the *entire* simulation state (all cell properties, AI grids, stats) is saved at each step. This is required for the Time-Travel feature and for saving/loading complete sessions (`.bft6` files). ⚠️ **This is a memory-intensive option.**
 * **Arena Images:** Checkbox. If enabled, a PNG image of the arena is captured at each step.
     * ⚠️ **Warning:** Saving states or images can consume very significant browser memory for long simulations.
 * **Image Size (px):** Defines the width and height of the saved square PNG images.
+* **History Buffer Size Limit (MB):** Sets the maximum memory threshold (RAM) for full state history frames. Once exceeded, the simulation automatically offloads older frames to the browser's local database (IndexedDB) to prevent crashes.
+* **Arena Layouts Buffer Size Limit (MB):** Sets the maximum RAM threshold for caching cell coordinates and types (`q,r,type`). Exceeding this limit triggers automatic offloading to IndexedDB.
+* **Images Buffer Size Limit (MB):** Sets the maximum RAM threshold for storing step-by-step PNG screenshots. When exceeded, images are offloaded to IndexedDB to protect memory.
 
 ### 5.7. CPRG Reporter Settings
 * **Initial CPRG Substrate:** The total amount of CPRG substrate units available at the beginning of the simulation.
@@ -168,14 +174,82 @@ This panel features the main simulation parameters as well as advanced controls 
 
 ### 5.8. Cell-Specific Settings (Panel)
 This section of the control panel is tabbed for **Attacker**, **Prey**, and **Defender** types. Each tab contains parameters unique to that cell's behavior.
-* **Initial Count:** The number of cells to place when using `Place Cells Randomly`.
-* **Replication (min):** The mean and range for the cell's standard division time. Set the mean to -1 to disable normal replication.
-* **Movement Behavior:** Controls for movement cooldown, probability, and directional strategy, including Attacker chemotaxis towards Prey autoinducer.
-* **T6SS / Defense / Toxin Production:** Parameters governing T6SS firing behavior (Attacker), retaliation and random firing (Defender), or capsule synthesis and toxin production/release parameters (Prey).
-* **Sensitivity & Resistance:** Thresholds for toxin-induced death/lysis (including sensitivity thresholds and absorption rates for environmental Prey toxins) and chances to resist attacks from other cell types.
-* **Replication Reward (Attacker & Defender Only):**
-    * **`Lyses per Reward`**: The number of successful lyses a cell must cause to earn a replication reward. Set to `0` to disable this feature.
-    * **`Reward Repl. CD (min)`**: The cooldown value (or reduction) applied as a reward. A mean of `-1` makes the rewarded replication immediate.
+
+#### Common Properties (Across Tabs)
+* **Initial Count:** The number of cells of this type to place when using the `Place Cells Randomly` function.
+* **Replication (min):** The mean division time and the range (± variation) in minutes. The division cooldown is randomized per cell within this range. Setting the mean to `-1` completely disables standard cell division for this cell type.
+* **Movement Behavior:**
+    * **Cooldown Min/Max (min):** The time range (in minutes/steps) a cell waits before trying to move again.
+    * **Probability (%):** The chance (0-100%) that the cell will actually attempt to move when its cooldown reaches zero. Set to 0% for non-motile cells.
+    * **Directionality (%):** Influences target hex selection. 100% means it looks only at empty adjacent hexes; 0% means it picks a random adjacent hex first and moves only if it happens to be empty. Intermediate values blend these two strategies.
+
+#### 1. Attacker Tab
+* **Movement Behavior (AI-Guided Attraction):**
+    * **Prey AI Attraction (%):** The probability that the Attacker will move toward the adjacent empty hex with the highest concentration of Prey-derived autoinducer (AI) signal instead of a random empty neighbor.
+    * **Prey AI Attraction Threshold:** The minimum local concentration of Prey AI required to trigger guided chemotactic attraction. If all empty adjacent spots are below this, the cell falls back to random movement.
+* **T6SS Firing:**
+    * **Fire Cooldown Min/Max (min):** The randomized cooldown range (in minutes) after a T6SS firing event.
+    * **Precision (%):** The chance that a firing event results in a precise hit (delivers toxins). The remaining percentage represents "misses" (resets cooldown but does no damage).
+    * **Contact Sensing Bias (%):** The chance that the Attacker commits to firing only at a physical neighbor (another cell or barrier). If no contacts are adjacent, the firing is aborted. The remaining percentage represents a random firing direction attempt (which may hit empty space).
+    * **Kin Exclusion (%):** The probability that the cell's self-recognition mechanism activates when targeting another Attacker cell.
+    * **Kin Exclusion Penalty (min):** If kin recognition activates, a value $\ge 0$ cancels the shot and sets a cooldown penalty (in minutes); a value of `-1` enables **Smart Re-targeting**, forcing the cell to pick a new, non-kin target from its neighbors.
+* **T6SS Effectors (vs Prey/Defenders):**
+    * **NL Units/Hit** & **L Units/Hit:** The number of Non-Lytic (NL) and Lytic (L) toxin units delivered per precise hit.
+    * **NL / L Delivery Chance (%):** The individual probabilities that the NL or L toxin component is successfully injected during a hit.
+* **Quorum Sensing (QS) (T6SS Activation):**
+    * **AI Prod. Rate (U/min):** The units of Attacker autoinducer (AI) secreted by each live Attacker cell per step.
+    * **AI Degrad. Rate (%/min) & AI Diffusion Rate:** The degradation percentage and spatial diffusion speed of the Attacker AI signal grid.
+    * **Activation Midpoint (K):** The local AI concentration at which T6SS activation reaches 50% (Hill equation midpoint). Set to `-1` for constitutive (always-active) T6SS.
+    * **Cooperativity (n):** The Hill coefficient. A higher value makes the density-dependent activation switch sharper and more binary.
+* **Replication Reward:**
+    * **Lyses per Reward:** The number of successful prey or defender lyses this cell must cause to earn a reward. Set to `0` to disable.
+    * **Reward Repl. CD (min) [Mean/Range]:** The division cooldown (or reduction) applied upon earning a reward. A mean of `-1` triggers immediate replication.
+* **Prey Toxin Sensitivity:**
+    * **NL Resist. (%) & L Resist. (%):** The chance to completely ignore environmental Prey toxins absorbed from the grid.
+    * **NL / L Absorp. (%):** The percentage of local grid-based Prey toxins absorbed by the cell in each step.
+    * **NL Die / L Lyse Thresh.:** Cumulative absorbed Prey toxin units required to kill (growth arrest) or lyse (burst) the Attacker cell.
+
+#### 2. Prey Tab
+* **Sensitivity vs Attackers / Defenders:**
+    * **NL Die Thresh.** & **L Lyse Thresh.:** The cumulative toxin units received from Attacker/Defender hits required to cause cell death (growth arrest) or lysis.
+    * **Base Lysis Delay (min):** The baseline delay before a lysing cell bursts. The active delay is calculated as `ceil(Base Lysis Delay / effectiveLyticUnits)`.
+    * **NL / L Resist. (%):** The chance to completely negate incoming Attacker or Defender toxins per hit.
+* **LacZ Units/Lysis:** The units of LacZ enzyme released into the environment when this Prey cell lyses, driving the CPRG reporter reaction.
+* **Quorum Sensing (QS) (Autoinducer):**
+    * **AI Prod. Rate (U/min):** The units of Prey autoinducer (AI) secreted per minute.
+    * **AI Degradation & Diffusion:** Rates governing the degradation and spread of Prey AI across the hex grid.
+* **Toxin Production & Release:**
+    * **NL / L Prod. Rate (U/min):** The units of Bacteriocin NL and L produced per minute.
+    * **NL / L Degradation & Diffusion:** Rates governing the environmental spread and decay of Prey-derived bacteriocins.
+    * **Trigger Mode:** The mechanism for activating toxin production. Can be:
+        * `Standard`: Stochastic activation check based on the start probability.
+        * `QS`: Activation probability scaled by local Prey AI density (Hill equation).
+        * `Attacker NL`: Production is triggered once the Prey accumulates attacker NL toxins $\ge$ **NL Init. Threshold**.
+    * **Stochastic Start Prob. (%/min):** The active chance (or scaling probability) for initiating toxin production. Must be $>0$ for any trigger mode to activate.
+    * **QS Derepression Midpoint (K) & QS Cooperativity (n):** Activation parameters for the QS trigger mode.
+    * **NL Init. Threshold:** The minimum attacker NL toxin damage required to trigger production in the Attacker NL mode.
+    * **Release On Lysis:** If checked (`true`), toxins accumulate internally and division is arrested until the cell crosses a random lysis threshold (between the configured Min and Max limits), at which point it lyses and dumps all internal toxins onto the grid. If unchecked (`false`), toxins are continuously secreted into the grid, and cells return to normal growth once their production target is reached.
+* **Capsule Synthesis (Defense):**
+    * **Enable Capsule Synthesis:** Master switch to activate capsule protection.
+    * **Max Protection (%):** The maximum protection chance provided by a full 5-layer capsule. Each layer provides 1/5th of this value.
+    * **Derepression Midpoint (K) & Cooperativity (n):** Controls for the derepression switch that responds to local Prey AI concentration. Setting K to `-1` makes capsule synthesis always-on (constitutive).
+    * **Capsule Cooldown Min/Max (min):** The randomized time range required to synthesize one protective capsule layer.
+
+#### 3. Defender Tab
+* **Retaliation Behavior:**
+    * **Sense Chance (%):** The probability that being hit by a T6SS attack will trigger Defender retaliation.
+    * **Max Retaliations:** The maximum number of counter-attack shots fired in a single burst (one shot per step) at the attacking cell.
+* **Random Firing:**
+    * **Rand. Fire CD (min-max):** The cooldown range (in steps) between proactive random firing attempts.
+    * **Rand. Fire Chance (%):** The probability per step (when not on cooldown or retaliating) to fire a single T6SS shot at a random adjacent cell.
+* **T6SS Effectors (vs Attackers/Prey):**
+    * **NL / L Units/Hit** and **NL / L Delivery Chance (%):** Toxins delivered and injection chances when attacking other cells.
+* **Replication Reward:**
+    * **Lyses per Reward** & **Reward Repl. CD (min) [Mean/Range]:** Lytic reward settings identical in function to the Attacker's reward system.
+* **Sensitivity vs Attackers:**
+    * **NL Die Thresh.**, **L Lyse Thresh.**, **Base Lysis Delay**, and **NL / L Resist. (%):** Toxin thresholds and resistance chances against direct Attacker T6SS hits.
+* **Prey Toxin Sensitivity:**
+    * **NL / L Resist. (%)**, **NL / L Absorp. (%)**, and **NL Die / L Lyse Thresh.:** Configurable parameters for environmental Prey toxin absorption, resistance, and survival thresholds.
 
 ## 6. Cell Types & Detailed Mechanics ("Under the Hood")
 
@@ -314,7 +388,7 @@ A cell's initial random state (e.g., its starting `replicationCooldown`) is set 
         * *Lysis-Dependent Release:* Toxins are accumulated internally (`internalPreyToxinNL` and `internalPreyToxinL`). Once the sum of accumulated internal toxins reaches the cell's individual **Lysis Threshold** (a random value chosen within a configured range exactly once when the cell is first activated as a producer), the cell lyses (dies and bursts), dumping its accumulated internal toxins onto the hex grid. Toxin-producing cells halt cell division while producing. If a cell divides (if production is inactive), any accumulated internal toxins are split equally (halved and rounded down to the nearest integer) between the parent and daughter cells. If a cell is lysed by attackers' T6SS before hitting its own threshold, its accumulated internal toxins are still successfully released.
         * *Lysis Visualization:* Prey cells with accumulated internal toxins (in lysis-dependent mode) are drawn with a green inner circle that darkens as they approach the lysis threshold. Continuous producers are drawn with a small, static mid-green center dot.
     * **Activation Mechanisms (Trigger Modes):**
-        * *Standard / Constitutive:* Governed stochastically by the **Stochastic Start Prob. (%/min)** at each simulation step to start toxin synthesis.
+		* *Standard / Stochastic:* Prey cells start with toxin production turned OFF by default. At each simulation minute, live cells have a chance to activate toxin synthesis governed stochastically by the **Stochastic Start Prob. (%/min)**. **Note:** If this probability is left at 0%, no toxins will ever be synthesized under this mode.
         * *QS Triggered:* Activated based on local Prey AI concentration, modeled by a Hill equation with midpoint $K$ and cooperativity $n$. The QS-induced chance is scaled by the **Stochastic Start Prob. (%/min)**. Once activated, the transition is permanent until completion (lysis or reaching the production target).
         * *Attacker NL Toxin Triggered:* Activated once the cell has been hit by attacker non-lytic toxins such that the accumulated units are $\ge$ **NL Init. Threshold**. Once the threshold is crossed, the activation chance per step is governed by the **Stochastic Start Prob. (%/min)**. This is a permanent one-way transition once activated.
 * **Reporter System:** Upon lysis, each Prey cell releases `lacZPerPrey` units of LacZ enzyme.
@@ -472,7 +546,14 @@ The CPRG reporter system simulates a common laboratory assay.
 
 ## 9. Preset Scenarios
 
-The "Load Preset Scenario" button provides access to pre-configured parameter sets designed to explore specific phenomena. **To select a preset, simply click anywhere on its title or in the background of its box. The box will become highlighted.**
+The "Load Preset Scenario" button opens an interactive modal presenting several pre-configured simulation layouts. 
+* **Interactive Customization:** To select a preset, click anywhere inside its box (the border will highlight in blue). When a preset is selected, you can adjust its custom sliders and options (such as fill percent, attacker-to-prey ratios, trigger modes, and specific strategy toggles) directly within that preset's panel.
+* **Applying the Preset:** Once you have customized the settings to your liking, click the **"Apply Selected Preset & Close"** button at the bottom of the modal. The system will:
+    1. Apply all specific overrides and your custom slider configurations to the simulation settings.
+    2. Reset the simulation arena and the RNG sequence.
+    3. Populated the hexagonal grid randomly using your specified fill percentage and cell ratios.
+
+The available preset scenarios are:
 * **1. Role of Initial Density:** Focuses on how varying initial cell densities and ratios between Attackers and Prey affect outcomes. Defenders are typically disabled.
 * **2. Prey Sensitivity / Effector Type:** Explores how different Prey sensitivities (to lytic vs. non-lytic toxins, or both) influence interactions. Defenders are typically disabled.
 * **3. Contact Sensing & Kin Exclusion:** Investigates the impact of Attacker T6SS firing strategies like biased targeting of adjacent cells and avoiding self-attack. Defenders are typically disabled.
@@ -509,12 +590,24 @@ The simulation provides robust options for data management:
     * **Import:** From the `Time-Travel Control` panel on the main page, click `Import Session (.bft6)` and select a `.bft6` file.
     * **If loading the first file:** This will load the entire saved session, including all settings and the full history.
     * **Additive Loading (Advanced):** If you already have a history loaded, you can import another `.bft6` file to **merge** its history with the existing one. The application will validate that the `Seed` and `Arena Radius` match before merging. This powerful feature allows you to piece together very long simulation runs that were saved in multiple segments. The import logic correctly handles overwriting steps if there is an overlap, and can manage non-contiguous data (e.g., loading steps 0-100 and then 500-600).
+
+    #### Retroactive Range Rendering ("Render from History")
+When full state history is enabled, you can retroactively generate high-resolution PNG image sequences for any specific window of past time steps without re-running the live environment:
+*   **Custom Range Bounds:** Input target values into the "From:" and "To:" step fields to isolate specific milestones or ecological transitions.
+*   **Low-Memory Batch Generation:** The engine sequentially loads frames out of IndexedDB, captures an offscreen canvas rendering, and pipes the output into memory-safe, chunked ZIP archives compiled via JSZip.
+*   **Dynamic Cancellation:** Clicking the **"Stop & Save Rendered"** button instantly terminates active rendering loops, safely packages all frames processed up to that exact millisecond into a valid ZIP archive, and restores the live control interface.
 	
     #### Advanced Memory Management (IndexedDB Database Offloading)
 Saving per-step data is memory-intensive. To prevent browser crashes during very long runs, the simulation includes buffer limits for images, arena states, and history, which can be configured in the **"Exports & Buffers"** panel.
 * **Silent Database Offloading:** When any data buffer exceeds its defined size limit in memory (RAM), the simulation automatically offloads the heavy data (e.g. detailed frame objects, captured base64 images, or arena TSV layouts) to the browser's local database (IndexedDB).
 * **RAM Protection:** The offloaded data is cleared from RAM, leaving only lightweight references in memory. This happens seamlessly in the background, allowing the simulation to run uninterrupted without needing user interaction, pausing, or intermediate file downloads.
 * **On-Demand Retrieval:** When you click the download or save options (such as downloading ZIPs of images/arena layouts, or saving the full `.bft6` session), the application automatically retrieves the offloaded frames and files from the database to build the download archive.
+
+    #### Native Directory Access (Single Prompt Workspace)
+To simplify high-frequency data logging, the application takes advantage of modern browser File System Access APIs:
+*   **One-Time Workspace Permission:** When clicking "Save All Data" or generating batch imagery, you will be prompted to select a local directory workspace. 
+*   **Silent Background Streaming:** Once approved, all subsequent `.bft6` history files, data tables, and image ZIP chunks write directly and silently to your local drive without triggering repeated browser download popups or confirmation dialogs.
+
 
 ### 10.1 Configuring Simulation via URL Parameters (Advanced)
 

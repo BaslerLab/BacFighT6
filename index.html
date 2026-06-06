@@ -33,7 +33,7 @@
                 </a>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 9.03 - 3.6.2026). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 9.06 - 6.6.2026). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 - 3.5.<br>
             </p>
         </header>
@@ -150,6 +150,10 @@
 								<input type="range" id="timeTravelSlider" min="0" max="0" value="0" title="Scrub through simulation history (requires 'Full State History' to be enabled)" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:bg-gray-100" disabled>
 								<button id="historyStepForwardButton" title="Step Forward (Shortcut: Right Arrow)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-3 rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>&#9654;</button>
 							</div>
+							<div class="flex items-center justify-center gap-2 mt-1.5">
+								<button id="playHistoryButton" title="Play History Autoplay" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-md shadow-sm text-xs disabled:opacity-50 disabled:cursor-not-allowed" disabled>Play</button>
+								<button id="stopHistoryButton" title="Stop History Autoplay" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md shadow-sm text-xs disabled:opacity-50 disabled:cursor-not-allowed" disabled>Stop</button>
+							</div>
 							<div id="timeTravelDisplay" class="text-xs text-center text-gray-600 mt-1">No history</div>
 						</div>
 						<button id="resumeFromStateButton" title="Discards future history and resumes the simulation from the currently viewed point in time." class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed" disabled>Resume Simulation from this State</button>
@@ -195,7 +199,7 @@
 							<input type="number" id="historyBufferSizeLimitInput" value="1200" min="0" step="100" class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mr-1.5">
 							<label for="historyBufferSizeLimitInput" class="text-sm font-medium text-gray-700 tooltip-trigger">
 								MB
-								<span class="tooltip-content">Automatically stop saving full state history when the buffer exceeds this size to prevent browser crashes. The simulation will continue to run. Set to 0 for no limit.</span>
+								<span class="tooltip-content">Automatically offload history frames to the local IndexedDB database when this memory threshold is exceeded, protecting browser RAM while allowing the simulation to run uninterrupted. Set to 0 for no limit.</span>
 							</label>
 						</div>
 					</div>
@@ -211,7 +215,7 @@
 							<input type="number" id="arenaStateBufferSizeLimitInput" value="200" min="0" step="50" class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mr-1.5">
 							<label for="arenaStateBufferSizeLimitInput" class="text-sm font-medium text-gray-700 tooltip-trigger">
 								MB
-								<span class="tooltip-content">Automatically pause and prompt for download when buffered Arena State TSV files exceed this size. Set to 0 to disable.</span>
+								<span class="tooltip-content">Automatically offload cached Arena State TSV string layouts to the local IndexedDB database when this threshold is crossed to prevent memory exhaustion. Data is compiled seamlessly upon archival export.</span>
 							</label>
 						</div>
 					</div>
@@ -236,7 +240,7 @@
 							<input type="number" id="imageBufferSizeLimitInput" value="500" min="0" step="100" class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mr-1.5">
 							<label for="imageBufferSizeLimitInput" class="text-sm font-medium text-gray-700 tooltip-trigger">
 								MB
-								<span class="tooltip-content">Automatically pause and prompt for download when buffered images exceed this size. Set to 0 to disable automatic batching.</span>
+								<span class="tooltip-content">Automatically dump processed frame snapshots out of system memory into the database when this size is exceeded, enabling massive time-series generation without background performance degradation.</span>
 							</label>
 						</div>
 					</div>
@@ -1018,7 +1022,7 @@
                     </ul>
                 </li>
                 <li><strong>Configure Parameters:</strong> Adjust settings in the left-hand Control Panel. For the cleanest workflow, load your settings *before* populating the arena. If you do this out of order, a sync button (🔄) will appear to help you fix the state.</li>
-                <li><strong>Run the Simulation:</strong> Use the main control buttons: <strong>Start [S]</strong>, <strong>Pause [P]</strong>, <strong>One Step [O]</strong>, and <strong>Stop & Report [R]</strong>. When paused, you can use the Arrow Keys to step through history. For better performance on long runs, increase the <strong>Render Rate</strong> in the 'Simulation Control' panel to draw the arena less frequently.</li>
+                <li><strong>Run the Simulation:</strong> Use the main control buttons: <strong>Start [S]</strong>, <strong>Pause [P]</strong>, <strong>One Step [O]</strong>, and <strong>Stop & Report [R]</strong>. When paused, you can scrub the timeline using the time-travel slider, use the step navigation buttons (◀/▶), the autoplay buttons (Play/Stop), or use the <strong>Left/Right Arrow Keys</strong> as keyboard shortcuts to navigate history. For better performance on long runs, increase the <strong>Render Rate</strong> in the 'Simulation Control' panel to draw the arena less frequently.</li>
                 <li><strong>Analyze Results:</strong> After stopping, a report appears. From here, you can view a graph of the population dynamics and download various data files, including the full session for later analysis.</li>
             </ol>
 
@@ -1044,10 +1048,10 @@
                     The <strong>'Load Preset Scenario'</strong> button provides a fast way to configure the simulation for specific experimental questions.
                 </p>
 	            <p class="text-sm text-gray-700 mt-2">
-                    <strong>To select a preset, simply click anywhere on its title or in the background of its box. The box will become highlighted.</strong>
+                    <strong>To select a preset, simply click anywhere on its title or in the background of its box. The box will become highlighted. Once a preset is selected, you can adjust its custom sliders and options (such as fill percentage, ratios, strategies, or trigger modes) directly within that preset's panel.</strong>
                 </p>
                 <p class="text-sm text-gray-700 mt-2">
-                    <strong>Behavior:</strong> Applying a preset will <strong>only override the specific settings</strong> relevant to that scenario (e.g., disable defenders, enable capsule synthesis, etc.). It leaves all other parameters (like Arena Radius or any settings you have manually changed) untouched. You can use the <strong>'Reset Settings to Defaults'</strong> button in the main panel if you wish to return to a baseline state before applying a preset.
+                    <strong>Applying the Preset:</strong> Clicking the <strong>"Apply Selected Preset & Close"</strong> button will apply the customized parameters, reset the arena and RNG, and randomly populate the grid. This will <strong>only override the specific settings</strong> relevant to that scenario, leaving all other parameters (like Arena Radius or any settings you have manually changed) untouched. You can use the <strong>'Reset Settings to Defaults'</strong> button in the main panel if you wish to return to a baseline state before applying a preset.
                 </p>
                 <p class="text-sm text-gray-700 mt-2">The available presets include:</p>
                 <ul class="list-disc ml-6 mt-2 space-y-1 text-sm">
@@ -1139,14 +1143,17 @@
                 <li><strong>Simulation Data (TSV):</strong> From the final report, download a time-series table of cell counts and cumulative events, ideal for plotting.</li>
 				<li><strong>Arena Images (ZIP):</strong> Enables downloading a ZIP file containing a PNG image of the arena for every time step. This feature must be enabled by checking the 'Arena Images' box in the 'Exports' panel before starting the simulation.</li>
                 <li><strong>Full Session (.bft6):</strong> If 'Full State History' is enabled, you can save the entire simulation—settings and complete step-by-step history—into a single, compact binary file. This is the best way to archive an exact experiment for later re-loading and analysis. During import, you can click <strong>'Stop &amp; Save History Loaded'</strong> to immediately cancel reading further steps, preserving the history loaded up to that point.</li>
+				<li><strong>Additive Session Merging:</strong> If you import a `.bft6` file when history is already present, the simulation will validate that the seed and arena radius match, then merge the timelines together, allowing you to assemble very long simulation sessions segment-by-segment.</li>
 				<li><strong>Export Step (JSON):</strong> From the 'Time-Travel Control' panel, you can export the complete state of the currently viewed step—including all cell properties, AI grids, and settings—to a single JSON file. This is ideal for restoring simulations from a certain step.</li>
 				<li><strong>Import Step (JSON):</strong> From the 'Time-Travel Control' panel, you can import a previously exported Step state JSON file. This will perfectly replicate the conditions of that step, including all settings and the precise RNG state, allowing you to replicate previous simulation or start a new simulation from that exact point with a new set of random numbers.</li>
+				<li><strong>History Autoplay &amp; Steps:</strong> While paused, scrub history with the scrub slider, step backward/forward one step at a time with the `◀` and `▶` step buttons (or left/right arrow shortcuts), or play/stop autoplay to play back the steps automatically using the step delay.</li>
+				<li><strong>Save All Data &amp; Workspace Access:</strong> Clicking "Save All Data" prompts for a local folder choice via the browser's File System Access API. Once approved, the simulation silently saves the population TSV, layouts ZIP, images ZIP, and the `.bft6` session directly to your local workspace, avoiding repeated browser download prompts.</li>
             </ul>
 			
 			<div class="mt-4">
 				<h5 class="font-semibold">Memory Management &amp; Database Offloading</h5>
 				<p class="text-sm text-gray-700">
-					Saving per-step data (like images, arena states, and full history) can consume a large amount of browser memory. To prevent crashes during long runs, you can set buffer limits in the <strong>"Exports &amp; Buffers"</strong> panel.
+					Saving per-step data (like images, arena states, and full history) can consume a large amount of browser memory. To prevent crashes during long runs, you can configure maximum RAM buffer thresholds (in MB) for history, arena layouts, and step images inside the <strong>"Exports &amp; Buffers"</strong> panel.
 				</p>
 				<ul class="list-disc ml-5 mt-2 space-y-1 text-sm">
 					<li>
