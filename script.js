@@ -613,6 +613,7 @@
 	let mainEmptyGridCanvas = null;
 	let exportEmptyGridCanvas = null;
 	let exportEmptyGridCanvasKey = "";
+	const BR_TOXIN_START_PROB_VALUES = [0.001, 0.003, 0.01, 0.03, 0.1];
 
 	class SimulationDB {
 		constructor() {
@@ -956,6 +957,40 @@
 		}
 		const db = await getDB();
 		return await db.getHistory(stepIndex);
+	}
+
+	async function getHistoryFramesBatch(db, steps) {
+		return new Promise((resolve, reject) => {
+			const transaction = db.db.transaction("history", "readonly");
+			const store = transaction.objectStore("history");
+			const results = new Map();
+			let completed = 0;
+			let hasError = false;
+
+			if (steps.length === 0) {
+				resolve(results);
+				return;
+			}
+
+			for (const step of steps) {
+				const request = store.get(step);
+				request.onsuccess = () => {
+					if (hasError) return;
+					if (request.result) {
+						results.set(step, request.result.data);
+					}
+					completed++;
+					if (completed === steps.length) {
+						resolve(results);
+					}
+				};
+				request.onerror = (e) => {
+					if (hasError) return;
+					hasError = true;
+					reject(e.target.error);
+				};
+			}
+		});
 	}
 
 	async function getArenaStateFrame(stepNumber) {
@@ -3895,7 +3930,7 @@ stopButton.addEventListener('click', () => {
 					simState.activePresetConfig.brDefSelectivity = valInt;
 					brDefSelectivityDisplay.textContent = brDefSelectivityMap[valInt];
 				} else if (slider.id === 'brPreyToxinStartProbabilitySlider') {
-					const valFloat = parseFloat(value);
+					const valFloat = BR_TOXIN_START_PROB_VALUES[parseInt(value)];
 					simState.activePresetConfig.brPreyToxinStartProb = valFloat;
 					brPreyToxinStartProbabilityDisplay.textContent = `${valFloat}%`;
 				}
@@ -4019,7 +4054,8 @@ stopButton.addEventListener('click', () => {
 		brPreyToxinCheckbox.checked = simState.activePresetConfig.brPreyToxin;
 		
 		const brToxinStartProbVal = simState.activePresetConfig.brPreyToxinStartProb !== undefined ? simState.activePresetConfig.brPreyToxinStartProb : 0.01;
-		brPreyToxinStartProbabilitySlider.value = brToxinStartProbVal;
+		const brToxinStartProbIndex = BR_TOXIN_START_PROB_VALUES.indexOf(brToxinStartProbVal);
+		brPreyToxinStartProbabilitySlider.value = brToxinStartProbIndex !== -1 ? brToxinStartProbIndex : 2;
 		brPreyToxinStartProbabilityDisplay.textContent = `${brToxinStartProbVal}%`;
 
 		brDefMovementCheckbox.checked = simState.activePresetConfig.brDefMovement;
@@ -4401,8 +4437,13 @@ async function runSimulationStep() {
         }
 
 
+		const stepAlreadyRecorded = simState.historicalData.length > 0 &&
+			simState.historicalData[simState.historicalData.length - 1].time === simState.simulationStepCount;
+
 		if (simState.config.historyEnabled) {
-			captureFullState();
+			if (!stepAlreadyRecorded) {
+				captureFullState();
+			}
 			updateTimeTravelSlider();
 		}
 		if (!simState.isInitialized || (!simState.isRunning && !simState.isStepping)) {
@@ -4469,42 +4510,45 @@ async function runSimulationStep() {
 			simState.finalStateRecorded = false;
 		}
 
-		// --- Record and Visualize Current State (for current simState.simulationStepCount) ---
-		let currentLiveAttackerCount = 0, currentLivePreyCount = 0, currentLiveDefenderCount = 0;
-		let currentDeadLysingAttackerCount = 0, currentDeadLysingPreyCount = 0, currentDeadLysingDefenderCount = 0;
 		const currentGridRadius = simState.config.hexGridActualRadius; // Use current config for bounds checking
-		// Barriers are not included in historical data counts
-		simState.cells.forEach(c => {
-			if (!isWithinHexBounds(c.q, c.r, currentGridRadius) || c.isEffectivelyGone) return;
-			if (c.isDead || c.isLysing) {
-				if (c.type === 'attacker') currentDeadLysingAttackerCount++;
-				else if (c.type === 'prey') currentDeadLysingPreyCount++;
-				else if (c.type === 'defender') currentDeadLysingDefenderCount++;
-			} else {
-				if (c.type === 'attacker') currentLiveAttackerCount++;
-				else if (c.type === 'prey') currentLivePreyCount++;
-				else if (c.type === 'defender') currentLiveDefenderCount++;
+
+		// --- Record and Visualize Current State (for current simState.simulationStepCount) ---
+		if (!stepAlreadyRecorded) {
+			let currentLiveAttackerCount = 0, currentLivePreyCount = 0, currentLiveDefenderCount = 0;
+			let currentDeadLysingAttackerCount = 0, currentDeadLysingPreyCount = 0, currentDeadLysingDefenderCount = 0;
+			// Barriers are not included in historical data counts
+			simState.cells.forEach(c => {
+				if (!isWithinHexBounds(c.q, c.r, currentGridRadius) || c.isEffectivelyGone) return;
+				if (c.isDead || c.isLysing) {
+					if (c.type === 'attacker') currentDeadLysingAttackerCount++;
+					else if (c.type === 'prey') currentDeadLysingPreyCount++;
+					else if (c.type === 'defender') currentDeadLysingDefenderCount++;
+				} else {
+					if (c.type === 'attacker') currentLiveAttackerCount++;
+					else if (c.type === 'prey') currentLivePreyCount++;
+					else if (c.type === 'defender') currentLiveDefenderCount++;
+				}
+			});
+
+			// For time 0, cumulative stats are already 0. For subsequent steps, they reflect previous step's actions.
+			simState.historicalData.push({
+				time: simState.simulationStepCount,
+				liveAttackers: currentLiveAttackerCount, livePrey: currentLivePreyCount, liveDefenders: currentLiveDefenderCount,
+				deadLysingAttackers: currentDeadLysingAttackerCount, deadLysingPrey: currentDeadLysingPreyCount, deadLysingDefenders: currentDeadLysingDefenderCount,
+				firings: simState.cumulativeFirings, // Cumulative up to *before* this step's calculations
+				killedAttackers: simState.cumulativeKills.attacker, killedPrey: simState.cumulativeKills.prey, killedDefenders: simState.cumulativeKills.defender,
+				lysedAttackers: simState.cumulativeLyses.attacker, lysedPrey: simState.cumulativeLyses.prey, lysedDefenders: simState.cumulativeLyses.defender,
+				cprgConverted: simState.totalCPRGConverted // CPRG state *before* this step's lysis
+			});
+
+			if (simState.saveImagesEnabled) {
+				captureArenaImage(); // Uses current simState.simulationStepCount for naming
 			}
-		});
-
-		// For time 0, cumulative stats are already 0. For subsequent steps, they reflect previous step's actions.
-		simState.historicalData.push({
-			time: simState.simulationStepCount,
-			liveAttackers: currentLiveAttackerCount, livePrey: currentLivePreyCount, liveDefenders: currentLiveDefenderCount,
-			deadLysingAttackers: currentDeadLysingAttackerCount, deadLysingPrey: currentDeadLysingPreyCount, deadLysingDefenders: currentDeadLysingDefenderCount,
-			firings: simState.cumulativeFirings, // Cumulative up to *before* this step's calculations
-			killedAttackers: simState.cumulativeKills.attacker, killedPrey: simState.cumulativeKills.prey, killedDefenders: simState.cumulativeKills.defender,
-			lysedAttackers: simState.cumulativeLyses.attacker, lysedPrey: simState.cumulativeLyses.prey, lysedDefenders: simState.cumulativeLyses.defender,
-			cprgConverted: simState.totalCPRGConverted // CPRG state *before* this step's lysis
-		});
-
-		if (simState.saveImagesEnabled) {
-			captureArenaImage(); // Uses current simState.simulationStepCount for naming
-		}
-		if (simState.saveArenaStatesEnabled) {
-			const tsvString = captureCurrentArenaStateTSV(simState.cells);
-			simState.capturedArenaStatesTSV.push({ step: simState.simulationStepCount, tsvData: tsvString, isOffloaded: false });
-		    simState.capturedArenaStatesTSVTotalSize += tsvString.length;
+			if (simState.saveArenaStatesEnabled) {
+				const tsvString = captureCurrentArenaStateTSV(simState.cells);
+				simState.capturedArenaStatesTSV.push({ step: simState.simulationStepCount, tsvData: tsvString, isOffloaded: false });
+				simState.capturedArenaStatesTSVTotalSize += tsvString.length;
+			}
 		}
 
         const renderRate = simState.config.simulationControl.renderRate;
@@ -6332,14 +6376,85 @@ async function saveFullSimulationToFile(isBatch = false) {
         await writeChunk(new Uint8Array([0xdd, (N >> 24) & 0xff, (N >> 16) & 0xff, (N >> 8) & 0xff, N & 0xff]));
     }
 
-    // Write frames sequentially
-    for (let i = 0; i < N; i++) {
-        const frame = await getHistoryFrame(allKeys[i]);
-        if (frame) {
-            await writeChunk(msgpack.encode(frame));
+    const limitInput = document.getElementById('historyBufferSizeLimitInput');
+    const sizeLimitMB = limitInput ? (parseInt(limitInput.value) || 1200) : (simState.config.history.sizeLimitMB || 1200);
+    const historyLimitBytes = sizeLimitMB * 1024 * 1024;
+
+    // Estimate step size:
+    let estimatedStepSize = 500 * 1024; // default 500KB fallback
+    let ramFramesCount = 0;
+    let ramFramesTotalSize = 0;
+    for (const [step, frame] of simState.optimizedHistoryFrames.entries()) {
+        if (frame && !frame.isOffloaded) {
+            ramFramesCount++;
+            ramFramesTotalSize += JSON.stringify(frame).length;
         }
-        const percent = Math.round((i / N) * 100);
+    }
+    if (ramFramesCount > 0) {
+        estimatedStepSize = ramFramesTotalSize / ramFramesCount;
+    }
+    
+    // We target using up to 80% of the user-configured history limit for our RAM batch during save
+    const targetBufferBytes = historyLimitBytes * 0.8;
+    const batchStepCount = Math.max(1, Math.floor(targetBufferBytes / estimatedStepSize));
+    
+    console.log(`Saving history in batches of ${batchStepCount} steps (estimated step size: ${Math.round(estimatedStepSize / 1024)} KB, limit: ${sizeLimitMB} MB)`);
+    
+    // Write frames in batches
+    for (let i = 0; i < N; i += batchStepCount) {
+        const batchKeys = allKeys.slice(i, i + batchStepCount);
+        
+        // Find which keys in this batch need to be fetched from DB
+        const dbKeys = [];
+        const ramFrames = new Map();
+        for (const key of batchKeys) {
+            const frame = simState.optimizedHistoryFrames.get(key);
+            if (frame && !frame.isOffloaded) {
+                ramFrames.set(key, frame);
+            } else {
+                dbKeys.push(key);
+            }
+        }
+        
+        // Fetch offloaded frames in a single transaction
+        let dbFrames = new Map();
+        if (dbKeys.length > 0) {
+            try {
+                dbFrames = await getHistoryFramesBatch(db, dbKeys);
+            } catch (err) {
+                console.error("Error fetching history batch from IndexedDB:", err);
+            }
+        }
+        
+        // Encode all frames in the batch
+        const encodedChunks = [];
+        for (const key of batchKeys) {
+            const frame = ramFrames.get(key) || dbFrames.get(key);
+            if (frame) {
+                encodedChunks.push(msgpack.encode(frame));
+            }
+        }
+        
+        // Combine all encoded frames in this batch and write as one big chunk
+        if (encodedChunks.length > 0) {
+            let totalLength = 0;
+            for (const chunk of encodedChunks) {
+                totalLength += chunk.length;
+            }
+            const combinedChunk = new Uint8Array(totalLength);
+            let offset = 0;
+            for (const chunk of encodedChunks) {
+                combinedChunk.set(chunk, offset);
+                offset += chunk.length;
+            }
+            
+            await writeChunk(combinedChunk);
+        }
+        
+        const percent = Math.min(100, Math.round(((i + batchKeys.length) / N) * 100));
         updateSaveProgress(percent, `Saving History: ${percent}%`);
+        // Yield to prevent thread locking
+        await new Promise(resolve => setTimeout(resolve, 0));
     }
 
     // Complete saving process
@@ -6615,7 +6730,8 @@ async function loadFullSimulationFromFile(fileInputData) { // can be File, Blob 
             blob = new Blob([fileInputData]);
         }
 
-        console.log("Starting low-memory stream-decoding of session file...");
+        const textDecoder = new TextDecoder("utf-8");
+        let sharedDataView = null;
 
         // 1. Recursive MsgPack decoder supporting core schema structures
         function decodeMsgPackPart(bytes, offset) {
@@ -6660,7 +6776,7 @@ async function loadFullSimulationFromFile(fileInputData) { // can be File, Blob 
                 if (pos + 1 + length > bytes.length) throw new RangeError("Out of bounds");
                 pos += 1;
                 const strBytes = bytes.subarray(pos, pos + length);
-                const str = new TextDecoder("utf-8").decode(strBytes);
+                const str = textDecoder.decode(strBytes);
                 return { value: str, bytesRead: 1 + length };
             }
             if (type === 0xc0) return { value: null, bytesRead: 1 };
@@ -6669,8 +6785,10 @@ async function loadFullSimulationFromFile(fileInputData) { // can be File, Blob 
             
             if (type === 0xcb) {
                 if (pos + 9 > bytes.length) throw new RangeError("Out of bounds");
-                const view = new DataView(bytes.buffer, bytes.byteOffset + pos + 1, 8);
-                const val = view.getFloat64(0, false);
+                if (!sharedDataView || sharedDataView.buffer !== bytes.buffer) {
+                    sharedDataView = new DataView(bytes.buffer);
+                }
+                const val = sharedDataView.getFloat64(bytes.byteOffset + pos + 1, false);
                 return { value: val, bytesRead: 9 };
             }
             if (type === 0xcc) {
@@ -6704,7 +6822,7 @@ async function loadFullSimulationFromFile(fileInputData) { // can be File, Blob 
                 if (pos + 2 + length > bytes.length) throw new RangeError("Out of bounds");
                 pos += 2;
                 const strBytes = bytes.subarray(pos, pos + length);
-                const str = new TextDecoder("utf-8").decode(strBytes);
+                const str = textDecoder.decode(strBytes);
                 return { value: str, bytesRead: 2 + length };
             }
             if (type === 0xda) {
@@ -6713,7 +6831,7 @@ async function loadFullSimulationFromFile(fileInputData) { // can be File, Blob 
                 if (pos + 3 + length > bytes.length) throw new RangeError("Out of bounds");
                 pos += 3;
                 const strBytes = bytes.subarray(pos, pos + length);
-                const str = new TextDecoder("utf-8").decode(strBytes);
+                const str = textDecoder.decode(strBytes);
                 return { value: str, bytesRead: 3 + length };
             }
             if (type === 0xdb) {
@@ -6722,7 +6840,7 @@ async function loadFullSimulationFromFile(fileInputData) { // can be File, Blob 
                 if (pos + 5 + length > bytes.length) throw new RangeError("Out of bounds");
                 pos += 5;
                 const strBytes = bytes.subarray(pos, pos + length);
-                const str = new TextDecoder("utf-8").decode(strBytes);
+                const str = textDecoder.decode(strBytes);
                 return { value: str, bytesRead: 5 + length };
             }
             if (type === 0xdc) {
