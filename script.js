@@ -4018,7 +4018,7 @@ stopButton.addEventListener('click', () => {
 		brPreyCapsuleCheckbox.checked = simState.activePresetConfig.brPreyCapsule;
 		brPreyToxinCheckbox.checked = simState.activePresetConfig.brPreyToxin;
 		
-		const brToxinStartProbVal = simState.activePresetConfig.brPreyToxinStartProb !== undefined ? simState.activePresetConfig.brPreyToxinStartProb : 0.1;
+		const brToxinStartProbVal = simState.activePresetConfig.brPreyToxinStartProb !== undefined ? simState.activePresetConfig.brPreyToxinStartProb : 0.01;
 		brPreyToxinStartProbabilitySlider.value = brToxinStartProbVal;
 		brPreyToxinStartProbabilityDisplay.textContent = `${brToxinStartProbVal}%`;
 

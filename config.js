@@ -295,7 +295,7 @@ const AppConfig = {
         brPreyAi: true,
         brPreyCapsule: true,
         brPreyToxin: true,
-        brPreyToxinStartProb: 0.03,
+        brPreyToxinStartProb: 0.01,
         brDefMovement: true,
         brDefSelectivity: 2,
         brDefPredation: true,
