@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 9.06 (6.6.2026)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 9.09 (26.6.2026)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -613,16 +613,47 @@
 	let mainEmptyGridCanvas = null;
 	let exportEmptyGridCanvas = null;
 	let exportEmptyGridCanvasKey = "";
-	const BR_TOXIN_START_PROB_VALUES = [0.001, 0.003, 0.01, 0.03, 0.1];
+	const BR_TOXIN_START_PROB_VALUES = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3];
 
 	class SimulationDB {
 		constructor() {
-			this.dbName = "BacFighT6_DB";
+			this.sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+			this.dbName = "BacFighT6_DB_" + this.sessionId;
 			this.dbVersion = 1;
 			this.db = null;
+
+			window.addEventListener("beforeunload", () => {
+				if (this.db) {
+					this.db.close();
+				}
+				if (indexedDB && indexedDB.deleteDatabase) {
+					indexedDB.deleteDatabase(this.dbName);
+				}
+			});
+		}
+
+		async cleanupOldDatabases() {
+			try {
+				if (indexedDB.databases) {
+					const dbs = await indexedDB.databases();
+					for (const dbInfo of dbs) {
+						if (dbInfo.name && dbInfo.name.startsWith("BacFighT6_DB_") && dbInfo.name !== this.dbName) {
+							indexedDB.deleteDatabase(dbInfo.name);
+						}
+					}
+				} else {
+					// Fallback legacy cleanup
+					if (indexedDB.deleteDatabase) {
+						indexedDB.deleteDatabase("BacFighT6_DB");
+					}
+				}
+			} catch (e) {
+				console.warn("Could not cleanup old databases", e);
+			}
 		}
 
 		init() {
+			this.cleanupOldDatabases();
 			return new Promise((resolve, reject) => {
 				const request = indexedDB.open(this.dbName, this.dbVersion);
 				request.onupgradeneeded = (event) => {
@@ -3156,6 +3187,10 @@ async function handleTimeTravelScrub(event) {
     simState.isScrubbing = !isAtEnd;
     resumeButton.disabled = simState.isRunning || isAtEnd;
     historyStepBackButton.disabled = (parseInt(slider.value, 10) <= parseInt(slider.min, 10));
+    const historyStepForwardButton = document.getElementById('historyStepForwardButton');
+    if (historyStepForwardButton) {
+        historyStepForwardButton.disabled = (parseInt(slider.value, 10) >= parseInt(slider.max, 10));
+    }
 }
 
 
@@ -6376,29 +6411,10 @@ async function saveFullSimulationToFile(isBatch = false) {
         await writeChunk(new Uint8Array([0xdd, (N >> 24) & 0xff, (N >> 16) & 0xff, (N >> 8) & 0xff, N & 0xff]));
     }
 
-    const limitInput = document.getElementById('historyBufferSizeLimitInput');
-    const sizeLimitMB = limitInput ? (parseInt(limitInput.value) || 1200) : (simState.config.history.sizeLimitMB || 1200);
-    const historyLimitBytes = sizeLimitMB * 1024 * 1024;
-
-    // Estimate step size:
-    let estimatedStepSize = 500 * 1024; // default 500KB fallback
-    let ramFramesCount = 0;
-    let ramFramesTotalSize = 0;
-    for (const [step, frame] of simState.optimizedHistoryFrames.entries()) {
-        if (frame && !frame.isOffloaded) {
-            ramFramesCount++;
-            ramFramesTotalSize += JSON.stringify(frame).length;
-        }
-    }
-    if (ramFramesCount > 0) {
-        estimatedStepSize = ramFramesTotalSize / ramFramesCount;
-    }
+    // Use a fixed chunk size of 100 to prevent aggressive memory usage that causes crashes
+    const batchStepCount = 100;
     
-    // We target using up to 80% of the user-configured history limit for our RAM batch during save
-    const targetBufferBytes = historyLimitBytes * 0.8;
-    const batchStepCount = Math.max(1, Math.floor(targetBufferBytes / estimatedStepSize));
-    
-    console.log(`Saving history in batches of ${batchStepCount} steps (estimated step size: ${Math.round(estimatedStepSize / 1024)} KB, limit: ${sizeLimitMB} MB)`);
+    console.log(`Saving history in batches of ${batchStepCount} steps`);
     
     // Write frames in batches
     for (let i = 0; i < N; i += batchStepCount) {
