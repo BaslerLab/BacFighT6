@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 10.0 (27.6.2026)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 10.01 (27.6.2026)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -756,12 +756,47 @@
 			});
 		}
 
+		getImage(step) {
+			return new Promise((resolve, reject) => {
+				const transaction = this.db.transaction("images", "readonly");
+				const request = transaction.objectStore("images").get(step);
+				request.onsuccess = () => resolve(request.result ? request.result.dataURL : null);
+				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
 		getAllImages() {
 			return new Promise((resolve, reject) => {
 				const transaction = this.db.transaction("images", "readonly");
 				const request = transaction.objectStore("images").getAll();
 				request.onsuccess = () => resolve(request.result.map(item => ({ step: item.step, dataURL: item.dataURL })));
 				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		getImagesBySteps(steps) {
+			return new Promise((resolve, reject) => {
+				if (steps.length === 0) return resolve(new Map());
+				const transaction = this.db.transaction("images", "readonly");
+				const store = transaction.objectStore("images");
+				const results = new Map();
+				let completed = 0;
+				let hasError = false;
+
+				for (const step of steps) {
+					const request = store.get(step);
+					request.onsuccess = () => {
+						if (hasError) return;
+						if (request.result) results.set(step, request.result.dataURL);
+						if (++completed === steps.length) resolve(results);
+					};
+					request.onerror = (e) => {
+						if (!hasError) {
+							hasError = true;
+							reject(e.target.error);
+						}
+					};
+				}
 			});
 		}
 
@@ -825,6 +860,32 @@
 				const request = transaction.objectStore("arena_states").getAll();
 				request.onsuccess = () => resolve(request.result.map(item => ({ step: item.step, tsvData: item.tsvData })));
 				request.onerror = (e) => reject(e.target.error);
+			});
+		}
+
+		getArenaStatesBySteps(steps) {
+			return new Promise((resolve, reject) => {
+				if (steps.length === 0) return resolve(new Map());
+				const transaction = this.db.transaction("arena_states", "readonly");
+				const store = transaction.objectStore("arena_states");
+				const results = new Map();
+				let completed = 0;
+				let hasError = false;
+
+				for (const step of steps) {
+					const request = store.get(step);
+					request.onsuccess = () => {
+						if (hasError) return;
+						if (request.result) results.set(step, request.result.tsvData);
+						if (++completed === steps.length) resolve(results);
+					};
+					request.onerror = (e) => {
+						if (!hasError) {
+							hasError = true;
+							reject(e.target.error);
+						}
+					};
+				}
 			});
 		}
 
@@ -5461,7 +5522,7 @@ async function runSimulationStep() {
 		}
 	}
 
-	function captureArenaImageForState(stateObject, step) {
+	function captureArenaImageForState(stateObject, step, returnOnly = false) {
 		const exportWidth = simState.imageExportResolution.width;
 		const exportHeight = simState.imageExportResolution.height;
 		const sizing = setupCanvasAndHexSize(exportWidth, exportHeight, simState.config.hexGridActualRadius);
@@ -5510,6 +5571,11 @@ async function runSimulationStep() {
 		finalCtx.drawImage(offscreenCanvas, 0, 0, sizing.actualCanvasWidth, sizing.actualCanvasHeight, drawX, drawY, drawWidth, drawHeight);
 
 		const dataURL = finalCanvas.toDataURL('image/png');
+		
+		if (returnOnly) {
+			return dataURL;
+		}
+
 		simState.capturedImagesDataURLs.push({ step: step, dataURL, isOffloaded: false });
 		simState.capturedImagesTotalSize += dataURL.length;
 	}
@@ -5596,15 +5662,15 @@ async function runSimulationStep() {
 		updateConfigFromUI(true); // Read latest UI settings (size, limits)
 
 		try {
-			// Clear existing images to make room for new render
-			const db = await getDB();
-			await db.clearImages();
-			simState.capturedImagesDataURLs = [];
-			simState.capturedImagesTotalSize = 0;
-
 			updateRenderHistoryProgress(0, `Starting render of ${totalSteps} steps...`);
 
-			const imageLimitBytes = (simState.config.exports.sizeThresholdForZip || 0) * 1024 * 1024;
+			let currentZip = new JSZip();
+			let currentZipSize = 0;
+			let zipIndex = 1;
+			let firstStepInZip = null;
+			let lastStepInZip = null;
+			const chunkLimitBytes = (simState.config.exports.sizeThresholdForZip || 100) * 1024 * 1024;
+			let actuallySavedSomething = false;
 
 			for (let i = 0; i < totalSteps; i++) {
 				if (simState.renderCancelled) {
@@ -5614,54 +5680,61 @@ async function runSimulationStep() {
 
 				const stepIndex = filteredSteps[i];
 				
-				// Get history frame (loads from IndexedDB if offloaded)
+				// Get history frame
 				const optimizedState = await getHistoryFrame(stepIndex);
 				if (!optimizedState) continue;
 
 				// Rehydrate
 				const rehydratedState = rehydrateOptimizedStep(optimizedState);
 
-				// Capture image from rehydrated state
-				captureArenaImageForState(rehydratedState, stepIndex);
+				// Capture image from rehydrated state (bypassing RAM array and DB)
+				const dataURL = captureArenaImageForState(rehydratedState, stepIndex, true);
+				
+				if (firstStepInZip === null) firstStepInZip = stepIndex;
+				lastStepInZip = stepIndex;
 
-				// Check buffer limit and offload if needed
-				if (imageLimitBytes > 0 && simState.capturedImagesTotalSize >= imageLimitBytes) {
-					updateRenderHistoryProgress(Math.round((i / totalSteps) * 100), `Offloading image batch to DB...`);
-					await offloadImagesToDB();
+				const base64Data = dataURL.substring(dataURL.indexOf(',') + 1);
+				currentZip.file(`image_${String(stepIndex).padStart(5, '0')}.png`, base64Data, { base64: true });
+				currentZipSize += dataURL.length;
+				actuallySavedSomething = true;
+
+				const percent = Math.round(((i + 1) / totalSteps) * 100);
+
+				if (currentZipSize >= chunkLimitBytes || i === totalSteps - 1) {
+					updateRenderHistoryProgress(percent, `Saving ZIP part ${zipIndex}...`);
+					const content = await currentZip.generateAsync({ type: "blob", compression: "STORE" });
+					const fileName = `${simState.runTimestamp || generateTimestamp()}_images_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+					
+					await saveFile(content, fileName, { preApprovedHandle: handle });
+					
+					currentZip = new JSZip();
+					currentZipSize = 0;
+					firstStepInZip = null;
+					zipIndex++;
 				}
 
-				// Update progress
-				const percent = Math.round(((i + 1) / totalSteps) * 100);
+				// Update progress and yield
 				updateRenderHistoryProgress(percent, `Rendering step ${stepIndex} (${i + 1}/${totalSteps})...`);
-
-				// Let browser render frame/progress bar
 				await new Promise(resolve => requestAnimationFrame(resolve));
 			}
 
-			// Offload any remaining images to DB
-			updateRenderHistoryProgress(100, simState.renderCancelled ? "Saving rendered steps..." : "Finalizing render...");
-			await offloadImagesToDB();
+			// If cancelled mid-chunk, save the remaining frames
+			if (simState.renderCancelled && currentZipSize > 0) {
+				updateRenderHistoryProgress(100, `Saving final ZIP part ${zipIndex}...`);
+				const content = await currentZip.generateAsync({ type: "blob", compression: "STORE" });
+				const fileName = `${simState.runTimestamp || generateTimestamp()}_images_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+				await saveFile(content, fileName, { preApprovedHandle: handle });
+			}
 
-			// Trigger ZIP packaging and save
-			if (simState.capturedImagesDataURLs.length > 0) {
-				updateRenderHistoryProgress(100, "Packaging images into ZIP...");
-				
-				// We can call downloadImagesAsZIP directly
-				await downloadImagesAsZIP(false, true);
-
-				updateRenderHistoryProgress(null, null);
+			updateRenderHistoryProgress(null, null);
+			if (actuallySavedSomething) {
 				if (simState.renderCancelled) {
 					await showInfoAlert("Rendering stopped. Rendered images saved successfully!", "Stopped");
 				} else {
 					await showInfoAlert("Images rendered and saved successfully!", "Success");
 				}
 			} else {
-				updateRenderHistoryProgress(null, null);
-				if (simState.renderCancelled) {
-					await showInfoAlert("Rendering stopped. No images were rendered.", "Stopped");
-				} else {
-					await showInfoAlert("No images were rendered to save.", "Info");
-				}
+				await showInfoAlert("No images were rendered to save.", "Info");
 			}
 
 		} catch (error) {
@@ -6199,8 +6272,6 @@ async function downloadImagesAsZIP(isMidSimBatch = false, andClearBuffer = false
     const chunkLimitBytes = chunkLimitMB * 1024 * 1024;
 
     const db = await getDB();
-    const allImagesFromDB = await db.getAllImages();
-    const dbImagesMap = new Map(allImagesFromDB.map(img => [img.step, img.dataURL]));
     
     let currentZip = new JSZip();
     let currentZipSize = 0;
@@ -6209,41 +6280,68 @@ async function downloadImagesAsZIP(isMidSimBatch = false, andClearBuffer = false
     let lastStepInZip = null;
     const processedSteps = [];
 
-    for (let i = 0; i < simState.capturedImagesDataURLs.length; i++) {
-        const imgRef = simState.capturedImagesDataURLs[i];
-        let dataURL = null;
-        if (!imgRef.isOffloaded) {
-            dataURL = imgRef.dataURL;
-        } else {
-            dataURL = dbImagesMap.get(imgRef.step);
-        }
-        if (!dataURL) continue;
-
-        if (firstStepInZip === null) firstStepInZip = imgRef.step;
-        lastStepInZip = imgRef.step;
-        processedSteps.push(imgRef.step);
-
-        const base64Data = dataURL.substring(dataURL.indexOf(',') + 1);
-        currentZip.file(`image_${String(imgRef.step).padStart(5, '0')}.png`, base64Data, { base64: true });
-        currentZipSize += dataURL.length;
-
-        // Update progress bar
-        const percent = Math.round((i / simState.capturedImagesDataURLs.length) * 100);
-        updateSaveProgress(percent, `Packaging Images: ${percent}%`);
-
-        // If we reached the size limit, or it is the last image, write the ZIP
-        if (currentZipSize >= chunkLimitBytes || i === simState.capturedImagesDataURLs.length - 1) {
-            const content = await currentZip.generateAsync({ type: "blob", compression: "STORE" });
-            const fileName = `${simState.runTimestamp || generateTimestamp()}_images_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+    for (let i = 0; i < simState.capturedImagesDataURLs.length; ) {
+        let batchRefs = [];
+        let accumulatedSize = 0;
+        let j = i;
+        
+        while (j < simState.capturedImagesDataURLs.length) {
+            const ref = simState.capturedImagesDataURLs[j];
+            const size = ref.sizeBytes || (1024 * 1024); // Fallback estimate (1MB) if undefined
             
-            await saveFile(content, fileName, { preApprovedHandle: handle });
-
-            // Reset ZIP parameters
-            currentZip = new JSZip();
-            currentZipSize = 0;
-            firstStepInZip = null;
-            zipIndex++;
+            // If accumulated size plus this image exceeds the limit, stop adding to this batch
+            if (batchRefs.length > 0 && accumulatedSize + size >= chunkLimitBytes) {
+                break;
+            }
+            batchRefs.push(ref);
+            accumulatedSize += size;
+            j++;
         }
+
+        const stepsToFetch = batchRefs.filter(ref => ref.isOffloaded).map(ref => ref.step);
+        let dbBatchMap = new Map();
+        
+        if (stepsToFetch.length > 0) {
+            dbBatchMap = await db.getImagesBySteps(stepsToFetch);
+        }
+
+        for (let j = 0; j < batchRefs.length; j++) {
+            const imgRef = batchRefs[j];
+            let dataURL = null;
+            if (!imgRef.isOffloaded) {
+                dataURL = imgRef.dataURL;
+            } else {
+                dataURL = dbBatchMap.get(imgRef.step);
+            }
+            if (!dataURL) continue;
+
+            if (firstStepInZip === null) firstStepInZip = imgRef.step;
+            lastStepInZip = imgRef.step;
+            processedSteps.push(imgRef.step);
+
+            const base64Data = dataURL.substring(dataURL.indexOf(',') + 1);
+            currentZip.file(`image_${String(imgRef.step).padStart(5, '0')}.png`, base64Data, { base64: true });
+            currentZipSize += dataURL.length;
+
+            const overallIndex = i + j;
+            const percent = Math.round((overallIndex / simState.capturedImagesDataURLs.length) * 100);
+            updateSaveProgress(percent, `Packaging Images: ${percent}%`);
+
+            // If we reached the size limit, or it is the last image, write the ZIP
+            if (currentZipSize >= chunkLimitBytes || overallIndex === simState.capturedImagesDataURLs.length - 1) {
+                const content = await currentZip.generateAsync({ type: "blob", compression: "STORE" });
+                const fileName = `${simState.runTimestamp || generateTimestamp()}_images_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+                
+                await saveFile(content, fileName, { preApprovedHandle: handle });
+
+                // Reset ZIP parameters
+                currentZip = new JSZip();
+                currentZipSize = 0;
+                firstStepInZip = null;
+                zipIndex++;
+            }
+        }
+        i = j; // Move the outer loop index forward to the next unbatched item
     }
     updateSaveProgress(null, "Images saved successfully!");
 
@@ -6291,10 +6389,7 @@ async function downloadArenaStatesAsZIP(isMidSimBatch = false, andClearBuffer = 
     // Chunking parameters
     const chunkLimitMB = simState.config.arenaStateBuffer.sizeLimitMB || 50;
     const chunkLimitBytes = chunkLimitMB * 1024 * 1024;
-
     const db = await getDB();
-    const allStatesFromDB = await db.getAllArenaStates();
-    const dbStatesMap = new Map(allStatesFromDB.map(s => [s.step, s.tsvData]));
     
     let currentZip = new JSZip();
     let currentZipSize = 0;
@@ -6303,39 +6398,64 @@ async function downloadArenaStatesAsZIP(isMidSimBatch = false, andClearBuffer = 
     let lastStepInZip = null;
     const processedSteps = [];
 
-    for (let i = 0; i < simState.capturedArenaStatesTSV.length; i++) {
-        const stateRef = simState.capturedArenaStatesTSV[i];
-        let tsvData = null;
-        if (!stateRef.isOffloaded) {
-            tsvData = stateRef.tsvData;
-        } else {
-            tsvData = dbStatesMap.get(stateRef.step);
-        }
-        if (!tsvData) continue;
-
-        if (firstStepInZip === null) firstStepInZip = stateRef.step;
-        lastStepInZip = stateRef.step;
-        processedSteps.push(stateRef.step);
-
-        currentZip.file(`arena_${String(stateRef.step).padStart(5, '0')}.tsv`, tsvData);
-        currentZipSize += tsvData.length;
-
-        // Update progress bar
-        const percent = Math.round((i / simState.capturedArenaStatesTSV.length) * 100);
-        updateSaveProgress(percent, `Packaging States: ${percent}%`);
-
-        // Write chunk if limit reached or last state
-        if (currentZipSize >= chunkLimitBytes || i === simState.capturedArenaStatesTSV.length - 1) {
-            const content = await currentZip.generateAsync({ type: "blob", compression: "STORE" });
-            const fileName = `${simState.runTimestamp || generateTimestamp()}_arenas_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+    for (let i = 0; i < simState.capturedArenaStatesTSV.length; ) {
+        let batchRefs = [];
+        let accumulatedSize = 0;
+        let j = i;
+        
+        while (j < simState.capturedArenaStatesTSV.length) {
+            const ref = simState.capturedArenaStatesTSV[j];
+            const size = ref.sizeBytes || (50 * 1024); // Fallback estimate (50KB) if undefined
             
-            await saveFile(content, fileName, { preApprovedHandle: handle });
-
-            currentZip = new JSZip();
-            currentZipSize = 0;
-            firstStepInZip = null;
-            zipIndex++;
+            if (batchRefs.length > 0 && accumulatedSize + size >= chunkLimitBytes) {
+                break;
+            }
+            batchRefs.push(ref);
+            accumulatedSize += size;
+            j++;
         }
+
+        const stepsToFetch = batchRefs.filter(ref => ref.isOffloaded).map(ref => ref.step);
+        let dbBatchMap = new Map();
+        
+        if (stepsToFetch.length > 0) {
+            dbBatchMap = await db.getArenaStatesBySteps(stepsToFetch);
+        }
+
+        for (let k = 0; k < batchRefs.length; k++) {
+            const stateRef = batchRefs[k];
+            let tsvData = null;
+            if (!stateRef.isOffloaded) {
+                tsvData = stateRef.tsvData;
+            } else {
+                tsvData = dbBatchMap.get(stateRef.step);
+            }
+            if (!tsvData) continue;
+
+            if (firstStepInZip === null) firstStepInZip = stateRef.step;
+            lastStepInZip = stateRef.step;
+            processedSteps.push(stateRef.step);
+
+            currentZip.file(`arena_state_step_${String(stateRef.step).padStart(5, '0')}.tsv`, tsvData);
+            currentZipSize += tsvData.length;
+
+            const overallIndex = i + k;
+            const percent = Math.round((overallIndex / simState.capturedArenaStatesTSV.length) * 100);
+            updateSaveProgress(percent, `Packaging States: ${percent}%`);
+
+            if (currentZipSize >= chunkLimitBytes || overallIndex === simState.capturedArenaStatesTSV.length - 1) {
+                const content = await currentZip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+                const fileName = `${simState.runTimestamp || generateTimestamp()}_arena_states_steps_${String(firstStepInZip).padStart(5, '0')}_to_${String(lastStepInZip).padStart(5, '0')}_part${zipIndex}.zip`;
+                
+                await saveFile(content, fileName, { preApprovedHandle: handle });
+
+                currentZip = new JSZip();
+                currentZipSize = 0;
+                firstStepInZip = null;
+                zipIndex++;
+            }
+        }
+        i = j; // Move the outer loop index forward to the next unbatched item
     }
     updateSaveProgress(null, "Arena states saved successfully!");
 
@@ -6400,22 +6520,30 @@ async function saveFullSimulationToFile(isBatch = false) {
     }
 
     let hasStreamError = false;
+    let usingBlobFallback = (writableStream === null); // Record if we START in fallback mode
+
     async function writeChunk(data) {
-        if (writableStream && !hasStreamError) {
+        if (hasStreamError) return false;
+
+        if (writableStream) {
             try {
                 await writableStream.write(data);
-                return;
+                return true;
             } catch (err) {
-                console.error("Writable stream write error, falling back to Blob chunks:", err);
+                console.error("Writable stream write error. Aborting save.", err);
                 hasStreamError = true;
                 simState.directoryHandle = null; // force fresh handle next time
                 try {
                     await writableStream.abort();
                 } catch(e) {}
                 writableStream = null;
+                return false;
             }
+        } else if (usingBlobFallback) {
+            blobChunks.push(data);
+            return true;
         }
-        blobChunks.push(data);
+        return false;
     }
 
     const db = await getDB();
@@ -6440,11 +6568,11 @@ async function saveFullSimulationToFile(isBatch = false) {
 
     const N = allKeys.length;
     if (N < 16) {
-        await writeChunk(new Uint8Array([0x90 | N]));
+        if (!(await writeChunk(new Uint8Array([0x90 | N])))) return;
     } else if (N < 65536) {
-        await writeChunk(new Uint8Array([0xdc, (N >> 8) & 0xff, N & 0xff]));
+        if (!(await writeChunk(new Uint8Array([0xdc, (N >> 8) & 0xff, N & 0xff])))) return;
     } else {
-        await writeChunk(new Uint8Array([0xdd, (N >> 24) & 0xff, (N >> 16) & 0xff, (N >> 8) & 0xff, N & 0xff]));
+        if (!(await writeChunk(new Uint8Array([0xdd, (N >> 24) & 0xff, (N >> 16) & 0xff, (N >> 8) & 0xff, N & 0xff])))) return;
     }
 
     // Use a fixed chunk size of 100 to prevent aggressive memory usage that causes crashes
@@ -6500,7 +6628,10 @@ async function saveFullSimulationToFile(isBatch = false) {
                 offset += chunk.length;
             }
             
-            await writeChunk(combinedChunk);
+            const success = await writeChunk(combinedChunk);
+            if (!success) {
+                break; // Stop immediately if there's an error
+            }
         }
         
         const percent = Math.min(100, Math.round(((i + batchKeys.length) / N) * 100));
@@ -6510,21 +6641,23 @@ async function saveFullSimulationToFile(isBatch = false) {
     }
 
     // Complete saving process
-    if (writableStream && !hasStreamError) {
+    if (hasStreamError) {
+        updateSaveProgress(null, null);
+        await showInfoAlert("An error occurred while writing to disk. Make sure you have enough free space and that the file is not locked.", "Save Failed");
+        if (button && !isBatch) button.disabled = false;
+        return;
+    }
+
+    if (writableStream) {
         try {
             await writableStream.close();
             console.log(`Successfully stream-saved single history file: ${fileName}`);
         } catch (err) {
-            console.error("Writable stream close error, falling back to Blob chunks:", err);
-            simState.directoryHandle = null;
-            const singleFileBlob = new Blob(blobChunks, { type: 'application/octet-stream' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(singleFileBlob);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+            console.error("Writable stream close error:", err);
+            updateSaveProgress(null, null);
+            await showInfoAlert(`The file was successfully written, but your browser failed to finalize it (often due to antivirus scans timing out on massive files). \n\nIf you see a '.crswap' file in your folder, your data is safe! Simply rename that file to:\n\n${fileName}\n\nand it will work perfectly.`, "Finalization Error");
+            if (button && !isBatch) button.disabled = false;
+            return;
         }
     } else {
         const singleFileBlob = new Blob(blobChunks, { type: 'application/octet-stream' });
