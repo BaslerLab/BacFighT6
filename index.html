@@ -33,7 +33,7 @@
                 </a>
             </div>
             <p class="text-xs md:text-sm text-gray-600 mt-1">
-                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 9.09 - 26.6.2026). Developed by
+                Visualizing and analysing attacker-prey-defender dynamics with advanced controls (ver. 10.0 - 27.6.2026). Developed by
                 <a href="https://www.biozentrum.unibas.ch/basler" target="_blank" class="text-blue-500 hover:underline">Marek Basler</a> using Gemini 2.5 - 3.5.<br>
             </p>
         </header>
@@ -249,12 +249,16 @@
 						<button id="renderFromHistoryButton" title="Generate and save images for all steps in the current history." class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1.5 px-3 rounded-lg shadow-md text-xs disabled:opacity-50 disabled:cursor-not-allowed w-full">Render from History</button>
 						<div id="renderHistoryRangeContainer" class="flex items-center justify-between mt-2 text-xs">
 							<div class="flex items-center">
-								<label for="renderFromStepInput" class="text-gray-700 mr-1.5">From:</label>
-								<input type="number" id="renderFromStepInput" value="1" min="1" class="block w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-0.5 px-1 text-center">
+								<label for="renderFromStepInput" class="text-gray-700 mr-1">From:</label>
+								<input type="number" id="renderFromStepInput" value="1" min="1" class="block w-12 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-0.5 px-1 text-center">
 							</div>
 							<div class="flex items-center">
-								<label for="renderToStepInput" class="text-gray-700 mr-1.5">To:</label>
-								<input type="number" id="renderToStepInput" value="1" min="1" class="block w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-0.5 px-1 text-center">
+								<label for="renderToStepInput" class="text-gray-700 mr-1">To:</label>
+								<input type="number" id="renderToStepInput" value="1" min="1" class="block w-12 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-0.5 px-1 text-center">
+							</div>
+							<div class="flex items-center">
+								<label for="renderRateStepInput" class="text-gray-700 mr-1">Rate:</label>
+								<input type="number" id="renderRateStepInput" value="1" min="1" class="block w-12 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-0.5 px-1 text-center">
 							</div>
 						</div>
 						<button id="cancelRenderButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded-lg shadow-md text-xs mt-2 w-full hidden">Stop &amp; Save Rendered</button>
@@ -1207,6 +1211,7 @@
 					<li><a href="https://doi.org/10.1126/science.1260064" target="_blank" class="text-blue-500 hover:underline">Borgeaud et al. 2015</a></li>
                     <li><a href="https://doi.org/10.1371/journal.pcbi.1004520" target="_blank" class="text-blue-500 hover:underline">Borenstein et al. 2015</a></li>
                     <li><a href="https://doi.org/10.1016/j.celrep.2017.12.020" target="_blank" class="text-blue-500 hover:underline">Ringel et al. 2017</a></li>
+                    <li><a href="https://doi.org/10.1016/j.cub.2017.12.030" target="_blank" class="text-blue-500 hover:underline">Mavridou et al. 2018</a></li>
                     <li><a href="https://doi.org/10.1371/journal.pbio.3000720" target="_blank" class="text-blue-500 hover:underline">Smith and Vettiger et al. 2020</a></li>
                     <li><a href="https://doi.org/10.1038/s41467-020-19017-z" target="_blank" class="text-blue-500 hover:underline">Smith et al. 2020</a></li>
                     <li><a href="https://doi.org/10.15252/embj.2021108595" target="_blank" class="text-blue-500 hover:underline">Lin et al. 2022</a></li>

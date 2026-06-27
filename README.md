@@ -1,6 +1,6 @@
 # BacFighT6: Simulation of T6SS-mediated Bacterial Interactions
 
-**Version:** 9.09 (26.6.2026)
+**Version:** 10.0 (27.6.2026)
 
 **Developed by:** Marek Basler (University of Basel, Biozentrum) with assistance from Gemini 2.5 - 3.5.
 
@@ -13,6 +13,7 @@
 * Borgeaud et al. 2015 (<https://doi.org/10.1126/science.1260064>)
 * Borenstein et al. 2015 (<https://doi.org/10.1371/journal.pcbi.1004520>)
 * Ringel et al. 2017 (<https://doi.org/10.1016/j.celrep.2017.12.020>)
+* Mavridou et al. 2018 (<https://doi.org/10.1016/j.cub.2017.12.030>)
 * Smith and Vettiger et al. 2020 (<https://doi.org/10.1371/journal.pbio.3000720>)
 * Smith et al. 2020 (<https://doi.org/10.1038/s41467-020-19017-z>)
 * Lin et al. 2022 (<https://doi.org/10.15252/embj.2021108595>)
@@ -593,13 +594,14 @@ The simulation provides robust options for data management:
 
     #### Retroactive Range Rendering ("Render from History")
 When full state history is enabled, you can retroactively generate high-resolution PNG image sequences for any specific window of past time steps without re-running the live environment:
-*   **Custom Range Bounds:** Input target values into the "From:" and "To:" step fields to isolate specific milestones or ecological transitions.
-*   **Low-Memory Batch Generation:** The engine sequentially loads frames out of IndexedDB, captures an offscreen canvas rendering, and pipes the output into memory-safe, chunked ZIP archives compiled via JSZip.
-*   **Dynamic Cancellation:** Clicking the **"Stop & Save Rendered"** button instantly terminates active rendering loops, safely packages all frames processed up to that exact millisecond into a valid ZIP archive, and restores the live control interface.
+	*   **Custom Range Bounds & Rates:** Input target values into the "From:" and "To:" step fields to isolate specific milestones. You can also specify a **"Rate"** to sample frames at regular intervals (e.g., setting Rate to 100 will render steps 5, 105, 205, etc.), which is useful for generating timelapses of very long simulations without rendering thousands of images. The final step in your range is always included.
+	*   **Low-Memory Batch Generation:** The engine sequentially loads frames out of IndexedDB, captures an offscreen canvas rendering, and pipes the output into memory-safe, chunked ZIP archives compiled via JSZip.
+	*   **Dynamic Cancellation:** Clicking the **"Stop & Save Rendered"** button instantly terminates active rendering loops, safely packages all frames processed up to that exact millisecond into a valid ZIP archive, and restores the live control interface.
 	
     #### Advanced Memory Management (IndexedDB Database Offloading)
 Saving per-step data is memory-intensive. To prevent browser crashes during very long runs, the simulation includes buffer limits for images, arena states, and history, which can be configured in the **"Exports & Buffers"** panel.
 * **Silent Database Offloading:** When any data buffer exceeds its defined size limit in memory (RAM), the simulation automatically offloads the heavy data (e.g. detailed frame objects, captured base64 images, or arena TSV layouts) to the browser's local database (IndexedDB).
+* **Multi-Tab Isolation:** Each simulation instance dynamically generates a unique Session ID for its IndexedDB storage. This ensures you can safely run multiple independent simulations in separate browser tabs or windows simultaneously without their databases interfering with or corrupting each other. Orphaned session databases are automatically cleaned up when starting new runs.
 * **RAM Protection:** The offloaded data is cleared from RAM, leaving only lightweight references in memory. This happens seamlessly in the background, allowing the simulation to run uninterrupted without needing user interaction, pausing, or intermediate file downloads.
 * **On-Demand Retrieval:** When you click the download or save options (such as downloading ZIPs of images/arena layouts, or saving the full `.bft6` session), the application automatically retrieves the offloaded frames and files from the database to build the download archive.
 

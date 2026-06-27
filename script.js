@@ -1,4 +1,4 @@
-// Simulation of T6SS-mediated Bacterial Interactions - ver. 9.09 (26.6.2026)
+// Simulation of T6SS-mediated Bacterial Interactions - ver. 10.0 (27.6.2026)
 // Copyright (c) 2025 Marek Basler
 // Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0)
 // Details: https://creativecommons.org/licenses/by/4.0/
@@ -79,6 +79,7 @@
 	const renderFromHistoryButton = document.getElementById('renderFromHistoryButton');
 	const renderFromStepInput = document.getElementById('renderFromStepInput');
 	const renderToStepInput = document.getElementById('renderToStepInput');
+	const renderRateStepInput = document.getElementById('renderRateStepInput');
 	const cancelRenderButton = document.getElementById('cancelRenderButton');
 	const cancelImportSessionButton = document.getElementById('cancelImportSessionButton');
 	// Attacker params
@@ -2995,6 +2996,7 @@ function drawArenaOnContext(targetCtx, canvasWidth, canvasHeight, currentCells, 
 		if (renderFromStepInput && renderToStepInput) {
 			renderFromStepInput.disabled = controlsDisabled || simState.optimizedHistoryFrames.size === 0;
 			renderToStepInput.disabled = controlsDisabled || simState.optimizedHistoryFrames.size === 0;
+			if (renderRateStepInput) renderRateStepInput.disabled = controlsDisabled || simState.optimizedHistoryFrames.size === 0;
 		}
 		if (cancelRenderButton) {
 			cancelRenderButton.classList.toggle('hidden', !simState.isRenderingFromHistory);
@@ -5469,8 +5471,14 @@ async function runSimulationStep() {
 		offscreenCanvas.height = sizing.actualCanvasHeight;
 		const offscreenCtx = offscreenCanvas.getContext('2d');
 
-		const cprgBgColor = canvas.style.backgroundColor || DEFAULT_CANVAS_BG_COLOR;
-
+		let cprgBgColor = DEFAULT_CANVAS_BG_COLOR;
+		if (simState.config.cprg.initialSubstrate > 0 && stateObject.totalCPRGConverted !== undefined) {
+			const cprgRatio = Math.min(1, stateObject.totalCPRGConverted / simState.config.cprg.initialSubstrate);
+			const r_val = Math.round(255 + (255 - 255) * cprgRatio);
+			const g_val = Math.round(255 + (0 - 255) * cprgRatio);
+			const b_val = Math.round(255 + (255 - 255) * cprgRatio);
+			cprgBgColor = `rgb(${r_val}, ${g_val}, ${b_val})`;
+		}
 		drawArenaOnContext(offscreenCtx,
 			sizing.actualCanvasWidth, 
 			sizing.actualCanvasHeight, 
@@ -5532,7 +5540,35 @@ async function runSimulationStep() {
 			return;
 		}
 
-		const filteredSteps = steps.filter(s => s >= fromStep && s <= toStep);
+		let renderRate = 1;
+		if (renderRateStepInput) {
+			renderRate = parseInt(renderRateStepInput.value, 10);
+			if (isNaN(renderRate) || renderRate < 1) renderRate = 1;
+		}
+
+		let filteredSteps = steps.filter(s => s >= fromStep && s <= toStep);
+		
+		if (renderRate > 1 && filteredSteps.length > 0) {
+			const resultSteps = [];
+			const lastStep = filteredSteps[filteredSteps.length - 1];
+			let nextTarget = fromStep;
+			
+			for (let i = 0; i < filteredSteps.length; i++) {
+				const s = filteredSteps[i];
+				if (s >= nextTarget) {
+					resultSteps.push(s);
+					while (nextTarget <= s) {
+						nextTarget += renderRate;
+					}
+				}
+			}
+			
+			if (resultSteps[resultSteps.length - 1] !== lastStep) {
+				resultSteps.push(lastStep);
+			}
+			filteredSteps = resultSteps;
+		}
+
 		const totalSteps = filteredSteps.length;
 		if (totalSteps === 0) {
 			await showInfoAlert("No history frames found in the specified range.", "Invalid Range");
